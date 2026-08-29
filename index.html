@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roblox Rich Text Generator</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Rich Text Generator</h1>
+        
+        <div class="main-grid">
+            <div class="panel">
+                <div class="control-group">
+                    <label>Text</label>
+                    <textarea id="textInput" rows="3">Der Fisch</textarea>
+                </div>
+
+                <div class="control-group">
+                    <label>User ID</label>
+                    <input type="text" id="userId" value="0" inputmode="numeric" pattern="[0-9]*" />
+                </div>
+
+                <div class="control-group">
+                    <label>Mode</label>
+                    <select id="colorMode">
+                        <option value="solid">Solid</option>
+                        <option value="gradient" selected>Gradient</option>
+                    </select>
+                </div>
+
+                <div id="solidControls">
+                    <div class="control-group">
+                        <label>Color</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="textColor" value="#00d4ff" />
+                            <input type="text" id="textColorHex" value="#00d4ff" />
+                        </div>
+                    </div>
+                </div>
+
+                <div id="gradientControls">
+                    <div class="control-group">
+                        <label>Type</label>
+                        <select id="gradientType">
+                            <option value="horizontal">Horizontal</option>
+                            <option value="rainbow">Rainbow</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Color 1</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="gradientColor1" value="#ff6b9d" />
+                            <input type="text" id="gradientColor1Hex" value="#ff6b9d" />
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Color 2</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="gradientColor2" value="#00d4ff" />
+                            <input type="text" id="gradientColor2Hex" value="#00d4ff" />
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Steps</label>
+                        <div class="range-group">
+                            <input type="range" id="gradientSteps" min="2" max="20" value="8" />
+                            <span id="gradientStepsValue">8</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Transparency</label>
+                    <div class="range-group">
+                        <input type="range" id="transparency" min="0" max="1" step="0.1" value="0" />
+                        <span id="transparencyValue">0</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Formatting</label>
+                    <div class="formatting-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="bold" />
+                            <span>B</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="italic" />
+                            <span>I</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="underline" />
+                            <span>U</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="strikethrough" />
+                            <span>S</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Line Breaks</label>
+                    <input type="checkbox" id="lineBreaks" />
+                </div>
+
+                <div class="control-group">
+                    <label>Fix Colors</label>
+                    <input type="checkbox" id="fixColors" />
+                </div>
+
+                <div class="control-group">
+                    <label>Stroke</label>
+                    <div class="color-picker-group">
+                        <input type="color" id="strokeColor" value="#0a0a1a" />
+                        <input type="text" id="strokeColorHex" value="#0a0a1a" />
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Stroke Width</label>
+                    <div class="range-group">
+                        <input type="range" id="strokeThickness" min="0" max="5" step="0.5" value="2" />
+                        <span id="strokeThicknessValue">2</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Size</label>
+                    <div class="range-group">
+                        <input type="range" id="fontSize" min="8" max="72" value="24" />
+                        <span id="fontSizeValue">24</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Font</label>
+                    <select id="fontFamily"></select>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="preview" id="preview">Der Fisch</div>
+                
+                <div class="output-section">
+                    <label>Rich Text</label>
+                    <button class="copy-btn" data-target="outputCode">Copy</button>
+                    <textarea id="outputCode" readonly></textarea>
+                </div>
+
+                <div class="output-section">
+                    <label>JSON</label>
+                    <button class="copy-btn" data-target="outputJson">Copy</button>
+                    <textarea id="outputJson" readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

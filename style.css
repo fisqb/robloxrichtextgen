@@ -1,0 +1,197 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #ff8c00;
+}
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 20px;
+}
+
+.panel {
+    background: #2a2a2a;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.control-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    color: #ccc;
+}
+
+textarea, input[type="text"], select {
+    width: 100%;
+    padding: 8px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+}
+
+textarea:focus, input:focus, select:focus {
+    outline: none;
+    border-color: #ff8c00;
+}
+
+.color-picker-group {
+    display: flex;
+    gap: 8px;
+}
+
+.color-picker-group input[type="color"] {
+    width: 40px;
+    height: 40px;
+    padding: 2px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #333;
+}
+
+.color-picker-group input[type="text"] {
+    flex: 1;
+}
+
+.range-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.range-group input[type="range"] {
+    flex: 1;
+    height: 4px;
+    background: #444;
+    border-radius: 2px;
+    -webkit-appearance: none;
+}
+
+.range-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ff8c00;
+    cursor: pointer;
+}
+
+.range-group span {
+    min-width: 30px;
+    text-align: center;
+    color: #ff8c00;
+}
+
+.formatting-group {
+    display: flex;
+    gap: 8px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.checkbox-label:has(input:checked) {
+    border-color: #ff8c00;
+    background: #3a3a3a;
+}
+
+.preview {
+    min-height: 80px;
+    padding: 20px;
+    background: #333;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.output-section {
+    position: relative;
+    margin-top: 15px;
+}
+
+.output-section label {
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.copy-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 4px 10px;
+    background: #444;
+    color: #ccc;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.copy-btn:hover {
+    background: #ff8c00;
+    color: #1a1a1a;
+}
+
+.copy-btn.copied {
+    background: #22c55e;
+    color: white;
+}
+
+textarea[readonly] {
+    min-height: 60px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    resize: vertical;
+}
+
+#solidControls.hidden {
+    display: none;
+}
+
+#gradientControls {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+}
