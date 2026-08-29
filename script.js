@@ -40,10 +40,6 @@ document.addEventListener('DOMContentLoaded', function() {
         fixColors: $('fixColors'),
         strokeColor: $('strokeColor'),
         strokeColorHex: $('strokeColorHex'),
-        strokeThickness: $('strokeThickness'),
-        strokeThicknessValue: $('strokeThicknessValue'),
-        fontSize: $('fontSize'),
-        fontSizeValue: $('fontSizeValue'),
         fontFamily: $('fontFamily'),
         preview: $('preview'),
         outputCode: $('outputCode'),
@@ -154,8 +150,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    syncRange(elements.strokeThickness, elements.strokeThicknessValue);
-    syncRange(elements.fontSize, elements.fontSizeValue);
     syncRange(elements.gradientSteps, elements.gradientStepsValue);
     syncRange(elements.transparency, elements.transparencyValue);
 
@@ -190,10 +184,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function generate() {
         const rawText = elements.textInput.value || 'Your Text';
         const userId = elements.userId.value || '0';
-        const size = parseInt(elements.fontSize.value);
         const font = elements.fontFamily.value;
         const stroke = elements.strokeColor.value;
-        const thickness = parseFloat(elements.strokeThickness.value);
         const mode = elements.colorMode.value;
         const trans = parseFloat(elements.transparency.value);
         const transAttr = trans > 0 ? ` transparency='${trans}'` : '';
@@ -217,9 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const color = elements.textColor.value;
             const formattedText = applyFormatting(processedText, formatting);
             
-            richText = thickness > 0
-                ? `<font color='${color}' face='${font}'><stroke color='${stroke}' thickness='${thickness}'>${formattedText}</stroke></font>`
-                : `<font color='${color}' face='${font}'>${formattedText}</font>`;
+            richText = `<font color='${color}' face='${font}'>${formattedText}</font>`;
             
             elements.preview.style.backgroundImage = 'none';
             elements.preview.style.webkitTextFillColor = 'initial';
@@ -289,10 +279,10 @@ document.addEventListener('DOMContentLoaded', function() {
             flushBuffer();
             
             if (fixColors) {
-                richText = `<font face='${font}'><stroke color='${stroke}' thickness='${thickness}'>${gradientContent}</stroke></font>`;
+                richText = `<font face='${font}'>${gradientContent}</font>`;
             } else {
                 const formattedContent = applyFormatting(gradientContent, formatting);
-                richText = `<font face='${font}'><stroke color='${stroke}' thickness='${thickness}'>${formattedContent}</stroke></font>`;
+                richText = `<font face='${font}'>${formattedContent}</font>`;
             }
             
             const colorStops = colors.map((c, i) => `${c} ${(i / (colors.length - 1)) * 100}%`).join(', ');
@@ -308,7 +298,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         elements.preview.style.opacity = 1 - trans;
-        elements.preview.style.fontSize = Math.min(size, 40) + 'px';
         elements.preview.style.fontFamily = font;
         elements.preview.style.fontWeight = formatting.bold ? 'bold' : 'normal';
         elements.preview.style.fontStyle = formatting.italic ? 'italic' : 'normal';
