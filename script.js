@@ -113,77 +113,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return text;
     };
 
-    const MAX_USER_ID_LENGTH = 20;
-    
-    elements.userId.addEventListener('input', function() {
-        this.value = this.value.replace(/\D/g, '').slice(0, MAX_USER_ID_LENGTH);
-        generate();
-    });
-    
-    elements.userId.addEventListener('blur', function() {
-        if (this.value === '') {
-            this.value = '0';
-            generate();
-        }
-    });
-
-    const syncColorPickers = (picker, hexInput) => {
-        picker.addEventListener('input', () => {
-            hexInput.value = picker.value;
-            generate();
-        });
-        hexInput.addEventListener('input', () => {
-            if (isValidHex(hexInput.value)) {
-                picker.value = hexInput.value;
-                generate();
-            }
-        });
-    };
-
-    syncColorPickers(elements.textColor, elements.textColorHex);
-    syncColorPickers(elements.gradientColor1, elements.gradientColor1Hex);
-    syncColorPickers(elements.gradientColor2, elements.gradientColor2Hex);
-    syncColorPickers(elements.strokeColor, elements.strokeColorHex);
-
-    const syncRange = (range, valueDisplay) => {
-        range.addEventListener('input', () => {
-            valueDisplay.textContent = range.value;
-            generate();
-        });
-    };
-
-    syncRange(elements.strokeThickness, elements.strokeThicknessValue);
-    syncRange(elements.gradientSteps, elements.gradientStepsValue);
-    syncRange(elements.transparency, elements.transparencyValue);
-
-    function toggleGradientColorControls() {
-        const isRainbow = elements.gradientType.value === 'rainbow';
-        const color1Group = elements.gradientColor1.closest('.control-group');
-        const color2Group = elements.gradientColor2.closest('.control-group');
-        
-        if (color1Group) color1Group.style.display = isRainbow ? 'none' : 'block';
-        if (color2Group) color2Group.style.display = isRainbow ? 'none' : 'block';
-    }
-
-    elements.colorMode.addEventListener('change', function() {
-        const isSolid = this.value === 'solid';
-        elements.solidControls.classList.toggle('hidden', !isSolid);
-        elements.gradientControls.style.display = isSolid ? 'none' : 'block';
-        if (!isSolid) setTimeout(() => elements.gradientControls.classList.add('active'), 10);
-        generate();
-    });
-
-    ['bold', 'italic', 'underline', 'strikethrough', 'lineBreaks', 'fixColors'].forEach(id => {
-        elements[id].addEventListener('change', generate);
-    });
-
-    elements.textInput.addEventListener('input', generate);
-    elements.fontFamily.addEventListener('change', generate);
-    elements.gradientType.addEventListener('change', function() {
-        toggleGradientColorControls();
-        generate();
-    });
-
     function generate() {
         const rawText = elements.textInput.value || 'Your Text';
         const userId = elements.userId.value || '0';
@@ -315,6 +244,77 @@ document.addEventListener('DOMContentLoaded', function() {
         const jsonOutput = `"${userId}": "${richText}"\n\n,`;
         elements.outputJson.value = jsonOutput;
     }
+
+    const MAX_USER_ID_LENGTH = 20;
+    
+    elements.userId.addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').slice(0, MAX_USER_ID_LENGTH);
+        generate();
+    });
+    
+    elements.userId.addEventListener('blur', function() {
+        if (this.value === '') {
+            this.value = '0';
+            generate();
+        }
+    });
+
+    const syncColorPickers = (picker, hexInput) => {
+        picker.addEventListener('input', () => {
+            hexInput.value = picker.value;
+            generate();
+        });
+        hexInput.addEventListener('input', () => {
+            if (isValidHex(hexInput.value)) {
+                picker.value = hexInput.value;
+                generate();
+            }
+        });
+    };
+
+    syncColorPickers(elements.textColor, elements.textColorHex);
+    syncColorPickers(elements.gradientColor1, elements.gradientColor1Hex);
+    syncColorPickers(elements.gradientColor2, elements.gradientColor2Hex);
+    syncColorPickers(elements.strokeColor, elements.strokeColorHex);
+
+    const syncRange = (range, valueDisplay) => {
+        range.addEventListener('input', () => {
+            valueDisplay.textContent = range.value;
+            generate();
+        });
+    };
+
+    syncRange(elements.strokeThickness, elements.strokeThicknessValue);
+    syncRange(elements.gradientSteps, elements.gradientStepsValue);
+    syncRange(elements.transparency, elements.transparencyValue);
+
+    function toggleGradientColorControls() {
+        const isRainbow = elements.gradientType.value === 'rainbow';
+        const color1Group = elements.gradientColor1.closest('.control-group');
+        const color2Group = elements.gradientColor2.closest('.control-group');
+        
+        if (color1Group) color1Group.style.display = isRainbow ? 'none' : 'block';
+        if (color2Group) color2Group.style.display = isRainbow ? 'none' : 'block';
+    }
+
+    elements.colorMode.addEventListener('change', function() {
+        const isSolid = this.value === 'solid';
+        elements.solidControls.classList.toggle('hidden', !isSolid);
+        elements.gradientControls.style.display = isSolid ? 'none' : 'block';
+        if (!isSolid) setTimeout(() => elements.gradientControls.classList.add('active'), 10);
+        generate();
+    });
+
+    ['bold', 'italic', 'underline', 'strikethrough', 'lineBreaks', 'fixColors'].forEach(id => {
+        elements[id].addEventListener('change', generate);
+    });
+
+    elements.textInput.addEventListener('input', generate);
+    elements.fontFamily.addEventListener('change', generate);
+    elements.gradientType.addEventListener('change', function() {
+        toggleGradientColorControls();
+        generate();
+    });
 
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', function() {
