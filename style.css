@@ -47,7 +47,9 @@ label {
     color: #ccc;
 }
 
-textarea, input[type="text"], select {
+textarea,
+input[type="text"],
+select {
     width: 100%;
     padding: 8px;
     background: #333;
@@ -57,7 +59,9 @@ textarea, input[type="text"], select {
     font-size: 0.9rem;
 }
 
-textarea:focus, input:focus, select:focus {
+textarea:focus,
+input:focus,
+select:focus {
     outline: none;
     border-color: #ff8c00;
 }
@@ -131,6 +135,11 @@ textarea:focus, input:focus, select:focus {
     background: #3a3a3a;
 }
 
+.preview-wrap {
+    position: relative;
+    margin-bottom: 20px;
+}
+
 .preview {
     min-height: 80px;
     padding: 20px;
@@ -140,8 +149,64 @@ textarea:focus, input:focus, select:focus {
     align-items: center;
     justify-content: center;
     text-align: center;
-    margin-bottom: 20px;
     font-size: 24px;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: text;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.preview .char {
+    display: inline;
+    padding: 1px 0;
+    border-radius: 2px;
+    transition: background-color 0.12s ease;
+}
+
+.preview .char:hover {
+    background: rgba(255, 140, 0, 0.25);
+}
+
+.preview .char.selected {
+    background: rgba(255, 140, 0, 0.45);
+    outline: 1px solid #ff8c00;
+}
+
+.preview .char.has-color {
+    box-shadow: inset 0 -2px 0 rgba(255, 140, 0, 0.7);
+}
+
+.preview .char.selected-point {
+    background: rgba(255, 140, 0, 0.6);
+    outline: 1px solid #fff;
+}
+
+.preview.points-mode {
+    cursor: crosshair;
+}
+
+.preview.points-mode .char:hover {
+    background: rgba(255, 140, 0, 0.35);
+}
+
+.point-marker {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    transform: translate(-50%, -50%) rotate(45deg);
+    border: 1px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.point-marker.selected {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+    z-index: 3;
 }
 
 .output-section {
@@ -199,6 +264,244 @@ textarea[readonly] {
 
 #gradientControls {
     display: block;
+}
+
+.char-editor {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #232323;
+    border: 1px solid #444;
+    border-radius: 6px;
+}
+
+.char-editor.hidden {
+    display: none;
+}
+
+.char-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #ff8c00;
+    margin-bottom: 8px;
+}
+
+.char-editor-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.char-editor-row input[type="color"] {
+    width: 40px;
+    height: 36px;
+    padding: 2px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #333;
+    cursor: pointer;
+}
+
+.char-editor-row input[type="text"] {
+    flex: 1;
+    padding: 6px 8px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+}
+
+.char-editor-row input[type="text"]::placeholder {
+    color: #666;
+}
+
+.mini-btn {
+    padding: 6px 10px;
+    background: #ff8c00;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.mini-btn:hover {
+    background: #ffa733;
+}
+
+.mini-btn.ghost {
+    background: #333;
+    color: #ccc;
+    border: 1px solid #444;
+    font-weight: 400;
+}
+
+.mini-btn.ghost:hover {
+    background: #3a3a3a;
+    color: #ff8c00;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.icon-btn:hover {
+    color: #ff8c00;
+}
+
+.char-editor-hint {
+    font-size: 0.72rem;
+    color: #777;
+    margin-top: 4px;
+    line-height: 1.35;
+}
+
+.help-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #ff8c00;
+    background: transparent;
+    color: #ff8c00;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    z-index: 5;
+}
+
+.help-btn:hover {
+    background: #ff8c00;
+    color: #1a1a1a;
+}
+
+.help-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 0.15s ease;
+}
+
+.help-overlay.hidden {
+    display: none;
+}
+
+.help-modal {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: helpPop 0.15s ease-out;
+}
+
+@keyframes helpPop {
+    from {
+        transform: scale(0.96);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.help-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.help-header h2 {
+    font-size: 1.05rem;
+    color: #ff8c00;
+    margin: 0;
+}
+
+.help-body {
+    padding: 14px 18px 20px;
+    overflow-y: auto;
+}
+
+.help-section {
+    margin-bottom: 16px;
+}
+
+.help-section:last-child {
+    margin-bottom: 0;
+}
+
+.help-section h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #ff8c00;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.help-section ul {
+    list-style: disc;
+    padding-left: 20px;
+    margin: 0;
+}
+
+.help-section li {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #d0d0d0;
+    margin-bottom: 3px;
+}
+
+.help-section code {
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 0.78rem;
+    color: #ffb066;
+}
+
+.help-section b {
+    color: #fff;
+}
+
+#defaultioControls,
+#defaultioGroupingGroup,
+#defaultioStepTimeGroup,
+#defaultioStepFreqGroup,
+#defaultioStyleTimeGroup {
+    border-left: 2px solid #ff8c00;
+    padding-left: 10px;
+    margin-left: -2px;
 }
 
 @media (max-width: 768px) {
