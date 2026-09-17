@@ -16,7 +16,7 @@ A rich text generator for Roblox. Create styled text with gradients, strokes, pe
 - **Two output formats:**
   - **Roblox RichText (native)** — `<font>`, `<stroke>`, `<b>`, `<i>`, `<u>`, `<s>`, `<br/>`
   - **Defaultio RichText Module** — animated markup for Defaultio's RichText module with `<Color=...>`, `<AnimateStyle=...>`, and more
-- **Outputs** — Rich Text, Defaultio Module Text, and JSON / Lua snippet
+- **Outputs** — Rich Text, Defaultio Module Text, and JSON snippet
 - **Tips panel** — the `?` button in the corner explains everything
 
 ## Usage
