@@ -317,14 +317,19 @@ document.addEventListener('DOMContentLoaded', function () {
             const span = document.createElement('span');
             span.className = 'char';
             span.dataset.index = cell.index;
-            span.textContent = cell.char === ' ' ? '\u00A0' : cell.char;
-            if (cell.char === ' ') span.style.whiteSpace = 'pre';
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'char-text';
+            textSpan.textContent = cell.char === ' ' ? '\u00A0' : cell.char;
+            if (cell.char === ' ') textSpan.style.whiteSpace = 'pre';
 
             const color = colorFn(cell.index);
-            if (color) span.style.color = color;
+            if (color) textSpan.style.color = color;
 
             const t = transparencyForIndex(cell.index, globalTrans, usePoints);
-            if (t > 0) span.style.opacity = String(1 - t);
+            if (t > 0) textSpan.style.opacity = String(1 - t);
+
+            span.appendChild(textSpan);
 
             if (charColors[cell.index]) span.classList.add('has-color');
 
