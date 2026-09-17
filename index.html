@@ -46,6 +46,7 @@
                     <select id="colorMode">
                         <option value="solid">Solid</option>
                         <option value="gradient" selected>Gradient</option>
+                        <option value="rainbow">Rainbow</option>
                     </select>
                 </div>
 
@@ -77,14 +78,6 @@
 
                 <div id="gradientControls">
                     <div class="control-group">
-                        <label>Type</label>
-                        <select id="gradientType">
-                            <option value="horizontal">Horizontal</option>
-                            <option value="rainbow">Rainbow</option>
-                        </select>
-                    </div>
-
-                    <div class="control-group">
                         <label>Color 1</label>
                         <div class="color-picker-group">
                             <input type="color" id="gradientColor1" value="#ff6b9d" />
@@ -108,6 +101,11 @@
                         </div>
                     </div>
                 </div>
+
+                <select id="gradientType" style="display:none">
+                    <option value="horizontal" selected>Horizontal</option>
+                    <option value="rainbow">Rainbow</option>
+                </select>
 
                 <div class="control-group">
                     <label>Transparency</label>
@@ -328,7 +326,8 @@
                         <h3>Color modes</h3>
                         <ul>
                             <li><b>Solid</b> - the whole text uses one color.</li>
-                            <li><b>Gradient</b> - colors blend between Color 1 and Color 2 across the text.</li>
+                            <li><b>Gradient</b> - colors blend horizontally between Color 1 and Color 2 across the text.
+                            </li>
                             <li><b>Rainbow</b> - a full hue spectrum across the text (Color 1 / Color 2 are hidden).
                             </li>
                             <li><b>Steps</b> controls how many color stops the gradient uses (e.g. 20 steps = 20
@@ -369,14 +368,16 @@
                             <li><b>Roblox RichText (native)</b> - uses <code>&lt;font&gt;</code>,
                                 <code>&lt;stroke&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>,
                                 <code>&lt;u&gt;</code>, <code>&lt;s&gt;</code>, <code>&lt;br/&gt;</code>. Paste into a
-                                TextLabel with RichText enabled.</li>
+                                TextLabel with RichText enabled.
+                            </li>
                             <li><b>Defaultio RichText Module</b> - uses markup like <code>&lt;Color=r,g,b&gt;</code>,
                                 <code>&lt;Font=...&gt;</code>, <code>&lt;AnimateStyle=...&gt;</code>,
                                 <code>&lt;AnimateStepTime=...&gt;</code>, <code>&lt;AnimateStepFrequency=...&gt;</code>,
                                 <code>&lt;AnimateStepGrouping=...&gt;</code>, <code>&lt;AnimateStyleTime=...&gt;</code>,
                                 <code>&lt;StrokeColor=...&gt;</code>, <code>&lt;TextStrokeTransparency=...&gt;</code>,
                                 <code>&lt;TextTransparency=...&gt;</code>. Paste into the Defaultio RichText module in
-                                Studio.</li>
+                                Studio.
+                            </li>
                         </ul>
                     </section>
 
@@ -439,7 +440,8 @@
                         <h3>Transparency</h3>
                         <ul>
                             <li>Global <b>Transparency</b> is applied once, on the outer
-                                <code>&lt;font face='...'&gt;</code> tag - it does not repeat on every character.</li>
+                                <code>&lt;font face='...'&gt;</code> tag - it does not repeat on every character.
+                            </li>
                             <li>To give individual characters their own transparency, use the <b>Character</b> panel's
                                 Transparency field.</li>
                             <li>To give individual gradient points their own transparency, use the <b>Gradient
