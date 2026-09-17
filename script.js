@@ -82,7 +82,12 @@ document.addEventListener('DOMContentLoaded', function () {
         animateStepTimeValue: $('animateStepTimeValue'),
         animateStepFrequency: $('animateStepFrequency'),
         animateStyleTime: $('animateStyleTime'),
-        animateStyleTimeValue: $('animateStyleTimeValue')
+        animateStyleTimeValue: $('animateStyleTimeValue'),
+        presetSelect: $('presetSelect'),
+        presetSave: $('presetSave'),
+        presetLoad: $('presetLoad'),
+        presetRename: $('presetRename'),
+        presetDelete: $('presetDelete')
     };
 
     ALL_FONTS.forEach(font => {
@@ -896,6 +901,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         updatePointsEditor();
+        saveState();
     }
 
     const MAX_USER_ID_LENGTH = 20;
@@ -1099,6 +1105,226 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('resize', () => {
         generate();
     });
+
+    const STATE_KEY = 'richTextGenState';
+    const PRESETS_KEY = 'richTextGenPresets';
+
+    function collectState() {
+        return {
+            text: elements.textInput.value,
+            userId: elements.userId.value,
+            colorMode: elements.colorMode.value,
+            colorSource: elements.colorSource.value,
+            outputFormat: elements.outputFormat.value,
+            textColor: elements.textColor.value,
+            gradientColor1: elements.gradientColor1.value,
+            gradientColor2: elements.gradientColor2.value,
+            gradientType: elements.gradientType.value,
+            gradientSteps: elements.gradientSteps.value,
+            transparency: elements.transparency.value,
+            bold: elements.bold.checked,
+            italic: elements.italic.checked,
+            underline: elements.underline.checked,
+            strikethrough: elements.strikethrough.checked,
+            lineBreaks: elements.lineBreaks.checked,
+            fixColors: elements.fixColors.checked,
+            strokeColor: elements.strokeColor.value,
+            strokeThickness: elements.strokeThickness.value,
+            fontFamily: elements.fontFamily.value,
+            charColors: charColors,
+            charTransparency: charTransparency,
+            gradientPoints: gradientPoints,
+            gradientPointTransparency: gradientPointTransparency,
+            animateStyle: elements.animateStyle.value,
+            animateGrouping: elements.animateGrouping.value,
+            animateStepTime: elements.animateStepTime.value,
+            animateStepFrequency: elements.animateStepFrequency.value,
+            animateStyleTime: elements.animateStyleTime.value
+        };
+    }
+
+    function applyState(s) {
+        if (!s || typeof s !== 'object') return;
+        try {
+            if (typeof s.text === 'string') elements.textInput.value = s.text;
+            if (typeof s.userId === 'string') elements.userId.value = s.userId;
+
+            if (s.colorMode) elements.colorMode.value = s.colorMode;
+            if (s.colorSource) elements.colorSource.value = s.colorSource;
+            if (s.outputFormat) elements.outputFormat.value = s.outputFormat;
+
+            if (s.textColor) {
+                elements.textColor.value = s.textColor;
+                elements.textColorHex.value = s.textColor;
+            }
+            if (s.gradientColor1) {
+                elements.gradientColor1.value = s.gradientColor1;
+                elements.gradientColor1Hex.value = s.gradientColor1;
+            }
+            if (s.gradientColor2) {
+                elements.gradientColor2.value = s.gradientColor2;
+                elements.gradientColor2Hex.value = s.gradientColor2;
+            }
+            if (s.gradientType) elements.gradientType.value = s.gradientType;
+            if (s.gradientSteps !== undefined) {
+                elements.gradientSteps.value = s.gradientSteps;
+                elements.gradientStepsValue.textContent = s.gradientSteps;
+            }
+            if (s.transparency !== undefined) {
+                elements.transparency.value = s.transparency;
+                elements.transparencyValue.textContent = s.transparency;
+            }
+
+            elements.bold.checked = !!s.bold;
+            elements.italic.checked = !!s.italic;
+            elements.underline.checked = !!s.underline;
+            elements.strikethrough.checked = !!s.strikethrough;
+            elements.lineBreaks.checked = !!s.lineBreaks;
+            elements.fixColors.checked = !!s.fixColors;
+
+            if (s.strokeColor) {
+                elements.strokeColor.value = s.strokeColor;
+                elements.strokeColorHex.value = s.strokeColor;
+            }
+            if (s.strokeThickness !== undefined) {
+                elements.strokeThickness.value = s.strokeThickness;
+                elements.strokeThicknessValue.textContent = s.strokeThickness;
+            }
+            if (s.fontFamily) elements.fontFamily.value = s.fontFamily;
+
+            charColors = (s.charColors && typeof s.charColors === 'object') ? { ...s.charColors } : {};
+            charTransparency = (s.charTransparency && typeof s.charTransparency === 'object') ? { ...s.charTransparency } : {};
+            gradientPoints = (s.gradientPoints && typeof s.gradientPoints === 'object') ? { ...s.gradientPoints } : {};
+            gradientPointTransparency = (s.gradientPointTransparency && typeof s.gradientPointTransparency === 'object') ? { ...s.gradientPointTransparency } : {};
+
+            if (s.animateStyle !== undefined) elements.animateStyle.value = s.animateStyle;
+            if (s.animateGrouping !== undefined) elements.animateGrouping.value = s.animateGrouping;
+            if (s.animateStepTime !== undefined) {
+                elements.animateStepTime.value = s.animateStepTime;
+                elements.animateStepTimeValue.textContent = s.animateStepTime;
+            }
+            if (s.animateStepFrequency !== undefined) elements.animateStepFrequency.value = s.animateStepFrequency;
+            if (s.animateStyleTime !== undefined) {
+                elements.animateStyleTime.value = s.animateStyleTime;
+                elements.animateStyleTimeValue.textContent = s.animateStyleTime;
+            }
+        } catch (e) {
+            console.warn('Failed to apply state', e);
+        }
+    }
+
+    function saveState() {
+        try {
+            localStorage.setItem(STATE_KEY, JSON.stringify(collectState()));
+        } catch (e) {
+            console.warn('Failed to save state', e);
+        }
+    }
+
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(STATE_KEY);
+            if (!raw) return false;
+            const s = JSON.parse(raw);
+            applyState(s);
+            return true;
+        } catch (e) {
+            console.warn('Failed to load state', e);
+            return false;
+        }
+    }
+
+    function loadPresets() {
+        try {
+            const raw = localStorage.getItem(PRESETS_KEY);
+            if (!raw) return {};
+            const obj = JSON.parse(raw);
+            return (obj && typeof obj === 'object') ? obj : {};
+        } catch (e) {
+            console.warn('Failed to load presets', e);
+            return {};
+        }
+    }
+
+    function savePresets(presets) {
+        try {
+            localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+        } catch (e) {
+            console.warn('Failed to save presets', e);
+        }
+    }
+
+    function refreshPresetSelect() {
+        const presets = loadPresets();
+        const current = elements.presetSelect.value;
+        elements.presetSelect.innerHTML = '';
+        elements.presetSelect.add(new Option('— Select a preset —', ''));
+        Object.keys(presets).sort((a, b) => a.localeCompare(b)).forEach(name => {
+            elements.presetSelect.add(new Option(name, name));
+        });
+        if (current && presets[current]) {
+            elements.presetSelect.value = current;
+        }
+    }
+
+    elements.presetSave.addEventListener('click', () => {
+        const rawName = prompt('Preset name:', '');
+        if (rawName === null) return;
+        const name = rawName.trim();
+        if (!name) return;
+        const presets = loadPresets();
+        presets[name] = collectState();
+        savePresets(presets);
+        refreshPresetSelect();
+        elements.presetSelect.value = name;
+    });
+
+    elements.presetLoad.addEventListener('click', () => {
+        const name = elements.presetSelect.value;
+        if (!name) return;
+        const presets = loadPresets();
+        if (!presets[name]) return;
+        applyState(presets[name]);
+        toggleGradientColorControls();
+        toggleDefaultioControls();
+        toggleColorSourceControls();
+        generate();
+    });
+
+    elements.presetRename.addEventListener('click', () => {
+        const name = elements.presetSelect.value;
+        if (!name) return;
+        const rawNew = prompt('Rename preset to:', name);
+        if (rawNew === null) return;
+        const newName = rawNew.trim();
+        if (!newName || newName === name) return;
+        const presets = loadPresets();
+        if (!presets[name]) return;
+        if (presets[newName] && !confirm('A preset with this name already exists. Overwrite?')) return;
+        presets[newName] = presets[name];
+        delete presets[name];
+        savePresets(presets);
+        refreshPresetSelect();
+        elements.presetSelect.value = newName;
+    });
+
+    elements.presetDelete.addEventListener('click', () => {
+        const name = elements.presetSelect.value;
+        if (!name) return;
+        if (!confirm(`Delete preset "${name}"?`)) return;
+        const presets = loadPresets();
+        delete presets[name];
+        savePresets(presets);
+        refreshPresetSelect();
+        elements.presetSelect.value = '';
+    });
+
+    loadState();
+    refreshPresetSelect();
+
+    toggleGradientColorControls();
+    toggleDefaultioControls();
+    toggleColorSourceControls();
 
     generate();
 });
