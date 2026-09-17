@@ -842,7 +842,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         const formattedInner = applyFormatting(inner, formatting);
-        const openFont = `<font face='${font}'>`;
+        const globalTransAttr = trans > 0 ? ` transparency='${roundTransparency(trans)}'` : '';
+        const openFont = `<font face='${font}'${globalTransAttr}>`;
         const hasStroke = thickness > 0;
         const openStroke = hasStroke ? `<stroke color='${stroke}' thickness='${thickness}'>` : '';
         const closeStroke = hasStroke ? '</stroke>' : '';
