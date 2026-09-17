@@ -270,6 +270,16 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
+    function makeRainbowIndexer(rawText) {
+        const total = rawText.length;
+        if (total === 0) return () => null;
+        return (i) => {
+            const t = total === 1 ? 0 : i / (total - 1);
+            const rgb = hsvToRgb(t * 360, 1, 1);
+            return rgbToHex(rgb.r, rgb.g, rgb.b);
+        };
+    }
+
     function colorForIndexFactory(rawText, options) {
         const { mode, solidColor, gradientColors, usePoints } = options;
 
@@ -278,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
             : null;
 
         const rainbowIndexer = (mode === 'rainbow')
-            ? makeGradientIndexer(rawText, generateGradientColors('#000000', '#000000', 8, 'rainbow'))
+            ? makeRainbowIndexer(rawText)
             : null;
 
         return (i) => {
@@ -806,12 +816,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 elements.gradientColor2.value,
                 parseInt(elements.gradientSteps.value),
                 'horizontal'
-            );
-        } else if (mode === 'rainbow') {
-            gradientColors = generateGradientColors(
-                '#000000', '#000000',
-                parseInt(elements.gradientSteps.value),
-                'rainbow'
             );
         }
 
