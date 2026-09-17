@@ -16,6 +16,21 @@
 
         <div class="main-grid">
             <div class="panel">
+                <div class="control-group presets-group">
+                    <label>Presets</label>
+                    <div class="presets-row">
+                        <select id="presetSelect">
+                            <option value="">— Select a preset —</option>
+                        </select>
+                        <button type="button" id="presetSave" class="mini-btn">Save</button>
+                    </div>
+                    <div class="presets-row">
+                        <button type="button" id="presetLoad" class="mini-btn ghost">Load</button>
+                        <button type="button" id="presetRename" class="mini-btn ghost">Rename</button>
+                        <button type="button" id="presetDelete" class="mini-btn ghost">Delete</button>
+                    </div>
+                </div>
+
                 <div class="control-group">
                     <label>Text</label>
                     <textarea id="textInput" rows="3">Text</textarea>
@@ -264,7 +279,7 @@
                 </div>
 
                 <div class="output-section">
-                    <label>JSON</label>
+                    <label>JSON / Lua</label>
                     <button class="copy-btn" data-target="outputJson">Copy</button>
                     <textarea id="outputJson" readonly></textarea>
                 </div>
@@ -284,8 +299,28 @@
                         <ul>
                             <li>Type your text in the <b>Text</b> field on the left.</li>
                             <li>The <b>Preview</b> on the right updates live.</li>
-                            <li>Copy the <b>Rich Text</b>, <b>Defaultio Module Text</b>, or <b>JSON</b> output
+                            <li>Copy the <b>Rich Text</b>, <b>Defaultio Module Text</b>, or <b>JSON / Lua</b> output
                                 using the Copy buttons.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Presets</h3>
+                        <ul>
+                            <li><b>Save</b> — store the current settings under a name.</li>
+                            <li><b>Load</b> — restore the selected preset.</li>
+                            <li><b>Rename</b> — rename the selected preset.</li>
+                            <li><b>Delete</b> — remove the selected preset.</li>
+                            <li>Presets are stored locally in your browser and persist between visits.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Auto-save</h3>
+                        <ul>
+                            <li>Your current text, colors, gradient points, and all other settings are saved
+                                automatically.</li>
+                            <li>They are restored the next time you open the page.</li>
                         </ul>
                     </section>
 
@@ -310,6 +345,8 @@
                             <li><b>Gradient Points</b> - place color stops on specific characters; colors and
                                 transparency blend between neighbouring points. Overrides Mode but is overridden by
                                 per-character colors.</li>
+                            <li>Switching between Mode and Gradient Points clears the other one's data to avoid mixing
+                                them.</li>
                         </ul>
                     </section>
 
@@ -323,7 +360,6 @@
                             <li>Use <b>Delete point</b> to remove the selected one, or <b>Reset all points</b> to clear
                                 them.</li>
                             <li>Small diamond markers above the preview show where points are placed.</li>
-                            <li>The panel hides automatically when <b>Color Source</b> is set back to <b>Mode</b>.</li>
                         </ul>
                     </section>
 
@@ -333,17 +369,14 @@
                             <li><b>Roblox RichText (native)</b> - uses <code>&lt;font&gt;</code>,
                                 <code>&lt;stroke&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>,
                                 <code>&lt;u&gt;</code>, <code>&lt;s&gt;</code>, <code>&lt;br/&gt;</code>. Paste into a
-                                TextLabel with RichText enabled.
-                            </li>
+                                TextLabel with RichText enabled.</li>
                             <li><b>Defaultio RichText Module</b> - uses markup like <code>&lt;Color=r,g,b&gt;</code>,
                                 <code>&lt;Font=...&gt;</code>, <code>&lt;AnimateStyle=...&gt;</code>,
-                                <code>&lt;AnimateYield=...&gt;</code>, <code>&lt;AnimateStepTime=...&gt;</code>,
-                                <code>&lt;AnimateStepFrequency=...&gt;</code>,
+                                <code>&lt;AnimateStepTime=...&gt;</code>, <code>&lt;AnimateStepFrequency=...&gt;</code>,
                                 <code>&lt;AnimateStepGrouping=...&gt;</code>, <code>&lt;AnimateStyleTime=...&gt;</code>,
                                 <code>&lt;StrokeColor=...&gt;</code>, <code>&lt;TextStrokeTransparency=...&gt;</code>,
                                 <code>&lt;TextTransparency=...&gt;</code>. Paste into the Defaultio RichText module in
-                                Studio.
-                            </li>
+                                Studio.</li>
                         </ul>
                     </section>
 
@@ -406,12 +439,13 @@
                         <h3>Transparency</h3>
                         <ul>
                             <li>Global <b>Transparency</b> is applied once, on the outer
-                                <code>&lt;font face='...'&gt;</code> tag - it does not repeat on every character.
-                            </li>
+                                <code>&lt;font face='...'&gt;</code> tag - it does not repeat on every character.</li>
                             <li>To give individual characters their own transparency, use the <b>Character</b> panel's
                                 Transparency field.</li>
                             <li>To give individual gradient points their own transparency, use the <b>Gradient
                                     Points</b> panel's Transparency field.</li>
+                            <li>Nearby transparency values (difference ≤ 0.1) are merged into one group to keep the
+                                output short.</li>
                             <li>Defaultio format: adds <code>&lt;TextTransparency=...&gt;</code>.</li>
                         </ul>
                     </section>
