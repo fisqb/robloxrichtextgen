@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rich Text Gen for Roblox</title>
     <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
     <div class="container">
         <h1>Rich Text Gen</h1>
-        
+
+        <button type="button" class="help-btn" id="helpBtn" title="Tips & Help" aria-label="Tips & Help">?</button>
+
         <div class="main-grid">
             <div class="panel">
                 <div class="control-group">
@@ -22,11 +26,27 @@
                     <input type="text" id="userId" value="0" inputmode="numeric" pattern="[0-9]*" />
                 </div>
 
-                <div class="control-group">
+                <div class="control-group" id="modeControls">
                     <label>Mode</label>
                     <select id="colorMode">
                         <option value="solid">Solid</option>
                         <option value="gradient" selected>Gradient</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Color Source</label>
+                    <select id="colorSource">
+                        <option value="mode" selected>Mode (Solid / Gradient / Rainbow)</option>
+                        <option value="points">Gradient Points</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Output Format</label>
+                    <select id="outputFormat">
+                        <option value="roblox" selected>Roblox RichText (native)</option>
+                        <option value="defaultio">Defaultio RichText Module</option>
                     </select>
                 </div>
 
@@ -134,15 +154,113 @@
                     <label>Font</label>
                     <select id="fontFamily"></select>
                 </div>
+
+                <div class="control-group" id="defaultioControls" style="display:none">
+                    <label>Animation</label>
+                    <select id="animateStyle">
+                        <option value="">None</option>
+                        <option value="Appear">Appear</option>
+                        <option value="Fade">Fade</option>
+                        <option value="Wiggle">Wiggle</option>
+                        <option value="Swing">Swing</option>
+                        <option value="Spin">Spin</option>
+                        <option value="Rainbow">Rainbow</option>
+                    </select>
+                </div>
+
+                <div class="control-group" id="defaultioGroupingGroup" style="display:none">
+                    <label>Animate Grouping</label>
+                    <select id="animateGrouping">
+                        <option value="Letter" selected>Letter</option>
+                        <option value="Word">Word</option>
+                        <option value="All">All</option>
+                    </select>
+                </div>
+
+                <div class="control-group" id="defaultioStepTimeGroup" style="display:none">
+                    <label>Animate Step Time (s)</label>
+                    <div class="range-group">
+                        <input type="range" id="animateStepTime" min="0" max="1" step="0.05" value="0" />
+                        <span id="animateStepTimeValue">0</span>
+                    </div>
+                </div>
+
+                <div class="control-group" id="defaultioStepFreqGroup" style="display:none">
+                    <label>Animate Step Frequency</label>
+                    <input type="text" id="animateStepFrequency" value="4" inputmode="numeric" />
+                </div>
+
+                <div class="control-group" id="defaultioStyleTimeGroup" style="display:none">
+                    <label>Animate Style Time (s)</label>
+                    <div class="range-group">
+                        <input type="range" id="animateStyleTime" min="0" max="5" step="0.1" value="0.5" />
+                        <span id="animateStyleTimeValue">0.5</span>
+                    </div>
+                </div>
             </div>
 
             <div class="panel">
-                <div class="preview" id="preview">Text</div>
-                
+                <div class="preview-wrap">
+                    <div class="preview" id="preview">Text</div>
+                </div>
+
+                <div class="char-editor hidden" id="charEditor">
+                    <div class="char-editor-header">
+                        <span id="charEditorTitle">Character: —</span>
+                        <button type="button" id="charEditorClose" class="icon-btn" title="Close">✕</button>
+                    </div>
+                    <div class="char-editor-row">
+                        <input type="color" id="charColor" value="#ff8c00" />
+                        <input type="text" id="charColorHex" value="#ff8c00" />
+                    </div>
+                    <div class="char-editor-row">
+                        <input type="text" id="charTransparency" placeholder="Transparency (optional, 0-1)"
+                            inputmode="decimal" />
+                        <button type="button" id="charApply" class="mini-btn">Apply</button>
+                    </div>
+                    <div class="char-editor-row">
+                        <button type="button" id="charReset" class="mini-btn ghost">Reset color</button>
+                        <button type="button" id="charResetAll" class="mini-btn ghost">Reset all characters</button>
+                    </div>
+                    <div class="char-editor-hint">
+                        Click/tap to select a character. Hold and drag to select multiple. Transparency is optional and
+                        per-character.
+                    </div>
+                </div>
+
+                <div class="char-editor hidden" id="pointsEditor">
+                    <div class="char-editor-header">
+                        <span id="pointsEditorTitle">Gradient Points</span>
+                    </div>
+                    <div class="char-editor-row">
+                        <input type="color" id="pointColor" value="#ff8c00" />
+                        <input type="text" id="pointColorHex" value="#ff8c00" />
+                    </div>
+                    <div class="char-editor-row">
+                        <input type="text" id="pointTransparency" placeholder="Transparency (optional, 0-1)"
+                            inputmode="decimal" />
+                        <button type="button" id="pointApply" class="mini-btn">Apply</button>
+                    </div>
+                    <div class="char-editor-row">
+                        <button type="button" id="pointDelete" class="mini-btn ghost">Delete point</button>
+                        <button type="button" id="pointsResetAll" class="mini-btn ghost">Reset all points</button>
+                    </div>
+                    <div class="char-editor-hint">
+                        In Gradient Points mode, click a character to place or select a point. Between points, colors
+                        and transparency blend smoothly.
+                    </div>
+                </div>
+
                 <div class="output-section">
                     <label>Rich Text</label>
                     <button class="copy-btn" data-target="outputCode">Copy</button>
                     <textarea id="outputCode" readonly></textarea>
+                </div>
+
+                <div class="output-section" id="outputDefaultioSection" style="display:none">
+                    <label>Defaultio Module Text</label>
+                    <button class="copy-btn" data-target="outputDefaultio">Copy</button>
+                    <textarea id="outputDefaultio" readonly></textarea>
                 </div>
 
                 <div class="output-section">
@@ -152,10 +270,178 @@
                 </div>
             </div>
         </div>
-        
+
+        <div class="help-overlay hidden" id="helpOverlay">
+            <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+                <div class="help-header">
+                    <h2 id="helpTitle">Tips &amp; Help</h2>
+                    <button type="button" class="icon-btn" id="helpClose" title="Close">✕</button>
+                </div>
+
+                <div class="help-body">
+                    <section class="help-section">
+                        <h3>Getting started</h3>
+                        <ul>
+                            <li>Type your text in the <b>Text</b> field on the left.</li>
+                            <li>The <b>Preview</b> on the right updates live.</li>
+                            <li>Copy the <b>Rich Text</b>, <b>Defaultio Module Text</b>, or <b>JSON / Lua</b> output
+                                using the Copy buttons.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Color modes</h3>
+                        <ul>
+                            <li><b>Solid</b> - the whole text uses one color.</li>
+                            <li><b>Gradient</b> - colors blend between Color 1 and Color 2 across the text.</li>
+                            <li><b>Rainbow</b> - a full hue spectrum across the text (Color 1 / Color 2 are hidden).
+                            </li>
+                            <li><b>Steps</b> controls how many color stops the gradient uses (e.g. 20 steps = 20
+                                distinct colors spread across the text).</li>
+                            <li>Mode and its controls are hidden when <b>Color Source</b> is set to <b>Gradient
+                                    Points</b>.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Color Source</h3>
+                        <ul>
+                            <li><b>Mode</b> - colors come from Solid / Gradient / Rainbow settings.</li>
+                            <li><b>Gradient Points</b> - place color stops on specific characters; colors and
+                                transparency blend between neighbouring points. Overrides Mode but is overridden by
+                                per-character colors.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Gradient Points</h3>
+                        <ul>
+                            <li>Set <b>Color Source</b> to <b>Gradient Points</b> to open the Gradient Points panel.
+                            </li>
+                            <li><b>Click/tap</b> a character to place a point there, or select an existing point.</li>
+                            <li>Each point has its own color, and optionally its own transparency.</li>
+                            <li>Use <b>Delete point</b> to remove the selected one, or <b>Reset all points</b> to clear
+                                them.</li>
+                            <li>Small diamond markers above the preview show where points are placed.</li>
+                            <li>The panel hides automatically when <b>Color Source</b> is set back to <b>Mode</b>.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Output formats</h3>
+                        <ul>
+                            <li><b>Roblox RichText (native)</b> - uses <code>&lt;font&gt;</code>,
+                                <code>&lt;stroke&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>,
+                                <code>&lt;u&gt;</code>, <code>&lt;s&gt;</code>, <code>&lt;br/&gt;</code>. Paste into a
+                                TextLabel with RichText enabled.
+                            </li>
+                            <li><b>Defaultio RichText Module</b> - uses markup like <code>&lt;Color=r,g,b&gt;</code>,
+                                <code>&lt;Font=...&gt;</code>, <code>&lt;AnimateStyle=...&gt;</code>,
+                                <code>&lt;AnimateYield=...&gt;</code>, <code>&lt;AnimateStepTime=...&gt;</code>,
+                                <code>&lt;AnimateStepFrequency=...&gt;</code>,
+                                <code>&lt;AnimateStepGrouping=...&gt;</code>, <code>&lt;AnimateStyleTime=...&gt;</code>,
+                                <code>&lt;StrokeColor=...&gt;</code>, <code>&lt;TextStrokeTransparency=...&gt;</code>,
+                                <code>&lt;TextTransparency=...&gt;</code>. Paste into the Defaultio RichText module in
+                                Studio.
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Defaultio animation options</h3>
+                        <ul>
+                            <li><b>Animation</b> - entrance style: Appear, Fade, Wiggle, Swing, Spin, Rainbow.</li>
+                            <li><b>Animate Grouping</b> - Letter (one by one), Word (whole words), All (everything at
+                                once).</li>
+                            <li><b>Animate Step Time</b> - seconds between animation steps.</li>
+                            <li><b>Animate Step Frequency</b> - how often to step (1 = every character, 4 = every 4th).
+                            </li>
+                            <li><b>Animate Style Time</b> - how long each entrance animation takes.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Per-character colors</h3>
+                        <ul>
+                            <li>Available when <b>Color Source</b> is <b>Mode</b>.</li>
+                            <li><b>Desktop:</b> click a character to select it. <b>Hold &amp; drag</b> to select many.
+                            </li>
+                            <li><b>Mobile:</b> tap a character to toggle it. Tap several to multi-select.</li>
+                            <li>A panel appears below the preview — pick a color and press <b>Apply</b>.</li>
+                            <li>Optionally enter a <b>Transparency</b> (0–1) to give the selected characters a
+                                per-character transparency. Leave empty to use the global value.</li>
+                            <li><b>Reset color</b> removes colors and per-character transparency from the selected
+                                characters.</li>
+                            <li><b>Reset all characters</b> clears every custom color and per-character transparency.
+                            </li>
+                            <li>Selected characters get an orange outline; customized ones get an orange underline.</li>
+                            <li>Custom colors <b>override</b> everything else in both formats.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Formatting</h3>
+                        <ul>
+                            <li><b>B</b> - bold, <b>I</b> - italic, <b>U</b> - underline, <b>S</b> - strikethrough.</li>
+                            <li><b>Line Breaks</b> - keep line breaks from the textarea as <code>&lt;br/&gt;</code>
+                                (Roblox) or <code>\n</code> (Defaultio).</li>
+                            <li><b>Fix Colors</b> - do not wrap spaces in <code>&lt;font&gt;</code> tags (Roblox only,
+                                cleaner output).</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Stroke &amp; Font</h3>
+                        <ul>
+                            <li><b>Stroke</b> - outline color; <b>Stroke Width</b> - outline thickness (0 disables it).
+                            </li>
+                            <li><b>Font</b> - choose from Roblox-supported fonts.</li>
+                            <li>In the Defaultio format, Stroke Width has no direct equivalent (the module only exposes
+                                stroke color and transparency), so only the stroke color is applied when thickness &gt;
+                                0.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Transparency</h3>
+                        <ul>
+                            <li>Global <b>Transparency</b> is applied once, on the outer
+                                <code>&lt;font face='...'&gt;</code> tag - it does not repeat on every character.
+                            </li>
+                            <li>To give individual characters their own transparency, use the <b>Character</b> panel's
+                                Transparency field.</li>
+                            <li>To give individual gradient points their own transparency, use the <b>Gradient
+                                    Points</b> panel's Transparency field.</li>
+                            <li>Defaultio format: adds <code>&lt;TextTransparency=...&gt;</code>.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Output</h3>
+                        <ul>
+                            <li><b>Rich Text</b> - native Roblox RichText string.</li>
+                            <li><b>Defaultio Module Text</b> - string for the Defaultio RichText module. Only shown when
+                                that output format is selected.</li>
+                            <li><b>JSON / Lua</b> - in Roblox mode this is a JSON entry; in Defaultio mode it becomes a
+                                ready-to-paste Lua snippet that constructs the RichText object.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3>Keyboard</h3>
+                        <ul>
+                            <li><b>Esc</b> - close this window.</li>
+                            <li>Click outside the modal - also closes it.</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+
         <div class="credit">made by ifisch</div>
     </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>
