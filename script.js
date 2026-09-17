@@ -277,6 +277,10 @@ document.addEventListener('DOMContentLoaded', function () {
             ? makeGradientIndexer(rawText, gradientColors)
             : null;
 
+        const rainbowIndexer = (mode === 'rainbow')
+            ? makeGradientIndexer(rawText, generateGradientColors('#000000', '#000000', 8, 'rainbow'))
+            : null;
+
         return (i) => {
             const custom = charColors[i];
             if (custom) return custom;
@@ -289,6 +293,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (mode === 'solid') return solidColor;
 
             if (gradientIndexer) return gradientIndexer(i);
+
+            if (rainbowIndexer) return rainbowIndexer(i);
 
             return null;
         };
@@ -799,7 +805,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 elements.gradientColor1.value,
                 elements.gradientColor2.value,
                 parseInt(elements.gradientSteps.value),
-                elements.gradientType.value
+                'horizontal'
+            );
+        } else if (mode === 'rainbow') {
+            gradientColors = generateGradientColors(
+                '#000000', '#000000',
+                parseInt(elements.gradientSteps.value),
+                'rainbow'
             );
         }
 
@@ -947,8 +959,17 @@ document.addEventListener('DOMContentLoaded', function () {
     syncRange(elements.gradientSteps, elements.gradientStepsValue);
     syncRange(elements.transparency, elements.transparencyValue);
 
+    function syncGradientTypeFromMode() {
+        const modeValue = elements.colorMode.value;
+        if (modeValue === 'rainbow') {
+            elements.gradientType.value = 'rainbow';
+        } else if (modeValue === 'gradient') {
+            elements.gradientType.value = 'horizontal';
+        }
+    }
+
     function toggleGradientColorControls() {
-        const isRainbow = elements.gradientType.value === 'rainbow';
+        const isRainbow = elements.colorMode.value === 'rainbow';
         const color1Group = elements.gradientColor1.closest('.control-group');
         const color2Group = elements.gradientColor2.closest('.control-group');
 
@@ -991,6 +1012,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     elements.colorMode.addEventListener('change', function () {
         if (elements.colorSource.value === 'points') {
+            syncGradientTypeFromMode();
             generate();
             return;
         }
@@ -998,6 +1020,8 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.solidControls.classList.toggle('hidden', !isSolid);
         elements.gradientControls.style.display = isSolid ? 'none' : 'block';
         if (!isSolid) setTimeout(() => elements.gradientControls.classList.add('active'), 10);
+        syncGradientTypeFromMode();
+        toggleGradientColorControls();
         generate();
     });
 
@@ -1049,10 +1073,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     elements.textInput.addEventListener('input', generate);
     elements.fontFamily.addEventListener('change', generate);
-    elements.gradientType.addEventListener('change', function () {
-        toggleGradientColorControls();
-        generate();
-    });
 
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', function () {
@@ -1074,6 +1094,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     elements.colorMode.value = 'gradient';
+    syncGradientTypeFromMode();
     elements.solidControls.classList.add('hidden');
     elements.gradientControls.style.display = 'block';
     setTimeout(() => elements.gradientControls.classList.add('active'), 10);
@@ -1149,7 +1170,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeof s.text === 'string') elements.textInput.value = s.text;
             if (typeof s.userId === 'string') elements.userId.value = s.userId;
 
-            if (s.colorMode) elements.colorMode.value = s.colorMode;
+            if (s.colorMode) {
+                elements.colorMode.value = s.colorMode;
+                syncGradientTypeFromMode();
+            }
             if (s.colorSource) elements.colorSource.value = s.colorSource;
             if (s.outputFormat) elements.outputFormat.value = s.outputFormat;
 
@@ -1165,7 +1189,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 elements.gradientColor2.value = s.gradientColor2;
                 elements.gradientColor2Hex.value = s.gradientColor2;
             }
-            if (s.gradientType) elements.gradientType.value = s.gradientType;
             if (s.gradientSteps !== undefined) {
                 elements.gradientSteps.value = s.gradientSteps;
                 elements.gradientStepsValue.textContent = s.gradientSteps;
