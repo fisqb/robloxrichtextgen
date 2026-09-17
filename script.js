@@ -867,7 +867,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        const formattedInner = applyFormatting(inner, formatting);
+        const formattedInner = inner
+            .split('<br/>')
+            .map(part => part === '' ? '' : applyFormatting(part, formatting))
+            .join('<br/>');
+
         const globalTransAttr = trans > 0 ? ` transparency='${roundTransparency(trans)}'` : '';
         const openFont = `<font face='${font}'${globalTransAttr}>`;
         const hasStroke = thickness > 0;
