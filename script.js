@@ -992,7 +992,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     elements.colorSource.addEventListener('change', function () {
         setSelection([]);
+        setSelectedPoint(null);
+
         if (this.value === 'points') {
+            charColors = {};
+            charTransparency = {};
             if (Object.keys(gradientPoints).length === 0) {
                 const firstChar = elements.textInput.value[0];
                 if (firstChar && firstChar !== '\n') {
@@ -1000,8 +1004,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         } else {
-            setSelectedPoint(null);
+            gradientPoints = {};
+            gradientPointTransparency = {};
         }
+
         toggleColorSourceControls();
         generate();
     });
