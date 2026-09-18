@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google-site-verification" content="i5pYim-4Sns000oP9ELzx2AHgjX9FnG5Jp0ke-GmW-c" />
     <title>Rich Text Gen for Roblox</title>
     <link rel="stylesheet" href="style.css" />
 </head>
@@ -61,18 +62,13 @@
                     </div>
                     <div class="presets-row">
                         <button type="button" id="presetLoad" class="mini-btn ghost" data-i18n="load">Load</button>
-                        <button type="button" id="presetRename" class="mini-btn ghost"
-                            data-i18n="rename">Rename</button>
-                        <button type="button" id="presetDelete" class="mini-btn ghost"
-                            data-i18n="delete">Delete</button>
+                        <button type="button" id="presetRename" class="mini-btn ghost" data-i18n="rename">Rename</button>
+                        <button type="button" id="presetDelete" class="mini-btn ghost" data-i18n="delete">Delete</button>
                     </div>
                     <div class="presets-row advanced-only">
-                        <button type="button" id="presetImport" class="mini-btn ghost" data-i18n="import">Import
-                            JSON</button>
-                        <button type="button" id="presetExport" class="mini-btn ghost"
-                            data-i18n="export">Export</button>
-                        <button type="button" id="presetExportAll" class="mini-btn ghost" data-i18n="exportAll">Export
-                            All</button>
+                        <button type="button" id="presetImport" class="mini-btn ghost" data-i18n="import">Import JSON</button>
+                        <button type="button" id="presetExport" class="mini-btn ghost" data-i18n="export">Export</button>
+                        <button type="button" id="presetExportAll" class="mini-btn ghost" data-i18n="exportAll">Export All</button>
                     </div>
                     <input type="file" id="presetFileInput" accept="application/json,.json" style="display:none" />
                 </div>
@@ -266,8 +262,7 @@
             <div class="panel">
                 <div class="preview-wrap">
                     <div class="preview" id="preview">Text</div>
-                    <button type="button" class="preview-expand-btn" id="previewExpandBtn"
-                        title="Expand preview">⛶</button>
+                    <button type="button" class="preview-expand-btn" id="previewExpandBtn" title="Expand preview">⛶</button>
                 </div>
 
                 <div id="editorHostMain"></div>
@@ -333,32 +328,25 @@
                     <section class="help-section">
                         <h3 data-i18n="helpSettings">Settings</h3>
                         <ul>
-                            <li data-i18n="helpSettings1">Use the Language, Theme and Mode selectors next to the title.
-                            </li>
-                            <li data-i18n="helpSettings2">Dark and Simple are the defaults. Your choices are saved
-                                between visits.</li>
-                            <li data-i18n="helpSettings3">Switch to Advanced for all features (per-character colors,
-                                Gradient Points, Defaultio, JSON output).</li>
+                            <li data-i18n="helpSettings1">Use the Language, Theme and Mode selectors next to the title.</li>
+                            <li data-i18n="helpSettings2">Dark and Simple are the defaults. Your choices are saved between visits.</li>
+                            <li data-i18n="helpSettings3">Switch to Advanced for all features (per-character colors, Gradient Points, Defaultio, JSON output).</li>
                         </ul>
                     </section>
 
                     <section class="help-section">
                         <h3 data-i18n="helpPresets">Presets</h3>
                         <ul>
-                            <li data-i18n="helpPresets1">Save, load, rename and delete presets with the buttons above.
-                            </li>
+                            <li data-i18n="helpPresets1">Save, load, rename and delete presets with the buttons above.</li>
                             <li data-i18n="helpPresets2">Presets are stored locally in your browser.</li>
-                            <li data-i18n="helpPresets3">Import JSON — load one or many presets from a .json file.
-                                Export — download the selected preset. Export All — download every preset in one file.
-                            </li>
+                            <li data-i18n="helpPresets3">Import JSON — load one or many presets from a .json file. Export — download the selected preset. Export All — download every preset in one file.</li>
                         </ul>
                     </section>
 
                     <section class="help-section">
                         <h3 data-i18n="helpAutoSave">Auto-save</h3>
                         <ul>
-                            <li data-i18n="helpAutoSave1">Your current text, colors, gradient points and settings are
-                                saved automatically.</li>
+                            <li data-i18n="helpAutoSave1">Your current text, colors, gradient points and settings are saved automatically.</li>
                         </ul>
                     </section>
 
@@ -366,8 +354,7 @@
                         <h3 data-i18n="helpColorModes">Color modes</h3>
                         <ul>
                             <li data-i18n="helpColorModes1">Solid — one color for the entire text.</li>
-                            <li data-i18n="helpColorModes2">Gradient — colors blend horizontally between Color 1 and
-                                Color 2.</li>
+                            <li data-i18n="helpColorModes2">Gradient — colors blend horizontally between Color 1 and Color 2.</li>
                             <li data-i18n="helpColorModes3">Rainbow — full hue spectrum across the text.</li>
                         </ul>
                     </section>
@@ -375,10 +362,8 @@
                     <section class="help-section">
                         <h3 data-i18n="helpAdvanced">Advanced features</h3>
                         <ul>
-                            <li data-i18n="helpAdvanced1">Per-character colors, Gradient Points, Defaultio module output
-                                and JSON/Lua output are available in Advanced mode.</li>
-                            <li data-i18n="helpAdvanced2">Click the ⛶ button to expand the preview; you can edit
-                                characters right there and pan around by dragging empty space.</li>
+                            <li data-i18n="helpAdvanced1">Per-character colors, Gradient Points, Defaultio module output and JSON/Lua output are available in Advanced mode.</li>
+                            <li data-i18n="helpAdvanced2">Click the ⛶ button to expand the preview; you can edit characters right there and pan around by dragging empty space.</li>
                         </ul>
                     </section>
 
@@ -403,14 +388,12 @@
                 <input type="text" id="charColorHex" value="#ff8c00" />
             </div>
             <div class="char-editor-row">
-                <input type="text" id="charTransparency" data-i18n-placeholder="transparencyPlaceholder"
-                    placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
+                <input type="text" id="charTransparency" data-i18n-placeholder="transparencyPlaceholder" placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
                 <button type="button" id="charApply" class="mini-btn" data-i18n="apply">Apply</button>
             </div>
             <div class="char-editor-row">
                 <button type="button" id="charReset" class="mini-btn ghost" data-i18n="resetColor">Reset color</button>
-                <button type="button" id="charResetAll" class="mini-btn ghost" data-i18n="resetAllChars">Reset all
-                    characters</button>
+                <button type="button" id="charResetAll" class="mini-btn ghost" data-i18n="resetAllChars">Reset all characters</button>
             </div>
         </div>
 
@@ -423,15 +406,12 @@
                 <input type="text" id="pointColorHex" value="#ff8c00" />
             </div>
             <div class="char-editor-row">
-                <input type="text" id="pointTransparency" data-i18n-placeholder="transparencyPlaceholder"
-                    placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
+                <input type="text" id="pointTransparency" data-i18n-placeholder="transparencyPlaceholder" placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
                 <button type="button" id="pointApply" class="mini-btn" data-i18n="apply">Apply</button>
             </div>
             <div class="char-editor-row">
-                <button type="button" id="pointDelete" class="mini-btn ghost" data-i18n="deletePoint">Delete
-                    point</button>
-                <button type="button" id="pointsResetAll" class="mini-btn ghost" data-i18n="resetAllPoints">Reset all
-                    points</button>
+                <button type="button" id="pointDelete" class="mini-btn ghost" data-i18n="deletePoint">Delete point</button>
+                <button type="button" id="pointsResetAll" class="mini-btn ghost" data-i18n="resetAllPoints">Reset all points</button>
             </div>
         </div>
 
