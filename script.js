@@ -41,12 +41,22 @@ document.addEventListener('DOMContentLoaded', function () {
         strikethrough: $('strikethrough'),
         lineBreaks: $('lineBreaks'),
         fixColors: $('fixColors'),
+        rgbColors: $('rgbColors'),
         strokeColor: $('strokeColor'),
         strokeColorHex: $('strokeColorHex'),
         strokeThickness: $('strokeThickness'),
         strokeThicknessValue: $('strokeThicknessValue'),
         fontFamily: $('fontFamily'),
         preview: $('preview'),
+        previewLarge: $('previewLarge'),
+        previewOverlay: $('previewOverlay'),
+        previewExpandBtn: $('previewExpandBtn'),
+        previewClose: $('previewClose'),
+        previewZoom: $('previewZoom'),
+        previewZoomValue: $('previewZoomValue'),
+        previewModalBody: $('previewModalBody'),
+        editorHostMain: $('editorHostMain'),
+        editorHostModal: $('editorHostModal'),
         outputCode: $('outputCode'),
         outputDefaultio: $('outputDefaultio'),
         outputDefaultioSection: $('outputDefaultioSection'),
@@ -87,7 +97,10 @@ document.addEventListener('DOMContentLoaded', function () {
         presetSave: $('presetSave'),
         presetLoad: $('presetLoad'),
         presetRename: $('presetRename'),
-        presetDelete: $('presetDelete')
+        presetDelete: $('presetDelete'),
+        languageSelect: $('languageSelect'),
+        themeSelect: $('themeSelect'),
+        uiModeSelect: $('uiModeSelect')
     };
 
     ALL_FONTS.forEach(font => {
@@ -181,6 +194,737 @@ document.addEventListener('DOMContentLoaded', function () {
         return `${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)}`;
     };
 
+    const formatColor = (hex) => {
+        if (!elements.rgbColors || !elements.rgbColors.checked) return hex;
+        const c = hexToRgb(hex);
+        if (!c) return hex;
+        return `rgb(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)})`;
+    };
+
+    const SETTINGS_KEY = 'richTextGenSettings';
+
+    const translations = {
+        en: {
+            language: 'Language', theme: 'Theme', uiMode: 'Mode',
+            presets: 'Presets', selectPreset: '— Select a preset —',
+            save: 'Save', load: 'Load', rename: 'Rename', delete: 'Delete',
+            text: 'Text', userId: 'User ID',
+            solid: 'Solid', gradient: 'Gradient', rainbow: 'Rainbow',
+            colorSource: 'Color Source', modeOption: 'Mode (Solid / Gradient / Rainbow)', gradientPoints: 'Gradient Points',
+            outputFormat: 'Output Format', robloxRichText: 'Roblox RichText (native)', defaultioRichText: 'Defaultio RichText Module',
+            color: 'Color', color1: 'Color 1', color2: 'Color 2', steps: 'Steps',
+            transparency: 'Transparency', formatting: 'Formatting',
+            lineBreaks: 'Line Breaks', fixColors: 'Fix Colors', rgbColors: 'RGB Colors',
+            stroke: 'Stroke', strokeWidth: 'Stroke Width', font: 'Font',
+            animation: 'Animation', none: 'None',
+            animateGrouping: 'Animate Grouping',
+            groupLetter: 'Letter', groupWord: 'Word', groupAll: 'All',
+            animateStepTime: 'Animate Step Time (s)',
+            animateStepFrequency: 'Animate Step Frequency',
+            animateStyleTime: 'Animate Style Time (s)',
+            preview: 'Preview', zoom: 'Zoom',
+            richText: 'Rich Text', defaultioModule: 'Defaultio Module Text', jsonLua: 'JSON / Lua',
+            copy: 'Copy', copied: 'Copied!',
+            apply: 'Apply', resetColor: 'Reset color', resetAllChars: 'Reset all characters',
+            deletePoint: 'Delete point', resetAllPoints: 'Reset all points',
+            character: 'Character', transparencyPlaceholder: 'Transparency (optional, 0-1)',
+            previewHint: 'Click/tap characters to select them. Hold and drag to select multiple. Drag empty space to pan.',
+            presetName: 'Preset name:', renamePreset: 'Rename preset to:',
+            deletePreset: 'Delete preset "{name}"?',
+            presetExists: 'A preset with this name already exists. Overwrite?',
+            dark: 'Dark', light: 'Light', simple: 'Simple', advanced: 'Advanced',
+            helpTitle: 'Tips & Help', helpGettingStarted: 'Getting started',
+            helpStart1: 'Type your text in the Text field on the left.',
+            helpStart2: 'The Preview on the right updates live.',
+            helpStart3: 'Copy the output using the Copy buttons.',
+            helpSettings: 'Settings',
+            helpSettings1: 'Use the Language, Theme and Mode selectors next to the title.',
+            helpSettings2: 'Dark and Simple are the defaults. Your choices are saved between visits.',
+            helpSettings3: 'Switch to Advanced for all features (per-character colors, Gradient Points, Defaultio, JSON output).',
+            helpPresets: 'Presets',
+            helpPresets1: 'Save, load, rename and delete presets with the buttons above.',
+            helpPresets2: 'Presets are stored locally in your browser.',
+            helpAutoSave: 'Auto-save',
+            helpAutoSave1: 'Your current text, colors, gradient points and settings are saved automatically.',
+            helpColorModes: 'Color modes',
+            helpColorModes1: 'Solid — one color for the entire text.',
+            helpColorModes2: 'Gradient — colors blend horizontally between Color 1 and Color 2.',
+            helpColorModes3: 'Rainbow — full hue spectrum across the text.',
+            helpAdvanced: 'Advanced features',
+            helpAdvanced1: 'Per-character colors, Gradient Points, Defaultio module output and JSON/Lua output are available in Advanced mode.',
+            helpAdvanced2: 'Click the ⛶ button to expand the preview; you can edit characters right there and pan around by dragging empty space.',
+            helpKeyboard: 'Keyboard',
+            helpKeyboard1: 'Esc — close the expanded preview or this window.',
+            helpKeyboard2: 'Click outside a modal to close it.'
+        },
+        es: {
+            language: 'Idioma', theme: 'Tema', uiMode: 'Modo',
+            presets: 'Ajustes guardados', selectPreset: '— Selecciona un ajuste —',
+            save: 'Guardar', load: 'Cargar', rename: 'Renombrar', delete: 'Eliminar',
+            text: 'Texto', userId: 'ID de usuario',
+            solid: 'Sólido', gradient: 'Degradado', rainbow: 'Arcoíris',
+            colorSource: 'Fuente de color', modeOption: 'Modo (Sólido / Degradado / Arcoíris)', gradientPoints: 'Puntos de degradado',
+            outputFormat: 'Formato de salida', robloxRichText: 'Roblox RichText (nativo)', defaultioRichText: 'Módulo Defaultio RichText',
+            color: 'Color', color1: 'Color 1', color2: 'Color 2', steps: 'Pasos',
+            transparency: 'Transparencia', formatting: 'Formato',
+            lineBreaks: 'Saltos de línea', fixColors: 'Corregir colores', rgbColors: 'Colores RGB',
+            stroke: 'Contorno', strokeWidth: 'Grosor del contorno', font: 'Fuente',
+            animation: 'Animación', none: 'Ninguna',
+            animateGrouping: 'Agrupación de animación',
+            groupLetter: 'Letra', groupWord: 'Palabra', groupAll: 'Todo',
+            animateStepTime: 'Tiempo entre pasos (s)',
+            animateStepFrequency: 'Frecuencia de pasos',
+            animateStyleTime: 'Duración del estilo (s)',
+            preview: 'Vista previa', zoom: 'Zoom',
+            richText: 'Rich Text', defaultioModule: 'Texto del módulo Defaultio', jsonLua: 'JSON / Lua',
+            copy: 'Copiar', copied: '¡Copiado!',
+            apply: 'Aplicar', resetColor: 'Restablecer color', resetAllChars: 'Restablecer todos',
+            deletePoint: 'Eliminar punto', resetAllPoints: 'Restablecer todos los puntos',
+            character: 'Carácter', transparencyPlaceholder: 'Transparencia (opcional, 0-1)',
+            previewHint: 'Haz clic o toca los caracteres para seleccionarlos. Mantén y arrastra para seleccionar varios. Arrastra el fondo para mover.',
+            presetName: 'Nombre del ajuste:', renamePreset: 'Renombrar ajuste a:',
+            deletePreset: '¿Eliminar el ajuste "{name}"?',
+            presetExists: 'Ya existe un ajuste con este nombre. ¿Sobrescribir?',
+            dark: 'Oscuro', light: 'Claro', simple: 'Simple', advanced: 'Avanzado',
+            helpTitle: 'Ayuda y consejos', helpGettingStarted: 'Primeros pasos',
+            helpStart1: 'Escribe tu texto en el campo Texto de la izquierda.',
+            helpStart2: 'La vista previa se actualiza en vivo.',
+            helpStart3: 'Copia la salida usando los botones Copiar.',
+            helpSettings: 'Ajustes',
+            helpSettings1: 'Usa los selectores de Idioma, Tema y Modo junto al título.',
+            helpSettings2: 'Oscuro y Simple son los valores predeterminados. Tus elecciones se guardan.',
+            helpSettings3: 'Cambia a Avanzado para todas las funciones.',
+            helpPresets: 'Ajustes guardados',
+            helpPresets1: 'Guarda, carga, renombra y elimina ajustes con los botones.',
+            helpPresets2: 'Los ajustes se guardan localmente en tu navegador.',
+            helpAutoSave: 'Guardado automático',
+            helpAutoSave1: 'Tu texto, colores y ajustes se guardan automáticamente.',
+            helpColorModes: 'Modos de color',
+            helpColorModes1: 'Sólido: un solo color para todo el texto.',
+            helpColorModes2: 'Degradado: los colores se mezclan horizontalmente.',
+            helpColorModes3: 'Arcoíris: espectro completo de tonos.',
+            helpAdvanced: 'Funciones avanzadas',
+            helpAdvanced1: 'Colores por carácter, Puntos de degradado, salida Defaultio y JSON/Lua en el modo Avanzado.',
+            helpAdvanced2: 'Pulsa el botón ⛶ para ampliar la vista previa.',
+            helpKeyboard: 'Teclado',
+            helpKeyboard1: 'Esc — cerrar la vista ampliada o esta ventana.',
+            helpKeyboard2: 'Haz clic fuera de un modal para cerrarlo.'
+        },
+        fr: {
+            language: 'Langue', theme: 'Thème', uiMode: 'Mode',
+            presets: 'Préréglages', selectPreset: '— Sélectionnez un préréglage —',
+            save: 'Enregistrer', load: 'Charger', rename: 'Renommer', delete: 'Supprimer',
+            text: 'Texte', userId: 'ID utilisateur',
+            solid: 'Uni', gradient: 'Dégradé', rainbow: 'Arc-en-ciel',
+            colorSource: 'Source de couleur', modeOption: 'Mode (Uni / Dégradé / Arc-en-ciel)', gradientPoints: 'Points de dégradé',
+            outputFormat: 'Format de sortie', robloxRichText: 'Roblox RichText (natif)', defaultioRichText: 'Module Defaultio RichText',
+            color: 'Couleur', color1: 'Couleur 1', color2: 'Couleur 2', steps: 'Étapes',
+            transparency: 'Transparence', formatting: 'Mise en forme',
+            lineBreaks: 'Sauts de ligne', fixColors: 'Corriger les couleurs', rgbColors: 'Couleurs RGB',
+            stroke: 'Contour', strokeWidth: 'Épaisseur du contour', font: 'Police',
+            animation: 'Animation', none: 'Aucune',
+            animateGrouping: "Groupement d'animation",
+            groupLetter: 'Lettre', groupWord: 'Mot', groupAll: 'Tout',
+            animateStepTime: 'Temps entre les étapes (s)',
+            animateStepFrequency: 'Fréquence des étapes',
+            animateStyleTime: 'Durée du style (s)',
+            preview: 'Aperçu', zoom: 'Zoom',
+            richText: 'Rich Text', defaultioModule: 'Texte du module Defaultio', jsonLua: 'JSON / Lua',
+            copy: 'Copier', copied: 'Copié !',
+            apply: 'Appliquer', resetColor: 'Réinitialiser la couleur', resetAllChars: 'Réinitialiser tous',
+            deletePoint: 'Supprimer le point', resetAllPoints: 'Réinitialiser tous les points',
+            character: 'Caractère', transparencyPlaceholder: 'Transparence (facultatif, 0-1)',
+            previewHint: 'Cliquez ou touchez les caractères pour les sélectionner. Maintenez et faites glisser pour en sélectionner plusieurs. Faites glisser le fond pour déplacer.',
+            presetName: 'Nom du préréglage :', renamePreset: 'Renommer le préréglage en :',
+            deletePreset: 'Supprimer le préréglage « {name} » ?',
+            presetExists: 'Un préréglage avec ce nom existe déjà. Écraser ?',
+            dark: 'Sombre', light: 'Clair', simple: 'Simple', advanced: 'Avancé',
+            helpTitle: 'Aide et astuces', helpGettingStarted: 'Pour commencer',
+            helpStart1: 'Saisissez votre texte à gauche.',
+            helpStart2: "L'aperçu se met à jour en direct.",
+            helpStart3: 'Copiez le résultat avec les boutons Copier.',
+            helpSettings: 'Paramètres',
+            helpSettings1: 'Utilisez les sélecteurs Langue, Thème et Mode à côté du titre.',
+            helpSettings2: 'Sombre et Simple par défaut. Vos choix sont conservés.',
+            helpSettings3: 'Passez en Avancé pour toutes les fonctions.',
+            helpPresets: 'Préréglages',
+            helpPresets1: 'Enregistrez, chargez, renommez et supprimez les préréglages.',
+            helpPresets2: 'Les préréglages sont stockés localement.',
+            helpAutoSave: 'Sauvegarde automatique',
+            helpAutoSave1: 'Votre texte, couleurs et réglages sont enregistrés automatiquement.',
+            helpColorModes: 'Modes de couleur',
+            helpColorModes1: 'Uni — une seule couleur.',
+            helpColorModes2: 'Dégradé — mélange horizontal entre Couleur 1 et Couleur 2.',
+            helpColorModes3: 'Arc-en-ciel — spectre complet.',
+            helpAdvanced: 'Fonctions avancées',
+            helpAdvanced1: 'Couleurs par caractère, Points de dégradé, sortie Defaultio et JSON/Lua en mode Avancé.',
+            helpAdvanced2: "Cliquez sur ⛶ pour agrandir l'aperçu.",
+            helpKeyboard: 'Clavier',
+            helpKeyboard1: "Échap — fermer l'aperçu ou cette fenêtre.",
+            helpKeyboard2: "Cliquez en dehors d'un modal pour le fermer."
+        },
+        de: {
+            language: 'Sprache', theme: 'Design', uiMode: 'Modus',
+            presets: 'Voreinstellungen', selectPreset: '— Voreinstellung wählen —',
+            save: 'Speichern', load: 'Laden', rename: 'Umbenennen', delete: 'Löschen',
+            text: 'Text', userId: 'Benutzer-ID',
+            solid: 'Einfarbig', gradient: 'Verlauf', rainbow: 'Regenbogen',
+            colorSource: 'Farbquelle', modeOption: 'Modus (Einfarbig / Verlauf / Regenbogen)', gradientPoints: 'Verlaufspunkte',
+            outputFormat: 'Ausgabeformat', robloxRichText: 'Roblox RichText (nativ)', defaultioRichText: 'Defaultio RichText-Modul',
+            color: 'Farbe', color1: 'Farbe 1', color2: 'Farbe 2', steps: 'Schritte',
+            transparency: 'Transparenz', formatting: 'Formatierung',
+            lineBreaks: 'Zeilenumbrüche', fixColors: 'Farben korrigieren', rgbColors: 'RGB-Farben',
+            stroke: 'Kontur', strokeWidth: 'Konturstärke', font: 'Schriftart',
+            animation: 'Animation', none: 'Keine',
+            animateGrouping: 'Animationsgruppierung',
+            groupLetter: 'Buchstabe', groupWord: 'Wort', groupAll: 'Alle',
+            animateStepTime: 'Schrittzeit (s)',
+            animateStepFrequency: 'Schrittfrequenz',
+            animateStyleTime: 'Stildauer (s)',
+            preview: 'Vorschau', zoom: 'Zoom',
+            richText: 'Rich Text', defaultioModule: 'Defaultio-Modul-Text', jsonLua: 'JSON / Lua',
+            copy: 'Kopieren', copied: 'Kopiert!',
+            apply: 'Anwenden', resetColor: 'Farbe zurücksetzen', resetAllChars: 'Alle zurücksetzen',
+            deletePoint: 'Punkt löschen', resetAllPoints: 'Alle Punkte zurücksetzen',
+            character: 'Zeichen', transparencyPlaceholder: 'Transparenz (optional, 0-1)',
+            previewHint: 'Klicke oder tippe auf Zeichen zum Auswählen. Halte und ziehe für mehrere. Ziehe den Hintergrund zum Verschieben.',
+            presetName: 'Name der Voreinstellung:', renamePreset: 'Voreinstellung umbenennen in:',
+            deletePreset: 'Voreinstellung „{name}" löschen?',
+            presetExists: 'Eine Voreinstellung mit diesem Namen existiert. Überschreiben?',
+            dark: 'Dunkel', light: 'Hell', simple: 'Einfach', advanced: 'Erweitert',
+            helpTitle: 'Tipps & Hilfe', helpGettingStarted: 'Erste Schritte',
+            helpStart1: 'Gib deinen Text links ein.',
+            helpStart2: 'Die Vorschau aktualisiert sich live.',
+            helpStart3: 'Kopiere die Ausgabe mit den Kopieren-Buttons.',
+            helpSettings: 'Einstellungen',
+            helpSettings1: 'Nutze Sprache, Design und Modus neben dem Titel.',
+            helpSettings2: 'Dunkel und Einfach sind Standard. Deine Auswahl bleibt erhalten.',
+            helpSettings3: 'Wechsle zu Erweitert für alle Funktionen.',
+            helpPresets: 'Voreinstellungen',
+            helpPresets1: 'Speichern, laden, umbenennen und löschen mit den Buttons.',
+            helpPresets2: 'Voreinstellungen werden lokal gespeichert.',
+            helpAutoSave: 'Automatisches Speichern',
+            helpAutoSave1: 'Text, Farben und Einstellungen werden automatisch gespeichert.',
+            helpColorModes: 'Farbmodi',
+            helpColorModes1: 'Einfarbig — eine Farbe für den gesamten Text.',
+            helpColorModes2: 'Verlauf — Farben mischen sich horizontal.',
+            helpColorModes3: 'Regenbogen — volles Farbspektrum.',
+            helpAdvanced: 'Erweiterte Funktionen',
+            helpAdvanced1: 'Zeichenfarben, Verlaufspunkte, Defaultio- und JSON/Lua-Ausgabe im Erweitert-Modus.',
+            helpAdvanced2: 'Klicke ⛶, um die Vorschau zu vergrößern.',
+            helpKeyboard: 'Tastatur',
+            helpKeyboard1: 'Esc — vergrößerte Vorschau oder dieses Fenster schließen.',
+            helpKeyboard2: 'Klicke außerhalb eines Modals, um es zu schließen.'
+        },
+        it: {
+            language: 'Lingua', theme: 'Tema', uiMode: 'Modalità',
+            presets: 'Preset', selectPreset: '— Seleziona un preset —',
+            save: 'Salva', load: 'Carica', rename: 'Rinomina', delete: 'Elimina',
+            text: 'Testo', userId: 'ID utente',
+            solid: 'Tinta unita', gradient: 'Sfumatura', rainbow: 'Arcobaleno',
+            colorSource: 'Sorgente colore', modeOption: 'Modalità (Tinta unita / Sfumatura / Arcobaleno)', gradientPoints: 'Punti sfumatura',
+            outputFormat: 'Formato output', robloxRichText: 'Roblox RichText (nativo)', defaultioRichText: 'Modulo Defaultio RichText',
+            color: 'Colore', color1: 'Colore 1', color2: 'Colore 2', steps: 'Passi',
+            transparency: 'Trasparenza', formatting: 'Formattazione',
+            lineBreaks: 'Interruzioni di riga', fixColors: 'Correggi colori', rgbColors: 'Colori RGB',
+            stroke: 'Contorno', strokeWidth: 'Spessore contorno', font: 'Carattere',
+            animation: 'Animazione', none: 'Nessuna',
+            animateGrouping: 'Raggruppamento animazione',
+            groupLetter: 'Lettera', groupWord: 'Parola', groupAll: 'Tutto',
+            animateStepTime: 'Tempo tra passi (s)',
+            animateStepFrequency: 'Frequenza passi',
+            animateStyleTime: 'Durata stile (s)',
+            preview: 'Anteprima', zoom: 'Zoom',
+            richText: 'Rich Text', defaultioModule: 'Testo modulo Defaultio', jsonLua: 'JSON / Lua',
+            copy: 'Copia', copied: 'Copiato!',
+            apply: 'Applica', resetColor: 'Reimposta colore', resetAllChars: 'Reimposta tutti',
+            deletePoint: 'Elimina punto', resetAllPoints: 'Reimposta tutti i punti',
+            character: 'Carattere', transparencyPlaceholder: 'Trasparenza (opzionale, 0-1)',
+            previewHint: 'Clicca o tocca i caratteri per selezionarli. Tieni premuto e trascina per selezionarne più di uno. Trascina lo sfondo per spostare.',
+            presetName: 'Nome preset:', renamePreset: 'Rinomina preset in:',
+            deletePreset: 'Eliminare il preset "{name}"?',
+            presetExists: 'Esiste già un preset con questo nome. Sovrascrivere?',
+            dark: 'Scuro', light: 'Chiaro', simple: 'Semplice', advanced: 'Avanzato',
+            helpTitle: 'Suggerimenti e aiuto', helpGettingStarted: 'Per iniziare',
+            helpStart1: 'Scrivi il testo a sinistra.',
+            helpStart2: "L'anteprima si aggiorna in tempo reale.",
+            helpStart3: "Copia l'output con i pulsanti Copia.",
+            helpSettings: 'Impostazioni',
+            helpSettings1: 'Usa Lingua, Tema e Modalità accanto al titolo.',
+            helpSettings2: 'Scuro e Semplice sono predefiniti. Le tue scelte vengono salvate.',
+            helpSettings3: 'Passa ad Avanzato per tutte le funzioni.',
+            helpPresets: 'Preset',
+            helpPresets1: 'Salva, carica, rinomina ed elimina i preset.',
+            helpPresets2: 'I preset sono memorizzati localmente.',
+            helpAutoSave: 'Salvataggio automatico',
+            helpAutoSave1: 'Testo, colori e impostazioni vengono salvati automaticamente.',
+            helpColorModes: 'Modalità colore',
+            helpColorModes1: 'Tinta unita — un solo colore.',
+            helpColorModes2: 'Sfumatura — colori sfumati orizzontalmente.',
+            helpColorModes3: 'Arcobaleno — spettro completo.',
+            helpAdvanced: 'Funzioni avanzate',
+            helpAdvanced1: 'Colori per carattere, Punti sfumatura, output Defaultio e JSON/Lua in modalità Avanzato.',
+            helpAdvanced2: "Premi ⛶ per ingrandire l'anteprima.",
+            helpKeyboard: 'Tastiera',
+            helpKeyboard1: "Esc — chiude l'anteprima o questa finestra.",
+            helpKeyboard2: 'Clicca fuori da un modale per chiuderlo.'
+        },
+        pt: {
+            language: 'Idioma', theme: 'Tema', uiMode: 'Modo',
+            presets: 'Presets', selectPreset: '— Selecione um preset —',
+            save: 'Salvar', load: 'Carregar', rename: 'Renomear', delete: 'Excluir',
+            text: 'Texto', userId: 'ID do usuário',
+            solid: 'Sólido', gradient: 'Gradiente', rainbow: 'Arco-íris',
+            colorSource: 'Fonte de cor', modeOption: 'Modo (Sólido / Gradiente / Arco-íris)', gradientPoints: 'Pontos de gradiente',
+            outputFormat: 'Formato de saída', robloxRichText: 'Roblox RichText (nativo)', defaultioRichText: 'Módulo Defaultio RichText',
+            color: 'Cor', color1: 'Cor 1', color2: 'Cor 2', steps: 'Passos',
+            transparency: 'Transparência', formatting: 'Formatação',
+            lineBreaks: 'Quebras de linha', fixColors: 'Corrigir cores', rgbColors: 'Cores RGB',
+            stroke: 'Contorno', strokeWidth: 'Largura do contorno', font: 'Fonte',
+            animation: 'Animação', none: 'Nenhuma',
+            animateGrouping: 'Agrupamento de animação',
+            groupLetter: 'Letra', groupWord: 'Palavra', groupAll: 'Tudo',
+            animateStepTime: 'Tempo entre passos (s)',
+            animateStepFrequency: 'Frequência dos passos',
+            animateStyleTime: 'Duração do estilo (s)',
+            preview: 'Pré-visualização', zoom: 'Zoom',
+            richText: 'Rich Text', defaultioModule: 'Texto do módulo Defaultio', jsonLua: 'JSON / Lua',
+            copy: 'Copiar', copied: 'Copiado!',
+            apply: 'Aplicar', resetColor: 'Redefinir cor', resetAllChars: 'Redefinir tudo',
+            deletePoint: 'Excluir ponto', resetAllPoints: 'Redefinir todos os pontos',
+            character: 'Caractere', transparencyPlaceholder: 'Transparência (opcional, 0-1)',
+            previewHint: 'Clique ou toque nos caracteres para selecioná-los. Segure e arraste para selecionar vários. Arraste o fundo para mover.',
+            presetName: 'Nome do preset:', renamePreset: 'Renomear preset para:',
+            deletePreset: 'Excluir o preset "{name}"?',
+            presetExists: 'Já existe um preset com esse nome. Substituir?',
+            dark: 'Escuro', light: 'Claro', simple: 'Simples', advanced: 'Avançado',
+            helpTitle: 'Dicas e ajuda', helpGettingStarted: 'Primeiros passos',
+            helpStart1: 'Digite seu texto à esquerda.',
+            helpStart2: 'A pré-visualização é atualizada ao vivo.',
+            helpStart3: 'Copie a saída usando os botões Copiar.',
+            helpSettings: 'Configurações',
+            helpSettings1: 'Use os seletores de Idioma, Tema e Modo ao lado do título.',
+            helpSettings2: 'Escuro e Simples são padrão. Suas escolhas são salvas.',
+            helpSettings3: 'Mude para Avançado para todos os recursos.',
+            helpPresets: 'Presets',
+            helpPresets1: 'Salve, carregue, renomeie e exclua presets.',
+            helpPresets2: 'Os presets são armazenados localmente.',
+            helpAutoSave: 'Salvamento automático',
+            helpAutoSave1: 'Seu texto, cores e configurações são salvos automaticamente.',
+            helpColorModes: 'Modos de cor',
+            helpColorModes1: 'Sólido — uma cor para todo o texto.',
+            helpColorModes2: 'Gradiente — cores misturadas horizontalmente.',
+            helpColorModes3: 'Arco-íris — espectro completo.',
+            helpAdvanced: 'Recursos avançados',
+            helpAdvanced1: 'Cores por caractere, Pontos de gradiente, saída Defaultio e JSON/Lua no modo Avançado.',
+            helpAdvanced2: 'Clique em ⛶ para expandir a pré-visualização.',
+            helpKeyboard: 'Teclado',
+            helpKeyboard1: 'Esc — fecha a pré-visualização expandida ou esta janela.',
+            helpKeyboard2: 'Clique fora de um modal para fechá-lo.'
+        },
+        ru: {
+            language: 'Язык', theme: 'Тема', uiMode: 'Режим',
+            presets: 'Пресеты', selectPreset: '— Выберите пресет —',
+            save: 'Сохранить', load: 'Загрузить', rename: 'Переименовать', delete: 'Удалить',
+            text: 'Текст', userId: 'User ID',
+            solid: 'Сплошной', gradient: 'Градиент', rainbow: 'Радуга',
+            colorSource: 'Источник цвета', modeOption: 'Режим (Solid / Gradient / Rainbow)', gradientPoints: 'Точки градиента',
+            outputFormat: 'Формат вывода', robloxRichText: 'Roblox RichText (нативный)', defaultioRichText: 'Модуль Defaultio RichText',
+            color: 'Цвет', color1: 'Цвет 1', color2: 'Цвет 2', steps: 'Шаги',
+            transparency: 'Прозрачность', formatting: 'Форматирование',
+            lineBreaks: 'Переносы строк', fixColors: 'Fix Colors', rgbColors: 'Цвета RGB',
+            stroke: 'Обводка', strokeWidth: 'Толщина обводки', font: 'Шрифт',
+            animation: 'Анимация', none: 'Нет',
+            animateGrouping: 'Группировка анимации',
+            groupLetter: 'По буквам', groupWord: 'По словам', groupAll: 'Всё сразу',
+            animateStepTime: 'Задержка шага (с)',
+            animateStepFrequency: 'Частота шага',
+            animateStyleTime: 'Длительность стиля (с)',
+            preview: 'Превью', zoom: 'Масштаб',
+            richText: 'Rich Text', defaultioModule: 'Текст для модуля Defaultio', jsonLua: 'JSON / Lua',
+            copy: 'Копировать', copied: 'Скопировано!',
+            apply: 'Применить', resetColor: 'Сбросить цвет', resetAllChars: 'Сбросить все буквы',
+            deletePoint: 'Удалить точку', resetAllPoints: 'Сбросить все точки',
+            character: 'Символ', transparencyPlaceholder: 'Прозрачность (необязательно, 0-1)',
+            previewHint: 'Кликните или тапните буквы для выделения. Зажмите и ведите для выделения нескольких. Тяните пустое место, чтобы сдвинуть.',
+            presetName: 'Имя пресета:', renamePreset: 'Переименовать пресет в:',
+            deletePreset: 'Удалить пресет "{name}"?',
+            presetExists: 'Пресет с таким именем уже существует. Перезаписать?',
+            dark: 'Тёмная', light: 'Светлая', simple: 'Простой', advanced: 'Продвинутый',
+            helpTitle: 'Справка и советы', helpGettingStarted: 'С чего начать',
+            helpStart1: 'Введите текст в поле слева.',
+            helpStart2: 'Превью справа обновляется в реальном времени.',
+            helpStart3: 'Скопируйте результат кнопками Copy.',
+            helpSettings: 'Настройки',
+            helpSettings1: 'Используйте селекты Язык, Тема и Режим рядом с заголовком.',
+            helpSettings2: 'По умолчанию — тёмная тема и простой режим. Выбор сохраняется между визитами.',
+            helpSettings3: 'Переключитесь на Продвинутый, чтобы получить все возможности.',
+            helpPresets: 'Пресеты',
+            helpPresets1: 'Сохраняйте, загружайте, переименовывайте и удаляйте пресеты.',
+            helpPresets2: 'Пресеты хранятся локально в браузере.',
+            helpAutoSave: 'Автосохранение',
+            helpAutoSave1: 'Ваш текст, цвета и настройки сохраняются автоматически.',
+            helpColorModes: 'Режимы цвета',
+            helpColorModes1: 'Solid — один цвет для всего текста.',
+            helpColorModes2: 'Gradient — цвета плавно переходят горизонтально.',
+            helpColorModes3: 'Rainbow — полный спектр оттенков.',
+            helpAdvanced: 'Продвинутые функции',
+            helpAdvanced1: 'Цвета по буквам, точки градиента, вывод для модуля Defaultio и JSON/Lua — в режиме Продвинутый.',
+            helpAdvanced2: 'Нажмите ⛶, чтобы развернуть превью, редактировать прямо там и двигать полотно перетаскиванием пустого места.',
+            helpKeyboard: 'Клавиатура',
+            helpKeyboard1: 'Esc — закрыть развёрнутое превью или это окно.',
+            helpKeyboard2: 'Клик вне окна тоже закрывает его.'
+        },
+        ja: {
+            language: '言語', theme: 'テーマ', uiMode: 'モード',
+            presets: 'プリセット', selectPreset: '— プリセットを選択 —',
+            save: '保存', load: '読み込み', rename: '名前を変更', delete: '削除',
+            text: 'テキスト', userId: 'ユーザーID',
+            solid: '単色', gradient: 'グラデーション', rainbow: '虹色',
+            colorSource: '色のソース', modeOption: 'モード (単色 / グラデーション / 虹色)', gradientPoints: 'グラデーションポイント',
+            outputFormat: '出力形式', robloxRichText: 'Roblox RichText (ネイティブ)', defaultioRichText: 'Defaultio RichText モジュール',
+            color: '色', color1: '色 1', color2: '色 2', steps: 'ステップ',
+            transparency: '透明度', formatting: '書式',
+            lineBreaks: '改行', fixColors: '色を修正', rgbColors: 'RGB カラー',
+            stroke: '縁取り', strokeWidth: '縁取りの太さ', font: 'フォント',
+            animation: 'アニメーション', none: 'なし',
+            animateGrouping: 'アニメーションのまとめ',
+            groupLetter: '文字', groupWord: '単語', groupAll: 'すべて',
+            animateStepTime: 'ステップ間の時間 (秒)',
+            animateStepFrequency: 'ステップ頻度',
+            animateStyleTime: 'スタイルの長さ (秒)',
+            preview: 'プレビュー', zoom: 'ズーム',
+            richText: 'Rich Text', defaultioModule: 'Defaultio モジュールテキスト', jsonLua: 'JSON / Lua',
+            copy: 'コピー', copied: 'コピーしました!',
+            apply: '適用', resetColor: '色をリセット', resetAllChars: 'すべてリセット',
+            deletePoint: 'ポイントを削除', resetAllPoints: 'すべてのポイントをリセット',
+            character: '文字', transparencyPlaceholder: '透明度 (任意, 0-1)',
+            previewHint: '文字をクリックまたはタップして選択します。長押ししてドラッグで複数選択。空白をドラッグして移動。',
+            presetName: 'プリセット名:', renamePreset: 'プリセットの新しい名前:',
+            deletePreset: 'プリセット「{name}」を削除しますか?',
+            presetExists: '同名のプリセットが存在します。上書きしますか?',
+            dark: 'ダーク', light: 'ライト', simple: 'シンプル', advanced: '詳細',
+            helpTitle: 'ヒントとヘルプ', helpGettingStarted: 'はじめに',
+            helpStart1: '左側のテキスト欄に入力します。',
+            helpStart2: '右側のプレビューがリアルタイムで更新されます。',
+            helpStart3: 'コピーボタンで出力をコピーできます。',
+            helpSettings: '設定',
+            helpSettings1: 'タイトルの横の言語・テーマ・モードのセレクターを使います。',
+            helpSettings2: 'デフォルトはダークテーマとシンプルモードです。選択は保存されます。',
+            helpSettings3: '詳細モードに切り替えるとすべての機能が使えます。',
+            helpPresets: 'プリセット',
+            helpPresets1: '保存・読み込み・名前変更・削除ができます。',
+            helpPresets2: 'プリセットはブラウザに保存されます。',
+            helpAutoSave: '自動保存',
+            helpAutoSave1: 'テキスト・色・設定は自動的に保存されます。',
+            helpColorModes: 'カラーモード',
+            helpColorModes1: '単色 — 全体を 1 色で。',
+            helpColorModes2: 'グラデーション — 色 1 と色 2 の間で横に変化。',
+            helpColorModes3: '虹色 — 全色相スペクトラム。',
+            helpAdvanced: '詳細機能',
+            helpAdvanced1: '文字ごとの色・グラデーションポイント・Defaultio・JSON/Lua は詳細モードで。',
+            helpAdvanced2: '⛶ を押すとプレビューを拡大し、その場で編集・ドラッグ移動できます。',
+            helpKeyboard: 'キーボード',
+            helpKeyboard1: 'Esc — 拡大プレビューまたはこのウィンドウを閉じます。',
+            helpKeyboard2: 'モーダルの外をクリックしても閉じます。'
+        },
+        ko: {
+            language: '언어', theme: '테마', uiMode: '모드',
+            presets: '프리셋', selectPreset: '— 프리셋 선택 —',
+            save: '저장', load: '불러오기', rename: '이름 변경', delete: '삭제',
+            text: '텍스트', userId: '사용자 ID',
+            solid: '단색', gradient: '그라데이션', rainbow: '무지개',
+            colorSource: '색상 소스', modeOption: '모드 (단색 / 그라데이션 / 무지개)', gradientPoints: '그라데이션 포인트',
+            outputFormat: '출력 형식', robloxRichText: 'Roblox RichText (기본)', defaultioRichText: 'Defaultio RichText 모듈',
+            color: '색상', color1: '색상 1', color2: '색상 2', steps: '단계',
+            transparency: '투명도', formatting: '서식',
+            lineBreaks: '줄 바꿈', fixColors: '색상 수정', rgbColors: 'RGB 색상',
+            stroke: '외곽선', strokeWidth: '외곽선 두께', font: '글꼴',
+            animation: '애니메이션', none: '없음',
+            animateGrouping: '애니메이션 그룹',
+            groupLetter: '글자', groupWord: '단어', groupAll: '전체',
+            animateStepTime: '단계 간격 (초)',
+            animateStepFrequency: '단계 빈도',
+            animateStyleTime: '스타일 시간 (초)',
+            preview: '미리보기', zoom: '확대',
+            richText: 'Rich Text', defaultioModule: 'Defaultio 모듈 텍스트', jsonLua: 'JSON / Lua',
+            copy: '복사', copied: '복사됨!',
+            apply: '적용', resetColor: '색상 초기화', resetAllChars: '모두 초기화',
+            deletePoint: '포인트 삭제', resetAllPoints: '모든 포인트 초기화',
+            character: '문자', transparencyPlaceholder: '투명도 (선택, 0-1)',
+            previewHint: '문자를 클릭하거나 탭하여 선택하세요. 길게 눌러 드래그하면 여러 개를 선택할 수 있습니다. 빈 공간을 드래그하면 이동합니다.',
+            presetName: '프리셋 이름:', renamePreset: '프리셋 새 이름:',
+            deletePreset: '프리셋 "{name}"을(를) 삭제할까요?',
+            presetExists: '같은 이름의 프리셋이 있습니다. 덮어쓸까요?',
+            dark: '어두움', light: '밝음', simple: '간단', advanced: '고급',
+            helpTitle: '도움말 및 팁', helpGettingStarted: '시작하기',
+            helpStart1: '왼쪽 텍스트 필드에 입력하세요.',
+            helpStart2: '오른쪽 미리보기가 실시간으로 업데이트됩니다.',
+            helpStart3: '복사 버튼으로 출력을 복사하세요.',
+            helpSettings: '설정',
+            helpSettings1: '제목 옆의 언어, 테마, 모드 선택기를 사용하세요.',
+            helpSettings2: '어두운 테마와 간단 모드가 기본입니다. 선택은 저장됩니다.',
+            helpSettings3: '고급 모드로 전환하면 모든 기능을 사용할 수 있습니다.',
+            helpPresets: '프리셋',
+            helpPresets1: '저장, 불러오기, 이름 변경, 삭제가 가능합니다.',
+            helpPresets2: '프리셋은 브라우저에 저장됩니다.',
+            helpAutoSave: '자동 저장',
+            helpAutoSave1: '텍스트, 색상, 설정이 자동으로 저장됩니다.',
+            helpColorModes: '색상 모드',
+            helpColorModes1: '단색 — 전체 텍스트에 하나의 색상.',
+            helpColorModes2: '그라데이션 — 색상 1과 2 사이에서 가로로 변화.',
+            helpColorModes3: '무지개 — 전체 색조 스펙트럼.',
+            helpAdvanced: '고급 기능',
+            helpAdvanced1: '문자별 색상, 그라데이션 포인트, Defaultio 및 JSON/Lua는 고급 모드에서.',
+            helpAdvanced2: '⛶를 눌러 미리보기를 확장하고 그 자리에서 편집 및 드래그로 이동할 수 있습니다.',
+            helpKeyboard: '키보드',
+            helpKeyboard1: 'Esc — 확장된 미리보기 또는 이 창을 닫습니다.',
+            helpKeyboard2: '모달 바깥을 클릭해도 닫힙니다.'
+        },
+        zh: {
+            language: '语言', theme: '主题', uiMode: '模式',
+            presets: '预设', selectPreset: '— 选择一个预设 —',
+            save: '保存', load: '加载', rename: '重命名', delete: '删除',
+            text: '文本', userId: '用户 ID',
+            solid: '纯色', gradient: '渐变', rainbow: '彩虹',
+            colorSource: '颜色来源', modeOption: '模式 (纯色 / 渐变 / 彩虹)', gradientPoints: '渐变点',
+            outputFormat: '输出格式', robloxRichText: 'Roblox RichText (原生)', defaultioRichText: 'Defaultio RichText 模块',
+            color: '颜色', color1: '颜色 1', color2: '颜色 2', steps: '步数',
+            transparency: '透明度', formatting: '格式',
+            lineBreaks: '换行', fixColors: '修正颜色', rgbColors: 'RGB 颜色',
+            stroke: '描边', strokeWidth: '描边宽度', font: '字体',
+            animation: '动画', none: '无',
+            animateGrouping: '动画分组',
+            groupLetter: '逐字', groupWord: '逐词', groupAll: '全部',
+            animateStepTime: '步进时间 (秒)',
+            animateStepFrequency: '步进频率',
+            animateStyleTime: '样式时长 (秒)',
+            preview: '预览', zoom: '缩放',
+            richText: 'Rich Text', defaultioModule: 'Defaultio 模块文本', jsonLua: 'JSON / Lua',
+            copy: '复制', copied: '已复制!',
+            apply: '应用', resetColor: '重置颜色', resetAllChars: '重置所有',
+            deletePoint: '删除点', resetAllPoints: '重置所有点',
+            character: '字符', transparencyPlaceholder: '透明度 (可选, 0-1)',
+            previewHint: '点击字符以选择。按住并拖动可选择多个。拖动空白处可平移。',
+            presetName: '预设名称:', renamePreset: '将预设重命名为:',
+            deletePreset: '删除预设 "{name}"?',
+            presetExists: '已存在同名预设。是否覆盖?',
+            dark: '暗色', light: '亮色', simple: '简易', advanced: '高级',
+            helpTitle: '帮助与提示', helpGettingStarted: '开始使用',
+            helpStart1: '在左侧文本框中输入文本。',
+            helpStart2: '右侧预览会实时更新。',
+            helpStart3: '使用复制按钮复制输出。',
+            helpSettings: '设置',
+            helpSettings1: '使用标题旁边的语言、主题和模式选择器。',
+            helpSettings2: '默认为暗色主题和简易模式。你的选择会被保存。',
+            helpSettings3: '切换到高级模式可使用所有功能。',
+            helpPresets: '预设',
+            helpPresets1: '使用按钮保存、加载、重命名和删除预设。',
+            helpPresets2: '预设保存在浏览器本地。',
+            helpAutoSave: '自动保存',
+            helpAutoSave1: '文本、颜色和设置会自动保存。',
+            helpColorModes: '颜色模式',
+            helpColorModes1: '纯色 — 整个文本使用一种颜色。',
+            helpColorModes2: '渐变 — 颜色 1 与颜色 2 之间水平混合。',
+            helpColorModes3: '彩虹 — 完整色相光谱。',
+            helpAdvanced: '高级功能',
+            helpAdvanced1: '逐字颜色、渐变点、Defaultio 与 JSON/Lua 输出均在高级模式。',
+            helpAdvanced2: '点击 ⛶ 可放大预览，就地编辑并拖动空白处平移。',
+            helpKeyboard: '键盘',
+            helpKeyboard1: 'Esc — 关闭放大预览或此窗口。',
+            helpKeyboard2: '点击模态框外部也可关闭。'
+        },
+        ar: {
+            language: 'اللغة', theme: 'السمة', uiMode: 'الوضع',
+            presets: 'الإعدادات المسبقة', selectPreset: '— اختر إعداداً مسبقاً —',
+            save: 'حفظ', load: 'تحميل', rename: 'إعادة تسمية', delete: 'حذف',
+            text: 'النص', userId: 'معرف المستخدم',
+            solid: 'لون واحد', gradient: 'تدرج', rainbow: 'قوس قزح',
+            colorSource: 'مصدر اللون', modeOption: 'الوضع (لون واحد / تدرج / قوس قزح)', gradientPoints: 'نقاط التدرج',
+            outputFormat: 'صيغة الإخراج', robloxRichText: 'Roblox RichText (أصلي)', defaultioRichText: 'وحدة Defaultio RichText',
+            color: 'اللون', color1: 'اللون 1', color2: 'اللون 2', steps: 'الخطوات',
+            transparency: 'الشفافية', formatting: 'التنسيق',
+            lineBreaks: 'فواصل الأسطر', fixColors: 'إصلاح الألوان', rgbColors: 'ألوان RGB',
+            stroke: 'الحدود', strokeWidth: 'سماكة الحدود', font: 'الخط',
+            animation: 'الحركة', none: 'بلا',
+            animateGrouping: 'تجميع الحركة',
+            groupLetter: 'حرف', groupWord: 'كلمة', groupAll: 'الكل',
+            animateStepTime: 'زمن الخطوة (ث)',
+            animateStepFrequency: 'تكرار الخطوة',
+            animateStyleTime: 'مدة النمط (ث)',
+            preview: 'معاينة', zoom: 'تكبير',
+            richText: 'Rich Text', defaultioModule: 'نص وحدة Defaultio', jsonLua: 'JSON / Lua',
+            copy: 'نسخ', copied: 'تم النسخ!',
+            apply: 'تطبيق', resetColor: 'إعادة تعيين اللون', resetAllChars: 'إعادة تعيين الكل',
+            deletePoint: 'حذف النقطة', resetAllPoints: 'إعادة تعيين كل النقاط',
+            character: 'حرف', transparencyPlaceholder: 'الشفافية (اختياري، 0-1)',
+            previewHint: 'انقر أو المس الحروف لتحديدها. اضغط مع السحب لتحديد عدة حروف. اسحب المساحة الفارغة للتحريك.',
+            presetName: 'اسم الإعداد المسبق:', renamePreset: 'إعادة تسمية الإعداد إلى:',
+            deletePreset: 'حذف الإعداد "{name}"?',
+            presetExists: 'يوجد إعداد بهذا الاسم بالفعل. هل تريد الكتابة فوقه؟',
+            dark: 'داكن', light: 'فاتح', simple: 'بسيط', advanced: 'متقدم',
+            helpTitle: 'نصائح ومساعدة', helpGettingStarted: 'البدء',
+            helpStart1: 'اكتب نصك في الحقل على اليسار.',
+            helpStart2: 'تتحدث المعاينة على اليمين مباشرة.',
+            helpStart3: 'انسخ الإخراج باستخدام أزرار النسخ.',
+            helpSettings: 'الإعدادات',
+            helpSettings1: 'استخدم محددات اللغة والسمة والوضع بجانب العنوان.',
+            helpSettings2: 'الافتراضي هو السمة الداكنة والوضع البسيط. يتم حفظ اختياراتك.',
+            helpSettings3: 'انتقل إلى الوضع المتقدم لكل الميزات.',
+            helpPresets: 'الإعدادات المسبقة',
+            helpPresets1: 'احفظ وحدد وأعد التسمية واحذف الإعدادات المسبقة.',
+            helpPresets2: 'يتم تخزين الإعدادات محلياً في المتصفح.',
+            helpAutoSave: 'الحفظ التلقائي',
+            helpAutoSave1: 'يتم حفظ النص والألوان والإعدادات تلقائياً.',
+            helpColorModes: 'أنماط الألوان',
+            helpColorModes1: 'لون واحد — لون واحد لكامل النص.',
+            helpColorModes2: 'تدرج — يمزج اللون 1 واللون 2 أفقياً.',
+            helpColorModes3: 'قوس قزح — الطيف اللوني الكامل.',
+            helpAdvanced: 'الميزات المتقدمة',
+            helpAdvanced1: 'ألوان لكل حرف، نقاط التدرج، إخراج Defaultio و JSON/Lua في الوضع المتقدم.',
+            helpAdvanced2: 'اضغط ⛶ لتوسيع المعاينة، والتحرير مباشرة مع سحب المساحة الفارغة للتحريك.',
+            helpKeyboard: 'لوحة المفاتيح',
+            helpKeyboard1: 'Esc — إغلاق المعاينة الموسعة أو هذه النافذة.',
+            helpKeyboard2: 'النقر خارج النافذة يغلقها أيضاً.'
+        },
+        hi: {
+            language: 'भाषा', theme: 'थीम', uiMode: 'मोड',
+            presets: 'प्रीसेट', selectPreset: '— एक प्रीसेट चुनें —',
+            save: 'सहेजें', load: 'लोड करें', rename: 'नाम बदलें', delete: 'हटाएं',
+            text: 'टेक्स्ट', userId: 'यूज़र आईडी',
+            solid: 'ठोस', gradient: 'ग्रेडिएंट', rainbow: 'इंद्रधनुष',
+            colorSource: 'रंग स्रोत', modeOption: 'मोड (ठोस / ग्रेडिएंट / इंद्रधनुष)', gradientPoints: 'ग्रेडिएंट पॉइंट',
+            outputFormat: 'आउटपुट प्रारूप', robloxRichText: 'Roblox RichText (नेटिव)', defaultioRichText: 'Defaultio RichText मॉड्यूल',
+            color: 'रंग', color1: 'रंग 1', color2: 'रंग 2', steps: 'चरण',
+            transparency: 'पारदर्शिता', formatting: 'फॉर्मेटिंग',
+            lineBreaks: 'लाइन ब्रेक', fixColors: 'रंग ठीक करें', rgbColors: 'RGB रंग',
+            stroke: 'स्ट्रोक', strokeWidth: 'स्ट्रोक चौड़ाई', font: 'फ़ॉन्ट',
+            animation: 'एनिमेशन', none: 'कोई नहीं',
+            animateGrouping: 'एनिमेशन समूह',
+            groupLetter: 'अक्षर', groupWord: 'शब्द', groupAll: 'सभी',
+            animateStepTime: 'चरण समय (सेकंड)',
+            animateStepFrequency: 'चरण आवृत्ति',
+            animateStyleTime: 'शैली अवधि (सेकंड)',
+            preview: 'पूर्वावलोकन', zoom: 'ज़ूम',
+            richText: 'Rich Text', defaultioModule: 'Defaultio मॉड्यूल टेक्स्ट', jsonLua: 'JSON / Lua',
+            copy: 'कॉपी', copied: 'कॉपी हो गया!',
+            apply: 'लागू करें', resetColor: 'रंग रीसेट', resetAllChars: 'सभी रीसेट करें',
+            deletePoint: 'पॉइंट हटाएं', resetAllPoints: 'सभी पॉइंट रीसेट करें',
+            character: 'अक्षर', transparencyPlaceholder: 'पारदर्शिता (वैकल्पिक, 0-1)',
+            previewHint: 'चुनने के लिए अक्षरों पर क्लिक या टैप करें। कई चुनने के लिए दबाकर खींचें। खाली जगह खींचकर हिलाएं।',
+            presetName: 'प्रीसेट नाम:', renamePreset: 'प्रीसेट का नया नाम:',
+            deletePreset: 'प्रीसेट "{name}" हटाएं?',
+            presetExists: 'इस नाम का प्रीसेट पहले से है। अधिलेखित करें?',
+            dark: 'डार्क', light: 'लाइट', simple: 'सरल', advanced: 'उन्नत',
+            helpTitle: 'सुझाव और सहायता', helpGettingStarted: 'शुरू करें',
+            helpStart1: 'बाईं ओर टेक्स्ट फ़ील्ड में अपना टेक्स्ट लिखें।',
+            helpStart2: 'दाईं ओर पूर्वावलोकन लाइव अपडेट होता है।',
+            helpStart3: 'कॉपी बटन से आउटपुट कॉपी करें।',
+            helpSettings: 'सेटिंग्स',
+            helpSettings1: 'शीर्षक के पास भाषा, थीम और मोड चयनकर्ता का उपयोग करें।',
+            helpSettings2: 'डार्क और सरल डिफ़ॉल्ट हैं। आपकी पसंद सहेजी जाती है।',
+            helpSettings3: 'सभी सुविधाओं के लिए उन्नत पर स्विच करें।',
+            helpPresets: 'प्रीसेट',
+            helpPresets1: 'बटनों से प्रीसेट सहेजें, लोड करें, नाम बदलें और हटाएं।',
+            helpPresets2: 'प्रीसेट ब्राउज़र में स्थानीय रूप से संग्रहीत होते हैं।',
+            helpAutoSave: 'स्वतः सहेजें',
+            helpAutoSave1: 'टेक्स्ट, रंग और सेटिंग्स स्वतः सहेजे जाते हैं।',
+            helpColorModes: 'रंग मोड',
+            helpColorModes1: 'ठोस — पूरे टेक्स्ट के लिए एक रंग।',
+            helpColorModes2: 'ग्रेडिएंट — रंग 1 और रंग 2 के बीच क्षैतिज मिश्रण।',
+            helpColorModes3: 'इंद्रधनुष — पूरा रंग स्पेक्ट्रम।',
+            helpAdvanced: 'उन्नत सुविधाएँ',
+            helpAdvanced1: 'अक्षर-वार रंग, ग्रेडिएंट पॉइंट, Defaultio और JSON/Lua उन्नत मोड में।',
+            helpAdvanced2: 'पूर्वावलोकन बड़ा करने के लिए ⛶ दबाएं, वहीं संपादित करें और खाली जगह खींचकर घुमाएँ।',
+            helpKeyboard: 'कीबोर्ड',
+            helpKeyboard1: 'Esc — विस्तारित पूर्वावलोकन या यह विंडो बंद करें।',
+            helpKeyboard2: 'मोडल के बाहर क्लिक करने से भी बंद हो जाता है।'
+        }
+    };
+
+    let currentLang = 'en';
+    let currentTheme = 'dark';
+    let currentUiMode = 'simple';
+
+    function t(key) {
+        const dict = translations[currentLang] || translations.en;
+        if (dict[key] !== undefined) return dict[key];
+        return translations.en[key] !== undefined ? translations.en[key] : key;
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            el.textContent = t(el.getAttribute('data-i18n'));
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+        });
+    }
+
+    function applyTheme(theme) {
+        currentTheme = (theme === 'light') ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        if (elements.themeSelect) elements.themeSelect.value = currentTheme;
+    }
+
+    function applyUiMode(mode) {
+        currentUiMode = (mode === 'advanced') ? 'advanced' : 'simple';
+        if (elements.uiModeSelect) elements.uiModeSelect.value = currentUiMode;
+        document.querySelectorAll('.advanced-only').forEach(el => {
+            el.classList.toggle('hidden-for-mode', currentUiMode !== 'advanced');
+        });
+        toggleDefaultioControls();
+    }
+
+    function applyLanguage(lang) {
+        currentLang = (translations[lang] ? lang : 'en');
+        document.documentElement.setAttribute('lang', currentLang);
+        document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+        if (elements.languageSelect) elements.languageSelect.value = currentLang;
+        applyTranslations();
+    }
+
+    function saveSettings() {
+        try {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+                lang: currentLang,
+                theme: currentTheme,
+                uiMode: currentUiMode
+            }));
+        } catch (e) {
+            console.warn('Failed to save settings', e);
+        }
+    }
+
+    function loadSettings() {
+        try {
+            const raw = localStorage.getItem(SETTINGS_KEY);
+            if (!raw) return null;
+            return JSON.parse(raw);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function isPreviewOpen() {
+        return elements.previewOverlay && !elements.previewOverlay.classList.contains('hidden');
+    }
+
+    function placeEditorsIn(host) {
+        if (!host) return;
+        if (elements.charEditor && elements.charEditor.parentElement !== host) {
+            host.appendChild(elements.charEditor);
+        }
+        if (elements.pointsEditor && elements.pointsEditor.parentElement !== host) {
+            host.appendChild(elements.pointsEditor);
+        }
+    }
+
+    function refreshEditorHost() {
+        const host = isPreviewOpen() ? elements.editorHostModal : elements.editorHostMain;
+        placeEditorsIn(host);
+    }
+
     function getSortedPointIndexes() {
         return Object.keys(gradientPoints).map(Number).sort((a, b) => a - b);
     }
@@ -197,11 +941,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const a = points[i];
             const b = points[i + 1];
             if (index >= a && index <= b) {
-                const t = (index - a) / (b - a);
+                const t2 = (index - a) / (b - a);
                 const c1 = hexToRgb(gradientPoints[a]);
                 const c2 = hexToRgb(gradientPoints[b]);
                 if (!c1 || !c2) return gradientPoints[a];
-                const mixed = lerpColor(c1, c2, t);
+                const mixed = lerpColor(c1, c2, t2);
                 return rgbToHex(mixed.r, mixed.g, mixed.b);
             }
         }
@@ -230,8 +974,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (ta === null && tb === null) return null;
                 if (ta === null) return tb;
                 if (tb === null) return ta;
-                const t = (index - a) / (b - a);
-                return lerp(ta, tb, t);
+                const t2 = (index - a) / (b - a);
+                return lerp(ta, tb, t2);
             }
         }
         return valueAt(points[0]);
@@ -274,8 +1018,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const total = rawText.length;
         if (total === 0) return () => null;
         return (i) => {
-            const t = total === 1 ? 0 : i / (total - 1);
-            const rgb = hsvToRgb(t * 360, 1, 1);
+            const tt = total === 1 ? 0 : i / (total - 1);
+            const rgb = hsvToRgb(tt * 360, 1, 1);
             return rgbToHex(rgb.r, rgb.g, rgb.b);
         };
     }
@@ -322,7 +1066,45 @@ document.addEventListener('DOMContentLoaded', function () {
         return globalTrans;
     }
 
-    function renderPreview(rawText, enableLineBreaks, opts) {
+    function getMarkerLayerFor(targetEl) {
+        if (targetEl === elements.previewLarge) return elements.previewModalBody;
+        return elements.previewWrap || (elements.preview ? elements.preview.parentElement : null);
+    }
+
+    function refreshPointMarkers() {
+        const usePoints = elements.colorSource.value === 'points' && getSortedPointIndexes().length > 0;
+
+        const targets = [
+            { textEl: elements.preview, layer: getMarkerLayerFor(elements.preview) },
+            { textEl: elements.previewLarge, layer: getMarkerLayerFor(elements.previewLarge) }
+        ];
+
+        targets.forEach(({ textEl, layer }) => {
+            if (!textEl || !layer) return;
+
+            layer.querySelectorAll('.point-marker[data-owner="' + (textEl.id || 'preview') + '"]').forEach(m => m.remove());
+
+            if (!usePoints) return;
+
+            const layerRect = layer.getBoundingClientRect();
+
+            Object.keys(gradientPoints).map(Number).sort((a, b) => a - b).forEach(idx => {
+                const span = textEl.querySelector(`.char[data-index="${idx}"]`);
+                if (!span) return;
+                const spanRect = span.getBoundingClientRect();
+                const marker = document.createElement('div');
+                marker.className = 'point-marker';
+                marker.dataset.owner = textEl.id || 'preview';
+                if (selectedPoint === idx) marker.classList.add('selected');
+                marker.style.background = gradientPoints[idx];
+                marker.style.left = (spanRect.left - layerRect.left + spanRect.width / 2) + 'px';
+                marker.style.top = (spanRect.top - layerRect.top - 8) + 'px';
+                layer.appendChild(marker);
+            });
+        });
+    }
+
+    function renderInto(targetEl, rawText, enableLineBreaks, opts) {
         const frag = document.createDocumentFragment();
         const cells = buildCharCells(rawText, enableLineBreaks);
         const colorFn = opts.colorFn;
@@ -347,8 +1129,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const color = colorFn(cell.index);
             if (color) textSpan.style.color = color;
 
-            const t = transparencyForIndex(cell.index, globalTrans, usePoints);
-            if (t > 0) textSpan.style.opacity = String(1 - t);
+            const t2 = transparencyForIndex(cell.index, globalTrans, usePoints);
+            if (t2 > 0) textSpan.style.opacity = String(1 - t2);
 
             span.appendChild(textSpan);
 
@@ -361,36 +1143,20 @@ document.addEventListener('DOMContentLoaded', function () {
             frag.appendChild(span);
         });
 
-        const p = elements.preview;
-        p.innerHTML = '';
-        p.appendChild(frag);
-        p.style.fontFamily = opts.font;
-        p.style.fontWeight = opts.bold ? 'bold' : 'normal';
-        p.style.fontStyle = opts.italic ? 'italic' : 'normal';
-        p.style.textDecoration = opts.underline ? 'underline'
+        targetEl.innerHTML = '';
+        targetEl.appendChild(frag);
+        targetEl.style.fontFamily = opts.font;
+        targetEl.style.fontWeight = opts.bold ? 'bold' : 'normal';
+        targetEl.style.fontStyle = opts.italic ? 'italic' : 'normal';
+        targetEl.style.textDecoration = opts.underline ? 'underline'
             : opts.strikethrough ? 'line-through' : 'none';
 
-        p.classList.toggle('points-mode', usePoints);
+        targetEl.classList.toggle('points-mode', usePoints);
+    }
 
-        const wrap = p.parentElement;
-        if (wrap) {
-            wrap.querySelectorAll('.point-marker').forEach(m => m.remove());
-            if (usePoints) {
-                const wrapRect = wrap.getBoundingClientRect();
-                Object.keys(gradientPoints).map(Number).sort((a, b) => a - b).forEach(idx => {
-                    const span = spanByIndex[idx];
-                    if (!span) return;
-                    const spanRect = span.getBoundingClientRect();
-                    const marker = document.createElement('div');
-                    marker.className = 'point-marker';
-                    if (selectedPoint === idx) marker.classList.add('selected');
-                    marker.style.background = gradientPoints[idx];
-                    marker.style.left = (spanRect.left - wrapRect.left + spanRect.width / 2) + 'px';
-                    marker.style.top = (spanRect.top - wrapRect.top - 8) + 'px';
-                    wrap.appendChild(marker);
-                });
-            }
-        }
+    function renderPreview(rawText, enableLineBreaks, opts) {
+        if (elements.preview) renderInto(elements.preview, rawText, enableLineBreaks, opts);
+        if (elements.previewLarge) renderInto(elements.previewLarge, rawText, enableLineBreaks, opts);
     }
 
     let isMouseDown = false;
@@ -398,8 +1164,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function setSelection(indexes) {
         selectedChars = new Set(indexes);
-        elements.preview.querySelectorAll('.char').forEach(el => {
-            el.classList.toggle('selected', selectedChars.has(Number(el.dataset.index)));
+        [elements.preview, elements.previewLarge].forEach(p => {
+            if (!p) return;
+            p.querySelectorAll('.char').forEach(el => {
+                el.classList.toggle('selected', selectedChars.has(Number(el.dataset.index)));
+            });
         });
         updateCharEditor();
     }
@@ -407,10 +1176,16 @@ document.addEventListener('DOMContentLoaded', function () {
     function setSelectedPoint(index) {
         selectedPoint = index;
         updatePointsEditor();
-        elements.preview.querySelectorAll('.char').forEach(el => {
-            el.classList.toggle('selected-point', Number(el.dataset.index) === selectedPoint);
+        [elements.preview, elements.previewLarge].forEach(p => {
+            if (!p) return;
+            p.querySelectorAll('.char').forEach(el => {
+                el.classList.toggle('selected-point', Number(el.dataset.index) === selectedPoint);
+            });
         });
-        document.querySelectorAll('.point-marker').forEach(m => m.classList.remove('selected'));
+        document.querySelectorAll('.point-marker').forEach(m => {
+            m.classList.remove('selected');
+        });
+        refreshPointMarkers();
     }
 
     function updateCharEditor() {
@@ -418,6 +1193,7 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.charEditor.classList.add('hidden');
             return;
         }
+        refreshEditorHost();
         elements.charEditor.classList.remove('hidden');
 
         const arr = [...selectedChars].sort((a, b) => a - b);
@@ -426,8 +1202,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const preview = chars.length > 20 ? chars.slice(0, 20) + '…' : chars;
         elements.charEditorTitle.textContent =
             arr.length === 1
-                ? `Character: "${raw[arr[0]] === '\n' ? '⏎' : raw[arr[0]] || ''}"`
-                : `Selected: ${arr.length} (${preview})`;
+                ? `${t('character')}: "${raw[arr[0]] === '\n' ? '⏎' : raw[arr[0]] || ''}"`
+                : `${arr.length} (${preview})`;
 
         const colors = new Set(arr.map(i => charColors[i] || null));
         if (colors.size === 1) {
@@ -456,26 +1232,27 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.pointsEditor.classList.add('hidden');
             return;
         }
+        refreshEditorHost();
         elements.pointsEditor.classList.remove('hidden');
 
         if (selectedPoint === null || gradientPoints[selectedPoint] === undefined) {
             const count = Object.keys(gradientPoints).length;
             elements.pointsEditorTitle.textContent = count > 0
-                ? `Gradient Points (${count})`
-                : 'Gradient Points';
+                ? `${t('gradientPoints')} (${count})`
+                : t('gradientPoints');
             elements.pointTransparency.value = '';
             return;
         }
 
         const raw = elements.textInput.value;
         const ch = raw[selectedPoint] === '\n' ? '⏎' : (raw[selectedPoint] || '');
-        elements.pointsEditorTitle.textContent = `Point at "${ch}" (index ${selectedPoint})`;
+        elements.pointsEditorTitle.textContent = `${t('gradientPoints')} "${ch}" (#${selectedPoint})`;
         const c = gradientPoints[selectedPoint];
         elements.pointColor.value = c;
         elements.pointColorHex.value = c;
 
-        const t = gradientPointTransparency[selectedPoint];
-        elements.pointTransparency.value = (t !== undefined) ? String(roundTransparency(t)) : '';
+        const t2 = gradientPointTransparency[selectedPoint];
+        elements.pointTransparency.value = (t2 !== undefined) ? String(roundTransparency(t2)) : '';
     }
 
     function handlePointClick(index) {
@@ -494,67 +1271,131 @@ document.addEventListener('DOMContentLoaded', function () {
         generate();
     }
 
-    elements.preview.addEventListener('mousedown', e => {
-        const el = e.target.closest('.char');
+    let touchStartIndex = null;
+    let touchDragMode = null;
+    let touchCurrentIndex = null;
+
+    function attachPreviewHandlers(el) {
         if (!el) return;
-        const idx = Number(el.dataset.index);
 
-        if (elements.colorSource.value === 'points') {
-            handlePointClick(idx);
-            e.preventDefault();
-            return;
-        }
+        el.addEventListener('mousedown', e => {
+            const target = e.target.closest('.char');
+            if (!target) return;
+            const idx = Number(target.dataset.index);
 
-        isMouseDown = true;
-        dragMode = selectedChars.has(idx) ? 'remove' : 'add';
-        if (dragMode === 'add') setSelection([...selectedChars, idx]);
-        else {
-            const s = new Set(selectedChars);
-            s.delete(idx);
-            setSelection([...s]);
-        }
-        e.preventDefault();
-    });
+            if (elements.colorSource.value === 'points') {
+                handlePointClick(idx);
+                e.preventDefault();
+                return;
+            }
 
-    elements.preview.addEventListener('mouseover', e => {
-        if (!isMouseDown) return;
-        if (elements.colorSource.value === 'points') return;
-        const el = e.target.closest('.char');
-        if (!el) return;
-        const idx = Number(el.dataset.index);
-        if (dragMode === 'add') {
-            if (!selectedChars.has(idx)) setSelection([...selectedChars, idx]);
-        } else {
-            if (selectedChars.has(idx)) {
+            isMouseDown = true;
+            dragMode = selectedChars.has(idx) ? 'remove' : 'add';
+            if (dragMode === 'add') setSelection([...selectedChars, idx]);
+            else {
                 const s = new Set(selectedChars);
                 s.delete(idx);
                 setSelection([...s]);
             }
-        }
-    });
+            e.preventDefault();
+        });
+
+        el.addEventListener('mouseover', e => {
+            if (!isMouseDown) return;
+            if (elements.colorSource.value === 'points') return;
+            const target = e.target.closest('.char');
+            if (!target) return;
+            const idx = Number(target.dataset.index);
+            if (dragMode === 'add') {
+                if (!selectedChars.has(idx)) setSelection([...selectedChars, idx]);
+            } else {
+                if (selectedChars.has(idx)) {
+                    const s = new Set(selectedChars);
+                    s.delete(idx);
+                    setSelection([...s]);
+                }
+            }
+        });
+
+        el.addEventListener('touchstart', e => {
+            const target = e.target.closest('.char');
+            if (!target) return;
+            const idx = Number(target.dataset.index);
+
+            if (elements.colorSource.value === 'points') {
+                handlePointClick(idx);
+                e.preventDefault();
+                return;
+            }
+
+            touchStartIndex = idx;
+            touchCurrentIndex = idx;
+
+            if (selectedChars.has(idx) && selectedChars.size === 1) {
+                touchDragMode = null;
+                const s = new Set(selectedChars);
+                s.delete(idx);
+                setSelection([...s]);
+            } else {
+                touchDragMode = selectedChars.has(idx) ? 'remove' : 'add';
+                if (touchDragMode === 'add') {
+                    setSelection([...selectedChars, idx]);
+                } else {
+                    const s = new Set(selectedChars);
+                    s.delete(idx);
+                    setSelection([...s]);
+                }
+            }
+
+            e.preventDefault();
+        }, { passive: false });
+
+        el.addEventListener('touchmove', e => {
+            if (touchStartIndex === null) return;
+            if (elements.colorSource.value === 'points') return;
+
+            const touch = e.touches[0];
+            if (!touch) return;
+
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (!target) return;
+            const charEl = target.closest('.char');
+            if (!charEl || !el.contains(charEl)) return;
+
+            const idx = Number(charEl.dataset.index);
+            if (idx === touchCurrentIndex) return;
+            touchCurrentIndex = idx;
+
+            if (touchDragMode === 'add') {
+                if (!selectedChars.has(idx)) setSelection([...selectedChars, idx]);
+            } else if (touchDragMode === 'remove') {
+                if (selectedChars.has(idx)) {
+                    const s = new Set(selectedChars);
+                    s.delete(idx);
+                    setSelection([...s]);
+                }
+            }
+
+            e.preventDefault();
+        }, { passive: false });
+
+        el.addEventListener('touchend', () => {
+            touchStartIndex = null;
+            touchDragMode = null;
+            touchCurrentIndex = null;
+        });
+
+        el.addEventListener('touchcancel', () => {
+            touchStartIndex = null;
+            touchDragMode = null;
+            touchCurrentIndex = null;
+        });
+    }
+
+    attachPreviewHandlers(elements.preview);
+    attachPreviewHandlers(elements.previewLarge);
 
     document.addEventListener('mouseup', () => { isMouseDown = false; dragMode = null; });
-
-    elements.preview.addEventListener('touchstart', e => {
-        const el = e.target.closest('.char');
-        if (!el) return;
-        const idx = Number(el.dataset.index);
-
-        if (elements.colorSource.value === 'points') {
-            handlePointClick(idx);
-            e.preventDefault();
-            return;
-        }
-
-        if (selectedChars.has(idx)) {
-            const s = new Set(selectedChars);
-            s.delete(idx);
-            setSelection([...s]);
-        } else {
-            setSelection([...selectedChars, idx]);
-        }
-        e.preventDefault();
-    }, { passive: false });
 
     function syncCharColorInputs(picker, hex) {
         picker.addEventListener('input', () => { hex.value = picker.value; });
@@ -578,10 +1419,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!hasTrans) {
             selectedChars.forEach(i => { charColors[i] = color; });
         } else if (isValidTransparency(transRaw)) {
-            const t = Number(transRaw);
+            const t2 = Number(transRaw);
             selectedChars.forEach(i => {
                 charColors[i] = color;
-                charTransparency[i] = t;
+                charTransparency[i] = t2;
             });
         } else {
             return;
@@ -688,14 +1529,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     current = null;
                 } else {
                     const c = colorFn(i) || null;
-                    const t = transFn(i);
-                    pushChar(' ', c, t);
+                    const t2 = transFn(i);
+                    pushChar(' ', c, t2);
                 }
                 continue;
             }
             const color = colorFn(i);
-            const t = transFn(i);
-            pushChar(ch, color, t);
+            const t2 = transFn(i);
+            pushChar(ch, color, t2);
         }
         return groups;
     }
@@ -740,7 +1581,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         const closeAnimation = () => {
             if (animationOpened) {
-                out += `<AnimateStyle=/>`;
+                out += `</AnimateStyle>`;
                 animationOpened = false;
             }
         };
@@ -847,10 +1688,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         parts.forEach(p => {
                             if (p === '') return;
                             if (/^ +$/.test(p)) groupInner += p;
-                            else groupInner += `<font color='${item.color}'>${p}</font>`;
+                            else groupInner += `<font color='${formatColor(item.color)}'>${p}</font>`;
                         });
                     } else {
-                        groupInner += `<font color='${item.color}'>${item.text}</font>`;
+                        groupInner += `<font color='${formatColor(item.color)}'>${item.text}</font>`;
                     }
                 } else {
                     groupInner += item.text;
@@ -875,7 +1716,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const globalTransAttr = trans > 0 ? ` transparency='${roundTransparency(trans)}'` : '';
         const openFont = `<font face='${font}'${globalTransAttr}>`;
         const hasStroke = thickness > 0;
-        const openStroke = hasStroke ? `<stroke color='${stroke}' thickness='${thickness}'>` : '';
+        const openStroke = hasStroke ? `<stroke color='${formatColor(stroke)}' thickness='${thickness}'>` : '';
         const closeStroke = hasStroke ? '</stroke>' : '';
         const richText = `${openFont}${openStroke}${formattedInner}${closeStroke}</font>`;
 
@@ -919,6 +1760,8 @@ document.addEventListener('DOMContentLoaded', function () {
             strikethrough: formatting.strikethrough,
             trans
         });
+
+        refreshPointMarkers();
 
         updatePointsEditor();
         saveState();
@@ -987,6 +1830,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function toggleDefaultioControls() {
         const isDefaultio = elements.outputFormat.value === 'defaultio';
+        const isAdvanced = currentUiMode === 'advanced';
         const groups = [
             elements.defaultioControls,
             elements.defaultioGroupingGroup,
@@ -994,10 +1838,13 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.defaultioStepFreqGroup,
             elements.defaultioStyleTimeGroup
         ];
-        groups.forEach(el => { if (el) el.style.display = isDefaultio ? 'block' : 'none'; });
+        groups.forEach(el => {
+            if (!el) return;
+            el.style.display = (isDefaultio && isAdvanced) ? 'block' : 'none';
+        });
 
         if (elements.outputDefaultioSection) {
-            elements.outputDefaultioSection.style.display = isDefaultio ? 'block' : 'none';
+            elements.outputDefaultioSection.style.display = (isDefaultio && isAdvanced) ? 'block' : 'none';
         }
     }
 
@@ -1060,7 +1907,7 @@ document.addEventListener('DOMContentLoaded', function () {
         generate();
     });
 
-    ['bold', 'italic', 'underline', 'strikethrough', 'lineBreaks', 'fixColors'].forEach(id => {
+    ['bold', 'italic', 'underline', 'strikethrough', 'lineBreaks', 'fixColors', 'rgbColors'].forEach(id => {
         elements[id].addEventListener('change', generate);
     });
 
@@ -1091,7 +1938,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.execCommand('copy');
 
             const originalText = this.textContent;
-            this.textContent = 'Copied!';
+            this.textContent = t('copied');
             this.classList.add('copied');
 
             setTimeout(() => {
@@ -1107,9 +1954,6 @@ document.addEventListener('DOMContentLoaded', function () {
     elements.gradientControls.style.display = 'block';
     setTimeout(() => elements.gradientControls.classList.add('active'), 10);
     elements.fixColors.checked = false;
-    toggleGradientColorControls();
-    toggleDefaultioControls();
-    toggleColorSourceControls();
 
     function openHelp() {
         elements.helpOverlay.classList.remove('hidden');
@@ -1125,9 +1969,241 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.target === elements.helpOverlay) closeHelp();
     });
 
+    function openPreview() {
+        if (!elements.previewOverlay) return;
+        elements.previewOverlay.classList.remove('hidden');
+        resetPan();
+        refreshEditorHost();
+        generate();
+    }
+    function closePreview() {
+        if (!elements.previewOverlay) return;
+        elements.previewOverlay.classList.add('hidden');
+        resetPan();
+        refreshEditorHost();
+        generate();
+    }
+
+    if (elements.previewExpandBtn) {
+        elements.previewExpandBtn.addEventListener('click', openPreview);
+    }
+    if (elements.previewClose) {
+        elements.previewClose.addEventListener('click', closePreview);
+    }
+    if (elements.previewOverlay) {
+        elements.previewOverlay.addEventListener('click', (e) => {
+            if (e.target === elements.previewOverlay) closePreview();
+        });
+    }
+
+    let zoomRafHandle = null;
+    let zoomTimeoutHandle = null;
+
+    function refreshMarkersAfterReflow() {
+        if (elements.previewLarge) void elements.previewLarge.offsetWidth;
+        if (elements.preview) void elements.preview.offsetWidth;
+        refreshPointMarkers();
+
+        if (zoomRafHandle !== null) cancelAnimationFrame(zoomRafHandle);
+        zoomRafHandle = requestAnimationFrame(() => {
+            zoomRafHandle = null;
+            if (elements.previewLarge) void elements.previewLarge.offsetWidth;
+            if (elements.preview) void elements.preview.offsetWidth;
+            refreshPointMarkers();
+        });
+
+        if (zoomTimeoutHandle !== null) clearTimeout(zoomTimeoutHandle);
+        zoomTimeoutHandle = setTimeout(() => {
+            zoomTimeoutHandle = null;
+            if (elements.previewLarge) void elements.previewLarge.offsetWidth;
+            if (elements.preview) void elements.preview.offsetWidth;
+            refreshPointMarkers();
+        }, 100);
+    }
+
+    function applyPreviewZoom(z) {
+        const min = elements.previewZoom ? parseFloat(elements.previewZoom.min) : 0.5;
+        const max = elements.previewZoom ? parseFloat(elements.previewZoom.max) : 4;
+        z = Math.max(min, Math.min(max, z));
+        if (elements.previewZoom) elements.previewZoom.value = z.toFixed(1);
+        if (elements.previewZoomValue) elements.previewZoomValue.textContent = z.toFixed(1) + 'x';
+        if (elements.previewLarge) {
+            elements.previewLarge.style.fontSize = (24 * z) + 'px';
+        }
+        refreshMarkersAfterReflow();
+        return z;
+    }
+
+    if (elements.previewZoom) {
+        elements.previewZoom.addEventListener('input', () => {
+            applyPreviewZoom(parseFloat(elements.previewZoom.value));
+        });
+    }
+
+    if (elements.previewModalBody) {
+        elements.previewModalBody.addEventListener('wheel', (e) => {
+            if (elements.previewOverlay && elements.previewOverlay.classList.contains('hidden')) return;
+            if (!elements.previewModalBody.contains(e.target)) return;
+
+            e.preventDefault();
+
+            const current = elements.previewZoom ? parseFloat(elements.previewZoom.value) : 1.5;
+            const step = 0.1;
+            const direction = e.deltaY < 0 ? 1 : -1;
+            const next = current + direction * step;
+
+            applyPreviewZoom(next);
+        }, { passive: false });
+    }
+
+    const PAN_LIMIT = 500;
+    const PAN_TAP_THRESHOLD = 5;
+    let panX = 0;
+    let panY = 0;
+    let isPanning = false;
+    let panStartX = 0;
+    let panStartY = 0;
+    let panStartOffsetX = 0;
+    let panStartOffsetY = 0;
+    let panMoved = false;
+
+    function applyPan() {
+        if (!elements.previewLarge) return;
+        const px = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panX));
+        const py = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panY));
+        panX = px;
+        panY = py;
+        elements.previewLarge.style.transform = `translate(${px}px, ${py}px)`;
+        refreshPointMarkers();
+    }
+
+    function resetPan() {
+        panX = 0;
+        panY = 0;
+        if (elements.previewLarge) {
+            elements.previewLarge.style.transform = '';
+        }
+        refreshPointMarkers();
+    }
+
+    function startPan(clientX, clientY) {
+        isPanning = true;
+        panMoved = false;
+        panStartX = clientX;
+        panStartY = clientY;
+        panStartOffsetX = panX;
+        panStartOffsetY = panY;
+    }
+
+    function movePan(clientX, clientY) {
+        if (!isPanning) return;
+        const dx = clientX - panStartX;
+        const dy = clientY - panStartY;
+        if (!panMoved && Math.abs(dx) + Math.abs(dy) < PAN_TAP_THRESHOLD) {
+            return;
+        }
+        if (!panMoved) {
+            panMoved = true;
+            if (elements.previewModalBody) {
+                elements.previewModalBody.classList.add('panning');
+            }
+        }
+        panX = panStartOffsetX + dx;
+        panY = panStartOffsetY + dy;
+        applyPan();
+    }
+
+    function endPan() {
+        isPanning = false;
+        panMoved = false;
+        if (elements.previewModalBody) {
+            elements.previewModalBody.classList.remove('panning');
+        }
+    }
+
+    let lastTapTime = 0;
+    let lastTapX = 0;
+    let lastTapY = 0;
+
+    function maybeResetPanFromTap(clientX, clientY) {
+        const now = Date.now();
+        const timeDiff = now - lastTapTime;
+        const dist = Math.abs(clientX - lastTapX) + Math.abs(clientY - lastTapY);
+        if (timeDiff < 300 && dist < 30) {
+            resetPan();
+            lastTapTime = 0;
+            return;
+        }
+        lastTapTime = now;
+        lastTapX = clientX;
+        lastTapY = clientY;
+    }
+
+    if (elements.previewModalBody) {
+        elements.previewModalBody.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            if (e.target.closest('.char')) return;
+            startPan(e.clientX, e.clientY);
+            e.preventDefault();
+        });
+
+        elements.previewModalBody.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.char')) return;
+            e.preventDefault();
+        });
+
+        elements.previewModalBody.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.char')) return;
+            const touch = e.touches[0];
+            if (!touch) return;
+            startPan(touch.clientX, touch.clientY);
+        }, { passive: true });
+
+        elements.previewModalBody.addEventListener('dblclick', (e) => {
+            if (e.target.closest('.char')) return;
+            resetPan();
+        });
+    }
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        movePan(e.clientX, e.clientY);
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isPanning) endPan();
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isPanning) return;
+        const touch = e.touches[0];
+        if (!touch) return;
+        movePan(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        if (!isPanning) return;
+        if (!panMoved) {
+            const touch = e.changedTouches && e.changedTouches[0];
+            if (touch) maybeResetPanFromTap(touch.clientX, touch.clientY);
+        }
+        endPan();
+    });
+
+    document.addEventListener('touchcancel', () => {
+        if (isPanning) endPan();
+    });
+
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !elements.helpOverlay.classList.contains('hidden')) {
-            closeHelp();
+        if (e.key === 'Escape') {
+            if (elements.helpOverlay && !elements.helpOverlay.classList.contains('hidden')) {
+                closeHelp();
+                return;
+            }
+            if (elements.previewOverlay && !elements.previewOverlay.classList.contains('hidden')) {
+                closePreview();
+                return;
+            }
         }
     });
 
@@ -1157,6 +2233,7 @@ document.addEventListener('DOMContentLoaded', function () {
             strikethrough: elements.strikethrough.checked,
             lineBreaks: elements.lineBreaks.checked,
             fixColors: elements.fixColors.checked,
+            rgbColors: elements.rgbColors.checked,
             strokeColor: elements.strokeColor.value,
             strokeThickness: elements.strokeThickness.value,
             fontFamily: elements.fontFamily.value,
@@ -1168,7 +2245,8 @@ document.addEventListener('DOMContentLoaded', function () {
             animateGrouping: elements.animateGrouping.value,
             animateStepTime: elements.animateStepTime.value,
             animateStepFrequency: elements.animateStepFrequency.value,
-            animateStyleTime: elements.animateStyleTime.value
+            animateStyleTime: elements.animateStyleTime.value,
+            previewZoom: elements.previewZoom ? elements.previewZoom.value : '1.5'
         };
     }
 
@@ -1212,6 +2290,7 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.strikethrough.checked = !!s.strikethrough;
             elements.lineBreaks.checked = !!s.lineBreaks;
             elements.fixColors.checked = !!s.fixColors;
+            elements.rgbColors.checked = !!s.rgbColors;
 
             if (s.strokeColor) {
                 elements.strokeColor.value = s.strokeColor;
@@ -1238,6 +2317,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (s.animateStyleTime !== undefined) {
                 elements.animateStyleTime.value = s.animateStyleTime;
                 elements.animateStyleTimeValue.textContent = s.animateStyleTime;
+            }
+            if (s.previewZoom !== undefined && elements.previewZoom) {
+                elements.previewZoom.value = s.previewZoom;
+                const z = parseFloat(s.previewZoom);
+                if (elements.previewZoomValue) elements.previewZoomValue.textContent = z.toFixed(1) + 'x';
+                if (elements.previewLarge) elements.previewLarge.style.fontSize = (24 * z) + 'px';
             }
         } catch (e) {
             console.warn('Failed to apply state', e);
@@ -1289,7 +2374,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const presets = loadPresets();
         const current = elements.presetSelect.value;
         elements.presetSelect.innerHTML = '';
-        elements.presetSelect.add(new Option('— Select a preset —', ''));
+        elements.presetSelect.add(new Option(t('selectPreset'), ''));
         Object.keys(presets).sort((a, b) => a.localeCompare(b)).forEach(name => {
             elements.presetSelect.add(new Option(name, name));
         });
@@ -1299,7 +2384,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     elements.presetSave.addEventListener('click', () => {
-        const rawName = prompt('Preset name:', '');
+        const rawName = prompt(t('presetName'), '');
         if (rawName === null) return;
         const name = rawName.trim();
         if (!name) return;
@@ -1325,13 +2410,13 @@ document.addEventListener('DOMContentLoaded', function () {
     elements.presetRename.addEventListener('click', () => {
         const name = elements.presetSelect.value;
         if (!name) return;
-        const rawNew = prompt('Rename preset to:', name);
+        const rawNew = prompt(t('renamePreset'), name);
         if (rawNew === null) return;
         const newName = rawNew.trim();
         if (!newName || newName === name) return;
         const presets = loadPresets();
         if (!presets[name]) return;
-        if (presets[newName] && !confirm('A preset with this name already exists. Overwrite?')) return;
+        if (presets[newName] && !confirm(t('presetExists'))) return;
         presets[newName] = presets[name];
         delete presets[name];
         savePresets(presets);
@@ -1342,7 +2427,7 @@ document.addEventListener('DOMContentLoaded', function () {
     elements.presetDelete.addEventListener('click', () => {
         const name = elements.presetSelect.value;
         if (!name) return;
-        if (!confirm(`Delete preset "${name}"?`)) return;
+        if (!confirm(t('deletePreset').replace('{name}', name))) return;
         const presets = loadPresets();
         delete presets[name];
         savePresets(presets);
@@ -1350,8 +2435,41 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.presetSelect.value = '';
     });
 
+    if (elements.languageSelect) {
+        elements.languageSelect.addEventListener('change', function () {
+            applyLanguage(this.value);
+            saveSettings();
+            refreshPresetSelect();
+        });
+    }
+    if (elements.themeSelect) {
+        elements.themeSelect.addEventListener('change', function () {
+            applyTheme(this.value);
+            saveSettings();
+        });
+    }
+    if (elements.uiModeSelect) {
+        elements.uiModeSelect.addEventListener('change', function () {
+            applyUiMode(this.value);
+            saveSettings();
+        });
+    }
+
+    const savedSettings = loadSettings() || {};
+    applyLanguage(savedSettings.lang || 'en');
+    applyTheme(savedSettings.theme || 'dark');
+    applyUiMode(savedSettings.uiMode || 'simple');
+
     loadState();
     refreshPresetSelect();
+
+    if (elements.previewLarge) {
+        const initialZoom = elements.previewZoom ? parseFloat(elements.previewZoom.value) : 1.5;
+        elements.previewLarge.style.fontSize = (24 * initialZoom) + 'px';
+        if (elements.previewZoomValue) elements.previewZoomValue.textContent = initialZoom.toFixed(1) + 'x';
+    }
+
+    refreshEditorHost();
 
     toggleGradientColorControls();
     toggleDefaultioControls();
