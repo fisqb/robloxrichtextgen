@@ -66,6 +66,15 @@
                         <button type="button" id="presetDelete" class="mini-btn ghost"
                             data-i18n="delete">Delete</button>
                     </div>
+                    <div class="presets-row advanced-only">
+                        <button type="button" id="presetImport" class="mini-btn ghost" data-i18n="import">Import
+                            JSON</button>
+                        <button type="button" id="presetExport" class="mini-btn ghost"
+                            data-i18n="export">Export</button>
+                        <button type="button" id="presetExportAll" class="mini-btn ghost" data-i18n="exportAll">Export
+                            All</button>
+                    </div>
+                    <input type="file" id="presetFileInput" accept="application/json,.json" style="display:none" />
                 </div>
 
                 <div class="control-group">
@@ -339,6 +348,9 @@
                             <li data-i18n="helpPresets1">Save, load, rename and delete presets with the buttons above.
                             </li>
                             <li data-i18n="helpPresets2">Presets are stored locally in your browser.</li>
+                            <li data-i18n="helpPresets3">Import JSON — load one or many presets from a .json file.
+                                Export — download the selected preset. Export All — download every preset in one file.
+                            </li>
                         </ul>
                     </section>
 
