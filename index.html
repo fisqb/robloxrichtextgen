@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8" />
@@ -10,65 +10,102 @@
 
 <body>
     <div class="container">
-        <h1>Rich Text Gen</h1>
+        <div class="header-row">
+            <h1>Rich Text Gen</h1>
+            <div class="header-controls">
+                <div class="top-control">
+                    <label class="top-control-label" data-i18n="language">Language</label>
+                    <select id="languageSelect">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="it">Italiano</option>
+                        <option value="pt">Português (Brasil)</option>
+                        <option value="ru">Русский</option>
+                        <option value="ja">日本語</option>
+                        <option value="ko">한국어</option>
+                        <option value="zh">中文 (简体)</option>
+                        <option value="ar">العربية</option>
+                        <option value="hi">हिन्दी</option>
+                    </select>
+                </div>
+                <div class="top-control">
+                    <label class="top-control-label" data-i18n="theme">Theme</label>
+                    <select id="themeSelect">
+                        <option value="dark" data-i18n="dark">Dark</option>
+                        <option value="light" data-i18n="light">Light</option>
+                    </select>
+                </div>
+                <div class="top-control">
+                    <label class="top-control-label" data-i18n="uiMode">Mode</label>
+                    <select id="uiModeSelect">
+                        <option value="simple" data-i18n="simple">Simple</option>
+                        <option value="advanced" data-i18n="advanced">Advanced</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
         <button type="button" class="help-btn" id="helpBtn" title="Tips & Help" aria-label="Tips & Help">?</button>
 
         <div class="main-grid">
             <div class="panel">
                 <div class="control-group presets-group">
-                    <label>Presets</label>
+                    <label data-i18n="presets">Presets</label>
                     <div class="presets-row">
                         <select id="presetSelect">
-                            <option value="">— Select a preset —</option>
+                            <option value="" data-i18n="selectPreset">— Select a preset —</option>
                         </select>
-                        <button type="button" id="presetSave" class="mini-btn">Save</button>
+                        <button type="button" id="presetSave" class="mini-btn" data-i18n="save">Save</button>
                     </div>
                     <div class="presets-row">
-                        <button type="button" id="presetLoad" class="mini-btn ghost">Load</button>
-                        <button type="button" id="presetRename" class="mini-btn ghost">Rename</button>
-                        <button type="button" id="presetDelete" class="mini-btn ghost">Delete</button>
+                        <button type="button" id="presetLoad" class="mini-btn ghost" data-i18n="load">Load</button>
+                        <button type="button" id="presetRename" class="mini-btn ghost"
+                            data-i18n="rename">Rename</button>
+                        <button type="button" id="presetDelete" class="mini-btn ghost"
+                            data-i18n="delete">Delete</button>
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label>Text</label>
+                    <label data-i18n="text">Text</label>
                     <textarea id="textInput" rows="3">Text</textarea>
                 </div>
 
-                <div class="control-group">
-                    <label>User ID</label>
+                <div class="control-group advanced-only">
+                    <label data-i18n="userId">User ID</label>
                     <input type="text" id="userId" value="0" inputmode="numeric" pattern="[0-9]*" />
                 </div>
 
                 <div class="control-group" id="modeControls">
-                    <label>Mode</label>
+                    <label data-i18n="mode">Mode</label>
                     <select id="colorMode">
-                        <option value="solid">Solid</option>
-                        <option value="gradient" selected>Gradient</option>
-                        <option value="rainbow">Rainbow</option>
+                        <option value="solid" data-i18n="solid">Solid</option>
+                        <option value="gradient" selected data-i18n="gradient">Gradient</option>
+                        <option value="rainbow" data-i18n="rainbow">Rainbow</option>
                     </select>
                 </div>
 
-                <div class="control-group">
-                    <label>Color Source</label>
+                <div class="control-group advanced-only">
+                    <label data-i18n="colorSource">Color Source</label>
                     <select id="colorSource">
-                        <option value="mode" selected>Mode (Solid / Gradient / Rainbow)</option>
-                        <option value="points">Gradient Points</option>
+                        <option value="mode" selected data-i18n="modeOption">Mode (Solid / Gradient / Rainbow)</option>
+                        <option value="points" data-i18n="gradientPoints">Gradient Points</option>
                     </select>
                 </div>
 
-                <div class="control-group">
-                    <label>Output Format</label>
+                <div class="control-group advanced-only">
+                    <label data-i18n="outputFormat">Output Format</label>
                     <select id="outputFormat">
-                        <option value="roblox" selected>Roblox RichText (native)</option>
-                        <option value="defaultio">Defaultio RichText Module</option>
+                        <option value="roblox" selected data-i18n="robloxRichText">Roblox RichText (native)</option>
+                        <option value="defaultio" data-i18n="defaultioRichText">Defaultio RichText Module</option>
                     </select>
                 </div>
 
                 <div id="solidControls">
                     <div class="control-group">
-                        <label>Color</label>
+                        <label data-i18n="color">Color</label>
                         <div class="color-picker-group">
                             <input type="color" id="textColor" value="#00d4ff" />
                             <input type="text" id="textColorHex" value="#00d4ff" />
@@ -78,7 +115,7 @@
 
                 <div id="gradientControls">
                     <div class="control-group">
-                        <label>Color 1</label>
+                        <label data-i18n="color1">Color 1</label>
                         <div class="color-picker-group">
                             <input type="color" id="gradientColor1" value="#ff6b9d" />
                             <input type="text" id="gradientColor1Hex" value="#ff6b9d" />
@@ -86,7 +123,7 @@
                     </div>
 
                     <div class="control-group">
-                        <label>Color 2</label>
+                        <label data-i18n="color2">Color 2</label>
                         <div class="color-picker-group">
                             <input type="color" id="gradientColor2" value="#00d4ff" />
                             <input type="text" id="gradientColor2Hex" value="#00d4ff" />
@@ -94,7 +131,7 @@
                     </div>
 
                     <div class="control-group">
-                        <label>Steps</label>
+                        <label data-i18n="steps">Steps</label>
                         <div class="range-group">
                             <input type="range" id="gradientSteps" min="2" max="20" value="8" />
                             <span id="gradientStepsValue">8</span>
@@ -107,8 +144,8 @@
                     <option value="rainbow">Rainbow</option>
                 </select>
 
-                <div class="control-group">
-                    <label>Transparency</label>
+                <div class="control-group advanced-only">
+                    <label data-i18n="transparency">Transparency</label>
                     <div class="range-group">
                         <input type="range" id="transparency" min="0" max="1" step="0.1" value="0" />
                         <span id="transparencyValue">0</span>
@@ -116,7 +153,7 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Formatting</label>
+                    <label data-i18n="formatting">Formatting</label>
                     <div class="formatting-group">
                         <label class="checkbox-label">
                             <input type="checkbox" id="bold" />
@@ -138,25 +175,30 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Line Breaks</label>
+                    <label data-i18n="rgbColors">RGB Colors</label>
+                    <input type="checkbox" id="rgbColors" />
+                </div>
+
+                <div class="control-group advanced-only">
+                    <label data-i18n="lineBreaks">Line Breaks</label>
                     <input type="checkbox" id="lineBreaks" />
                 </div>
 
-                <div class="control-group">
-                    <label>Fix Colors</label>
+                <div class="control-group advanced-only">
+                    <label data-i18n="fixColors">Fix Colors</label>
                     <input type="checkbox" id="fixColors" />
                 </div>
 
                 <div class="control-group">
-                    <label>Stroke</label>
+                    <label data-i18n="stroke">Stroke</label>
                     <div class="color-picker-group">
                         <input type="color" id="strokeColor" value="#0a0a1a" />
                         <input type="text" id="strokeColorHex" value="#0a0a1a" />
                     </div>
                 </div>
 
-                <div class="control-group">
-                    <label>Stroke Width</label>
+                <div class="control-group advanced-only">
+                    <label data-i18n="strokeWidth">Stroke Width</label>
                     <div class="range-group">
                         <input type="range" id="strokeThickness" min="0" max="5" step="0.5" value="2" />
                         <span id="strokeThicknessValue">2</span>
@@ -164,14 +206,14 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Font</label>
+                    <label data-i18n="font">Font</label>
                     <select id="fontFamily"></select>
                 </div>
 
-                <div class="control-group" id="defaultioControls" style="display:none">
-                    <label>Animation</label>
+                <div class="control-group advanced-only" id="defaultioControls" style="display:none">
+                    <label data-i18n="animation">Animation</label>
                     <select id="animateStyle">
-                        <option value="">None</option>
+                        <option value="" data-i18n="none">None</option>
                         <option value="Appear">Appear</option>
                         <option value="Fade">Fade</option>
                         <option value="Wiggle">Wiggle</option>
@@ -181,30 +223,30 @@
                     </select>
                 </div>
 
-                <div class="control-group" id="defaultioGroupingGroup" style="display:none">
-                    <label>Animate Grouping</label>
+                <div class="control-group advanced-only" id="defaultioGroupingGroup" style="display:none">
+                    <label data-i18n="animateGrouping">Animate Grouping</label>
                     <select id="animateGrouping">
-                        <option value="Letter" selected>Letter</option>
-                        <option value="Word">Word</option>
-                        <option value="All">All</option>
+                        <option value="Letter" selected data-i18n="groupLetter">Letter</option>
+                        <option value="Word" data-i18n="groupWord">Word</option>
+                        <option value="All" data-i18n="groupAll">All</option>
                     </select>
                 </div>
 
-                <div class="control-group" id="defaultioStepTimeGroup" style="display:none">
-                    <label>Animate Step Time (s)</label>
+                <div class="control-group advanced-only" id="defaultioStepTimeGroup" style="display:none">
+                    <label data-i18n="animateStepTime">Animate Step Time (s)</label>
                     <div class="range-group">
                         <input type="range" id="animateStepTime" min="0" max="1" step="0.05" value="0" />
                         <span id="animateStepTimeValue">0</span>
                     </div>
                 </div>
 
-                <div class="control-group" id="defaultioStepFreqGroup" style="display:none">
-                    <label>Animate Step Frequency</label>
+                <div class="control-group advanced-only" id="defaultioStepFreqGroup" style="display:none">
+                    <label data-i18n="animateStepFrequency">Animate Step Frequency</label>
                     <input type="text" id="animateStepFrequency" value="4" inputmode="numeric" />
                 </div>
 
-                <div class="control-group" id="defaultioStyleTimeGroup" style="display:none">
-                    <label>Animate Style Time (s)</label>
+                <div class="control-group advanced-only" id="defaultioStyleTimeGroup" style="display:none">
+                    <label data-i18n="animateStyleTime">Animate Style Time (s)</label>
                     <div class="range-group">
                         <input type="range" id="animateStyleTime" min="0" max="5" step="0.1" value="0.5" />
                         <span id="animateStyleTimeValue">0.5</span>
@@ -215,71 +257,49 @@
             <div class="panel">
                 <div class="preview-wrap">
                     <div class="preview" id="preview">Text</div>
+                    <button type="button" class="preview-expand-btn" id="previewExpandBtn"
+                        title="Expand preview">⛶</button>
                 </div>
 
-                <div class="char-editor hidden" id="charEditor">
-                    <div class="char-editor-header">
-                        <span id="charEditorTitle">Character: —</span>
-                        <button type="button" id="charEditorClose" class="icon-btn" title="Close">✕</button>
-                    </div>
-                    <div class="char-editor-row">
-                        <input type="color" id="charColor" value="#ff8c00" />
-                        <input type="text" id="charColorHex" value="#ff8c00" />
-                    </div>
-                    <div class="char-editor-row">
-                        <input type="text" id="charTransparency" placeholder="Transparency (optional, 0-1)"
-                            inputmode="decimal" />
-                        <button type="button" id="charApply" class="mini-btn">Apply</button>
-                    </div>
-                    <div class="char-editor-row">
-                        <button type="button" id="charReset" class="mini-btn ghost">Reset color</button>
-                        <button type="button" id="charResetAll" class="mini-btn ghost">Reset all characters</button>
-                    </div>
-                    <div class="char-editor-hint">
-                        Click/tap to select a character. Hold and drag to select multiple. Transparency is optional and
-                        per-character.
-                    </div>
-                </div>
-
-                <div class="char-editor hidden" id="pointsEditor">
-                    <div class="char-editor-header">
-                        <span id="pointsEditorTitle">Gradient Points</span>
-                    </div>
-                    <div class="char-editor-row">
-                        <input type="color" id="pointColor" value="#ff8c00" />
-                        <input type="text" id="pointColorHex" value="#ff8c00" />
-                    </div>
-                    <div class="char-editor-row">
-                        <input type="text" id="pointTransparency" placeholder="Transparency (optional, 0-1)"
-                            inputmode="decimal" />
-                        <button type="button" id="pointApply" class="mini-btn">Apply</button>
-                    </div>
-                    <div class="char-editor-row">
-                        <button type="button" id="pointDelete" class="mini-btn ghost">Delete point</button>
-                        <button type="button" id="pointsResetAll" class="mini-btn ghost">Reset all points</button>
-                    </div>
-                    <div class="char-editor-hint">
-                        In Gradient Points mode, click a character to place or select a point. Between points, colors
-                        and transparency blend smoothly.
-                    </div>
-                </div>
+                <div id="editorHostMain"></div>
 
                 <div class="output-section">
-                    <label>Rich Text</label>
-                    <button class="copy-btn" data-target="outputCode">Copy</button>
+                    <label data-i18n="richText">Rich Text</label>
+                    <button class="copy-btn" data-target="outputCode" data-i18n="copy">Copy</button>
                     <textarea id="outputCode" readonly></textarea>
                 </div>
 
-                <div class="output-section" id="outputDefaultioSection" style="display:none">
-                    <label>Defaultio Module Text</label>
-                    <button class="copy-btn" data-target="outputDefaultio">Copy</button>
+                <div class="output-section advanced-only" id="outputDefaultioSection" style="display:none">
+                    <label data-i18n="defaultioModule">Defaultio Module Text</label>
+                    <button class="copy-btn" data-target="outputDefaultio" data-i18n="copy">Copy</button>
                     <textarea id="outputDefaultio" readonly></textarea>
                 </div>
 
-                <div class="output-section">
-                    <label>JSON</label>
-                    <button class="copy-btn" data-target="outputJson">Copy</button>
+                <div class="output-section advanced-only">
+                    <label data-i18n="jsonLua">JSON / Lua</label>
+                    <button class="copy-btn" data-target="outputJson" data-i18n="copy">Copy</button>
                     <textarea id="outputJson" readonly></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-overlay hidden" id="previewOverlay">
+            <div class="preview-modal" role="dialog" aria-modal="true">
+                <div class="preview-modal-header">
+                    <span data-i18n="preview">Preview</span>
+                    <div class="preview-modal-controls">
+                        <label class="preview-zoom-label" data-i18n="zoom">Zoom</label>
+                        <input type="range" id="previewZoom" min="0.5" max="4" step="0.1" value="1.5" />
+                        <span id="previewZoomValue">1.5x</span>
+                        <button type="button" class="icon-btn" id="previewClose" title="Close">✕</button>
+                    </div>
+                </div>
+                <div class="preview-modal-body" id="previewModalBody">
+                    <div class="preview preview-large" id="previewLarge">Text</div>
+                </div>
+                <div class="preview-modal-editors" id="editorHostModal"></div>
+                <div class="preview-modal-footer" data-i18n="previewHint">
+                    Click/tap characters to select them. Hold and drag to select multiple. Drag empty space to pan.
                 </div>
             </div>
         </div>
@@ -287,187 +307,119 @@
         <div class="help-overlay hidden" id="helpOverlay">
             <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
                 <div class="help-header">
-                    <h2 id="helpTitle">Tips &amp; Help</h2>
+                    <h2 id="helpTitle" data-i18n="helpTitle">Tips &amp; Help</h2>
                     <button type="button" class="icon-btn" id="helpClose" title="Close">✕</button>
                 </div>
 
                 <div class="help-body">
                     <section class="help-section">
-                        <h3>Getting started</h3>
+                        <h3 data-i18n="helpGettingStarted">Getting started</h3>
                         <ul>
-                            <li>Type your text in the <b>Text</b> field on the left.</li>
-                            <li>The <b>Preview</b> on the right updates live.</li>
-                            <li>Copy the <b>Rich Text</b>, <b>Defaultio Module Text</b>, or <b>JSON</b> output
-                                using the Copy buttons.</li>
+                            <li data-i18n="helpStart1">Type your text in the Text field on the left.</li>
+                            <li data-i18n="helpStart2">The Preview on the right updates live.</li>
+                            <li data-i18n="helpStart3">Copy the output using the Copy buttons.</li>
                         </ul>
                     </section>
 
                     <section class="help-section">
-                        <h3>Presets</h3>
+                        <h3 data-i18n="helpSettings">Settings</h3>
                         <ul>
-                            <li><b>Save</b> — store the current settings under a name.</li>
-                            <li><b>Load</b> — restore the selected preset.</li>
-                            <li><b>Rename</b> — rename the selected preset.</li>
-                            <li><b>Delete</b> — remove the selected preset.</li>
-                            <li>Presets are stored locally in your browser and persist between visits.</li>
-                        </ul>
-                    </section>
-
-                    <section class="help-section">
-                        <h3>Auto-save</h3>
-                        <ul>
-                            <li>Your current text, colors, gradient points, and all other settings are saved
-                                automatically.</li>
-                            <li>They are restored the next time you open the page.</li>
-                        </ul>
-                    </section>
-
-                    <section class="help-section">
-                        <h3>Color modes</h3>
-                        <ul>
-                            <li><b>Solid</b> - the whole text uses one color.</li>
-                            <li><b>Gradient</b> - colors blend horizontally between Color 1 and Color 2 across the text.
+                            <li data-i18n="helpSettings1">Use the Language, Theme and Mode selectors next to the title.
                             </li>
-                            <li><b>Rainbow</b> - a full hue spectrum across the text (Color 1 / Color 2 are hidden).
+                            <li data-i18n="helpSettings2">Dark and Simple are the defaults. Your choices are saved
+                                between visits.</li>
+                            <li data-i18n="helpSettings3">Switch to Advanced for all features (per-character colors,
+                                Gradient Points, Defaultio, JSON output).</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3 data-i18n="helpPresets">Presets</h3>
+                        <ul>
+                            <li data-i18n="helpPresets1">Save, load, rename and delete presets with the buttons above.
                             </li>
-                            <li><b>Steps</b> controls how many color stops the gradient uses (e.g. 20 steps = 20
-                                distinct colors spread across the text).</li>
-                            <li>Mode and its controls are hidden when <b>Color Source</b> is set to <b>Gradient
-                                    Points</b>.</li>
+                            <li data-i18n="helpPresets2">Presets are stored locally in your browser.</li>
                         </ul>
                     </section>
 
                     <section class="help-section">
-                        <h3>Color Source</h3>
+                        <h3 data-i18n="helpAutoSave">Auto-save</h3>
                         <ul>
-                            <li><b>Mode</b> - colors come from Solid / Gradient / Rainbow settings.</li>
-                            <li><b>Gradient Points</b> - place color stops on specific characters; colors and
-                                transparency blend between neighbouring points. Overrides Mode but is overridden by
-                                per-character colors.</li>
-                            <li>Switching between Mode and Gradient Points clears the other one's data to avoid mixing
-                                them.</li>
+                            <li data-i18n="helpAutoSave1">Your current text, colors, gradient points and settings are
+                                saved automatically.</li>
                         </ul>
                     </section>
 
                     <section class="help-section">
-                        <h3>Gradient Points</h3>
+                        <h3 data-i18n="helpColorModes">Color modes</h3>
                         <ul>
-                            <li>Set <b>Color Source</b> to <b>Gradient Points</b> to open the Gradient Points panel.
-                            </li>
-                            <li><b>Click/tap</b> a character to place a point there, or select an existing point.</li>
-                            <li>Each point has its own color, and optionally its own transparency.</li>
-                            <li>Use <b>Delete point</b> to remove the selected one, or <b>Reset all points</b> to clear
-                                them.</li>
-                            <li>Small diamond markers above the preview show where points are placed.</li>
+                            <li data-i18n="helpColorModes1">Solid — one color for the entire text.</li>
+                            <li data-i18n="helpColorModes2">Gradient — colors blend horizontally between Color 1 and
+                                Color 2.</li>
+                            <li data-i18n="helpColorModes3">Rainbow — full hue spectrum across the text.</li>
                         </ul>
                     </section>
 
                     <section class="help-section">
-                        <h3>Output formats</h3>
+                        <h3 data-i18n="helpAdvanced">Advanced features</h3>
                         <ul>
-                            <li><b>Roblox RichText (native)</b> - uses <code>&lt;font&gt;</code>,
-                                <code>&lt;stroke&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>,
-                                <code>&lt;u&gt;</code>, <code>&lt;s&gt;</code>, <code>&lt;br/&gt;</code>. Paste into a
-                                TextLabel with RichText enabled.</li>
-                            <li><b>Defaultio RichText Module</b> - uses markup like <code>&lt;Color=r,g,b&gt;</code>,
-                                <code>&lt;Font=...&gt;</code>, <code>&lt;AnimateStyle=...&gt;</code>,
-                                <code>&lt;AnimateStepTime=...&gt;</code>, <code>&lt;AnimateStepFrequency=...&gt;</code>,
-                                <code>&lt;AnimateStepGrouping=...&gt;</code>, <code>&lt;AnimateStyleTime=...&gt;</code>,
-                                <code>&lt;StrokeColor=...&gt;</code>, <code>&lt;TextStrokeTransparency=...&gt;</code>,
-                                <code>&lt;TextTransparency=...&gt;</code>. Paste into the Defaultio RichText module in
-                                Studio.</li>
+                            <li data-i18n="helpAdvanced1">Per-character colors, Gradient Points, Defaultio module output
+                                and JSON/Lua output are available in Advanced mode.</li>
+                            <li data-i18n="helpAdvanced2">Click the ⛶ button to expand the preview; you can edit
+                                characters right there and pan around by dragging empty space.</li>
                         </ul>
                     </section>
 
                     <section class="help-section">
-                        <h3>Defaultio animation options</h3>
+                        <h3 data-i18n="helpKeyboard">Keyboard</h3>
                         <ul>
-                            <li><b>Animation</b> - entrance style: Appear, Fade, Wiggle, Swing, Spin, Rainbow.</li>
-                            <li><b>Animate Grouping</b> - Letter (one by one), Word (whole words), All (everything at
-                                once).</li>
-                            <li><b>Animate Step Time</b> - seconds between animation steps.</li>
-                            <li><b>Animate Step Frequency</b> - how often to step (1 = every character, 4 = every 4th).
-                            </li>
-                            <li><b>Animate Style Time</b> - how long each entrance animation takes.</li>
-                        </ul>
-                    </section>
-
-                    <section class="help-section">
-                        <h3>Per-character colors</h3>
-                        <ul>
-                            <li>Available when <b>Color Source</b> is <b>Mode</b>.</li>
-                            <li><b>Desktop:</b> click a character to select it. <b>Hold &amp; drag</b> to select many.
-                            </li>
-                            <li><b>Mobile:</b> tap a character to toggle it. Tap several to multi-select.</li>
-                            <li>A panel appears below the preview — pick a color and press <b>Apply</b>.</li>
-                            <li>Optionally enter a <b>Transparency</b> (0–1) to give the selected characters a
-                                per-character transparency. Leave empty to use the global value.</li>
-                            <li><b>Reset color</b> removes colors and per-character transparency from the selected
-                                characters.</li>
-                            <li><b>Reset all characters</b> clears every custom color and per-character transparency.
-                            </li>
-                            <li>Selected characters get an orange outline; customized ones get an orange underline.</li>
-                            <li>Custom colors <b>override</b> everything else in both formats.</li>
-                        </ul>
-                    </section>
-
-                    <section class="help-section">
-                        <h3>Formatting</h3>
-                        <ul>
-                            <li><b>B</b> - bold, <b>I</b> - italic, <b>U</b> - underline, <b>S</b> - strikethrough.</li>
-                            <li><b>Line Breaks</b> - keep line breaks from the textarea as <code>&lt;br/&gt;</code>
-                                (Roblox) or <code>\n</code> (Defaultio).</li>
-                            <li><b>Fix Colors</b> - do not wrap spaces in <code>&lt;font&gt;</code> tags (Roblox only,
-                                cleaner output).</li>
-                        </ul>
-                    </section>
-
-                    <section class="help-section">
-                        <h3>Stroke &amp; Font</h3>
-                        <ul>
-                            <li><b>Stroke</b> - outline color; <b>Stroke Width</b> - outline thickness (0 disables it).
-                            </li>
-                            <li><b>Font</b> - choose from Roblox-supported fonts.</li>
-                            <li>In the Defaultio format, Stroke Width has no direct equivalent (the module only exposes
-                                stroke color and transparency), so only the stroke color is applied when thickness &gt;
-                                0.</li>
-                        </ul>
-                    </section>
-
-                    <section class="help-section">
-                        <h3>Transparency</h3>
-                        <ul>
-                            <li>Global <b>Transparency</b> is applied once, on the outer
-                                <code>&lt;font face='...'&gt;</code> tag - it does not repeat on every character.</li>
-                            <li>To give individual characters their own transparency, use the <b>Character</b> panel's
-                                Transparency field.</li>
-                            <li>To give individual gradient points their own transparency, use the <b>Gradient
-                                    Points</b> panel's Transparency field.</li>
-                            <li>Nearby transparency values (difference ≤ 0.1) are merged into one group to keep the
-                                output short.</li>
-                            <li>Defaultio format: adds <code>&lt;TextTransparency=...&gt;</code>.</li>
-                        </ul>
-                    </section>
-
-                    <section class="help-section">
-                        <h3>Output</h3>
-                        <ul>
-                            <li><b>Rich Text</b> - native Roblox RichText string.</li>
-                            <li><b>Defaultio Module Text</b> - string for the Defaultio RichText module. Only shown when
-                                that output format is selected.</li>
-                            <li><b>JSON / Lua</b> - in Roblox mode this is a JSON entry; in Defaultio mode it becomes a
-                                ready-to-paste Lua snippet that constructs the RichText object.</li>
-                        </ul>
-                    </section>
-
-                    <section class="help-section">
-                        <h3>Keyboard</h3>
-                        <ul>
-                            <li><b>Esc</b> - close this window.</li>
-                            <li>Click outside the modal - also closes it.</li>
+                            <li data-i18n="helpKeyboard1">Esc — close the expanded preview or this window.</li>
+                            <li data-i18n="helpKeyboard2">Click outside a modal to close it.</li>
                         </ul>
                     </section>
                 </div>
+            </div>
+        </div>
+
+        <div class="char-editor hidden" id="charEditor">
+            <div class="char-editor-header">
+                <span id="charEditorTitle" data-i18n="character">Character</span>
+                <button type="button" id="charEditorClose" class="icon-btn" title="Close">✕</button>
+            </div>
+            <div class="char-editor-row">
+                <input type="color" id="charColor" value="#ff8c00" />
+                <input type="text" id="charColorHex" value="#ff8c00" />
+            </div>
+            <div class="char-editor-row">
+                <input type="text" id="charTransparency" data-i18n-placeholder="transparencyPlaceholder"
+                    placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
+                <button type="button" id="charApply" class="mini-btn" data-i18n="apply">Apply</button>
+            </div>
+            <div class="char-editor-row">
+                <button type="button" id="charReset" class="mini-btn ghost" data-i18n="resetColor">Reset color</button>
+                <button type="button" id="charResetAll" class="mini-btn ghost" data-i18n="resetAllChars">Reset all
+                    characters</button>
+            </div>
+        </div>
+
+        <div class="char-editor hidden" id="pointsEditor">
+            <div class="char-editor-header">
+                <span id="pointsEditorTitle" data-i18n="gradientPoints">Gradient Points</span>
+            </div>
+            <div class="char-editor-row">
+                <input type="color" id="pointColor" value="#ff8c00" />
+                <input type="text" id="pointColorHex" value="#ff8c00" />
+            </div>
+            <div class="char-editor-row">
+                <input type="text" id="pointTransparency" data-i18n-placeholder="transparencyPlaceholder"
+                    placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
+                <button type="button" id="pointApply" class="mini-btn" data-i18n="apply">Apply</button>
+            </div>
+            <div class="char-editor-row">
+                <button type="button" id="pointDelete" class="mini-btn ghost" data-i18n="deletePoint">Delete
+                    point</button>
+                <button type="button" id="pointsResetAll" class="mini-btn ghost" data-i18n="resetAllPoints">Reset all
+                    points</button>
             </div>
         </div>
 
