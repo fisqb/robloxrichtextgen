@@ -98,6 +98,10 @@ document.addEventListener('DOMContentLoaded', function () {
         presetLoad: $('presetLoad'),
         presetRename: $('presetRename'),
         presetDelete: $('presetDelete'),
+        presetImport: $('presetImport'),
+        presetExport: $('presetExport'),
+        presetExportAll: $('presetExportAll'),
+        presetFileInput: $('presetFileInput'),
         languageSelect: $('languageSelect'),
         themeSelect: $('themeSelect'),
         uiModeSelect: $('uiModeSelect')
@@ -201,6 +205,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return `rgb(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)})`;
     };
 
+    // ===== Settings: language, theme, UI mode =====
     const SETTINGS_KEY = 'richTextGenSettings';
 
     const translations = {
@@ -208,6 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: 'Language', theme: 'Theme', uiMode: 'Mode',
             presets: 'Presets', selectPreset: '— Select a preset —',
             save: 'Save', load: 'Load', rename: 'Rename', delete: 'Delete',
+            import: 'Import JSON', export: 'Export', exportAll: 'Export All',
             text: 'Text', userId: 'User ID',
             solid: 'Solid', gradient: 'Gradient', rainbow: 'Rainbow',
             colorSource: 'Color Source', modeOption: 'Mode (Solid / Gradient / Rainbow)', gradientPoints: 'Gradient Points',
@@ -232,6 +238,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'Preset name:', renamePreset: 'Rename preset to:',
             deletePreset: 'Delete preset "{name}"?',
             presetExists: 'A preset with this name already exists. Overwrite?',
+            importOk: 'Imported {count} preset(s).',
+            importNoPresets: 'No valid presets found in this JSON file.',
+            importFailed: 'Failed to parse JSON file.',
+            exportSelectFirst: 'Select a preset first.',
+            exportNoPresets: 'No presets to export.',
             dark: 'Dark', light: 'Light', simple: 'Simple', advanced: 'Advanced',
             helpTitle: 'Tips & Help', helpGettingStarted: 'Getting started',
             helpStart1: 'Type your text in the Text field on the left.',
@@ -244,6 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'Presets',
             helpPresets1: 'Save, load, rename and delete presets with the buttons above.',
             helpPresets2: 'Presets are stored locally in your browser.',
+            helpPresets3: 'Import JSON — load one or many presets from a .json file. Export — download the selected preset. Export All — download every preset in one file.',
             helpAutoSave: 'Auto-save',
             helpAutoSave1: 'Your current text, colors, gradient points and settings are saved automatically.',
             helpColorModes: 'Color modes',
@@ -261,6 +273,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: 'Idioma', theme: 'Tema', uiMode: 'Modo',
             presets: 'Ajustes guardados', selectPreset: '— Selecciona un ajuste —',
             save: 'Guardar', load: 'Cargar', rename: 'Renombrar', delete: 'Eliminar',
+            import: 'Importar JSON', export: 'Exportar', exportAll: 'Exportar todo',
             text: 'Texto', userId: 'ID de usuario',
             solid: 'Sólido', gradient: 'Degradado', rainbow: 'Arcoíris',
             colorSource: 'Fuente de color', modeOption: 'Modo (Sólido / Degradado / Arcoíris)', gradientPoints: 'Puntos de degradado',
@@ -285,6 +298,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'Nombre del ajuste:', renamePreset: 'Renombrar ajuste a:',
             deletePreset: '¿Eliminar el ajuste "{name}"?',
             presetExists: 'Ya existe un ajuste con este nombre. ¿Sobrescribir?',
+            importOk: 'Se importaron {count} ajustes.',
+            importNoPresets: 'No se encontraron ajustes válidos en este archivo JSON.',
+            importFailed: 'No se pudo analizar el archivo JSON.',
+            exportSelectFirst: 'Selecciona un ajuste primero.',
+            exportNoPresets: 'No hay ajustes para exportar.',
             dark: 'Oscuro', light: 'Claro', simple: 'Simple', advanced: 'Avanzado',
             helpTitle: 'Ayuda y consejos', helpGettingStarted: 'Primeros pasos',
             helpStart1: 'Escribe tu texto en el campo Texto de la izquierda.',
@@ -297,6 +315,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'Ajustes guardados',
             helpPresets1: 'Guarda, carga, renombra y elimina ajustes con los botones.',
             helpPresets2: 'Los ajustes se guardan localmente en tu navegador.',
+            helpPresets3: 'Importar JSON — carga uno o varios ajustes desde un archivo .json. Exportar — descarga el ajuste seleccionado. Exportar todo — descarga todos los ajustes en un archivo.',
             helpAutoSave: 'Guardado automático',
             helpAutoSave1: 'Tu texto, colores y ajustes se guardan automáticamente.',
             helpColorModes: 'Modos de color',
@@ -314,6 +333,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: 'Langue', theme: 'Thème', uiMode: 'Mode',
             presets: 'Préréglages', selectPreset: '— Sélectionnez un préréglage —',
             save: 'Enregistrer', load: 'Charger', rename: 'Renommer', delete: 'Supprimer',
+            import: 'Importer JSON', export: 'Exporter', exportAll: 'Tout exporter',
             text: 'Texte', userId: 'ID utilisateur',
             solid: 'Uni', gradient: 'Dégradé', rainbow: 'Arc-en-ciel',
             colorSource: 'Source de couleur', modeOption: 'Mode (Uni / Dégradé / Arc-en-ciel)', gradientPoints: 'Points de dégradé',
@@ -338,6 +358,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'Nom du préréglage :', renamePreset: 'Renommer le préréglage en :',
             deletePreset: 'Supprimer le préréglage « {name} » ?',
             presetExists: 'Un préréglage avec ce nom existe déjà. Écraser ?',
+            importOk: '{count} préréglage(s) importé(s).',
+            importNoPresets: 'Aucun préréglage valide trouvé dans ce fichier JSON.',
+            importFailed: 'Échec de l\'analyse du fichier JSON.',
+            exportSelectFirst: 'Sélectionnez d\'abord un préréglage.',
+            exportNoPresets: 'Aucun préréglage à exporter.',
             dark: 'Sombre', light: 'Clair', simple: 'Simple', advanced: 'Avancé',
             helpTitle: 'Aide et astuces', helpGettingStarted: 'Pour commencer',
             helpStart1: 'Saisissez votre texte à gauche.',
@@ -350,6 +375,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'Préréglages',
             helpPresets1: 'Enregistrez, chargez, renommez et supprimez les préréglages.',
             helpPresets2: 'Les préréglages sont stockés localement.',
+            helpPresets3: 'Importer JSON — chargez un ou plusieurs préréglages depuis un fichier .json. Exporter — téléchargez le préréglage sélectionné. Tout exporter — téléchargez tous les préréglages.',
             helpAutoSave: 'Sauvegarde automatique',
             helpAutoSave1: 'Votre texte, couleurs et réglages sont enregistrés automatiquement.',
             helpColorModes: 'Modes de couleur',
@@ -367,6 +393,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: 'Sprache', theme: 'Design', uiMode: 'Modus',
             presets: 'Voreinstellungen', selectPreset: '— Voreinstellung wählen —',
             save: 'Speichern', load: 'Laden', rename: 'Umbenennen', delete: 'Löschen',
+            import: 'JSON importieren', export: 'Exportieren', exportAll: 'Alle exportieren',
             text: 'Text', userId: 'Benutzer-ID',
             solid: 'Einfarbig', gradient: 'Verlauf', rainbow: 'Regenbogen',
             colorSource: 'Farbquelle', modeOption: 'Modus (Einfarbig / Verlauf / Regenbogen)', gradientPoints: 'Verlaufspunkte',
@@ -391,6 +418,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'Name der Voreinstellung:', renamePreset: 'Voreinstellung umbenennen in:',
             deletePreset: 'Voreinstellung „{name}" löschen?',
             presetExists: 'Eine Voreinstellung mit diesem Namen existiert. Überschreiben?',
+            importOk: '{count} Voreinstellung(en) importiert.',
+            importNoPresets: 'Keine gültigen Voreinstellungen in dieser JSON-Datei gefunden.',
+            importFailed: 'JSON-Datei konnte nicht gelesen werden.',
+            exportSelectFirst: 'Bitte zuerst eine Voreinstellung auswählen.',
+            exportNoPresets: 'Keine Voreinstellungen zum Exportieren.',
             dark: 'Dunkel', light: 'Hell', simple: 'Einfach', advanced: 'Erweitert',
             helpTitle: 'Tipps & Hilfe', helpGettingStarted: 'Erste Schritte',
             helpStart1: 'Gib deinen Text links ein.',
@@ -403,6 +435,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'Voreinstellungen',
             helpPresets1: 'Speichern, laden, umbenennen und löschen mit den Buttons.',
             helpPresets2: 'Voreinstellungen werden lokal gespeichert.',
+            helpPresets3: 'JSON importieren — lade eine oder mehrere Voreinstellungen aus einer .json-Datei. Exportieren — lade die ausgewählte Voreinstellung herunter. Alle exportieren — lade alle Voreinstellungen in einer Datei herunter.',
             helpAutoSave: 'Automatisches Speichern',
             helpAutoSave1: 'Text, Farben und Einstellungen werden automatisch gespeichert.',
             helpColorModes: 'Farbmodi',
@@ -420,6 +453,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: 'Lingua', theme: 'Tema', uiMode: 'Modalità',
             presets: 'Preset', selectPreset: '— Seleziona un preset —',
             save: 'Salva', load: 'Carica', rename: 'Rinomina', delete: 'Elimina',
+            import: 'Importa JSON', export: 'Esporta', exportAll: 'Esporta tutto',
             text: 'Testo', userId: 'ID utente',
             solid: 'Tinta unita', gradient: 'Sfumatura', rainbow: 'Arcobaleno',
             colorSource: 'Sorgente colore', modeOption: 'Modalità (Tinta unita / Sfumatura / Arcobaleno)', gradientPoints: 'Punti sfumatura',
@@ -444,6 +478,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'Nome preset:', renamePreset: 'Rinomina preset in:',
             deletePreset: 'Eliminare il preset "{name}"?',
             presetExists: 'Esiste già un preset con questo nome. Sovrascrivere?',
+            importOk: '{count} preset importati.',
+            importNoPresets: 'Nessun preset valido trovato in questo file JSON.',
+            importFailed: 'Impossibile analizzare il file JSON.',
+            exportSelectFirst: 'Seleziona prima un preset.',
+            exportNoPresets: 'Nessun preset da esportare.',
             dark: 'Scuro', light: 'Chiaro', simple: 'Semplice', advanced: 'Avanzato',
             helpTitle: 'Suggerimenti e aiuto', helpGettingStarted: 'Per iniziare',
             helpStart1: 'Scrivi il testo a sinistra.',
@@ -456,6 +495,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'Preset',
             helpPresets1: 'Salva, carica, rinomina ed elimina i preset.',
             helpPresets2: 'I preset sono memorizzati localmente.',
+            helpPresets3: 'Importa JSON — carica uno o più preset da un file .json. Esporta — scarica il preset selezionato. Esporta tutto — scarica tutti i preset in un file.',
             helpAutoSave: 'Salvataggio automatico',
             helpAutoSave1: 'Testo, colori e impostazioni vengono salvati automaticamente.',
             helpColorModes: 'Modalità colore',
@@ -473,6 +513,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: 'Idioma', theme: 'Tema', uiMode: 'Modo',
             presets: 'Presets', selectPreset: '— Selecione um preset —',
             save: 'Salvar', load: 'Carregar', rename: 'Renomear', delete: 'Excluir',
+            import: 'Importar JSON', export: 'Exportar', exportAll: 'Exportar tudo',
             text: 'Texto', userId: 'ID do usuário',
             solid: 'Sólido', gradient: 'Gradiente', rainbow: 'Arco-íris',
             colorSource: 'Fonte de cor', modeOption: 'Modo (Sólido / Gradiente / Arco-íris)', gradientPoints: 'Pontos de gradiente',
@@ -497,6 +538,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'Nome do preset:', renamePreset: 'Renomear preset para:',
             deletePreset: 'Excluir o preset "{name}"?',
             presetExists: 'Já existe um preset com esse nome. Substituir?',
+            importOk: '{count} preset(s) importado(s).',
+            importNoPresets: 'Nenhum preset válido encontrado neste arquivo JSON.',
+            importFailed: 'Falha ao analisar o arquivo JSON.',
+            exportSelectFirst: 'Selecione um preset primeiro.',
+            exportNoPresets: 'Nenhum preset para exportar.',
             dark: 'Escuro', light: 'Claro', simple: 'Simples', advanced: 'Avançado',
             helpTitle: 'Dicas e ajuda', helpGettingStarted: 'Primeiros passos',
             helpStart1: 'Digite seu texto à esquerda.',
@@ -509,6 +555,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'Presets',
             helpPresets1: 'Salve, carregue, renomeie e exclua presets.',
             helpPresets2: 'Os presets são armazenados localmente.',
+            helpPresets3: 'Importar JSON — carregue um ou vários presets de um arquivo .json. Exportar — baixe o preset selecionado. Exportar tudo — baixe todos os presets em um arquivo.',
             helpAutoSave: 'Salvamento automático',
             helpAutoSave1: 'Seu texto, cores e configurações são salvos automaticamente.',
             helpColorModes: 'Modos de cor',
@@ -526,6 +573,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: 'Язык', theme: 'Тема', uiMode: 'Режим',
             presets: 'Пресеты', selectPreset: '— Выберите пресет —',
             save: 'Сохранить', load: 'Загрузить', rename: 'Переименовать', delete: 'Удалить',
+            import: 'Импорт JSON', export: 'Экспорт', exportAll: 'Экспорт всех',
             text: 'Текст', userId: 'User ID',
             solid: 'Сплошной', gradient: 'Градиент', rainbow: 'Радуга',
             colorSource: 'Источник цвета', modeOption: 'Режим (Solid / Gradient / Rainbow)', gradientPoints: 'Точки градиента',
@@ -550,6 +598,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'Имя пресета:', renamePreset: 'Переименовать пресет в:',
             deletePreset: 'Удалить пресет "{name}"?',
             presetExists: 'Пресет с таким именем уже существует. Перезаписать?',
+            importOk: 'Импортировано пресетов: {count}.',
+            importNoPresets: 'В этом JSON-файле не найдено подходящих пресетов.',
+            importFailed: 'Не удалось прочитать JSON-файл.',
+            exportSelectFirst: 'Сначала выберите пресет.',
+            exportNoPresets: 'Нет пресетов для экспорта.',
             dark: 'Тёмная', light: 'Светлая', simple: 'Простой', advanced: 'Продвинутый',
             helpTitle: 'Справка и советы', helpGettingStarted: 'С чего начать',
             helpStart1: 'Введите текст в поле слева.',
@@ -562,6 +615,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'Пресеты',
             helpPresets1: 'Сохраняйте, загружайте, переименовывайте и удаляйте пресеты.',
             helpPresets2: 'Пресеты хранятся локально в браузере.',
+            helpPresets3: 'Импорт JSON — загрузите один или несколько пресетов из .json файла. Экспорт — скачайте выбранный пресет. Экспорт всех — скачайте все пресеты одним файлом.',
             helpAutoSave: 'Автосохранение',
             helpAutoSave1: 'Ваш текст, цвета и настройки сохраняются автоматически.',
             helpColorModes: 'Режимы цвета',
@@ -579,6 +633,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: '言語', theme: 'テーマ', uiMode: 'モード',
             presets: 'プリセット', selectPreset: '— プリセットを選択 —',
             save: '保存', load: '読み込み', rename: '名前を変更', delete: '削除',
+            import: 'JSON をインポート', export: 'エクスポート', exportAll: 'すべてエクスポート',
             text: 'テキスト', userId: 'ユーザーID',
             solid: '単色', gradient: 'グラデーション', rainbow: '虹色',
             colorSource: '色のソース', modeOption: 'モード (単色 / グラデーション / 虹色)', gradientPoints: 'グラデーションポイント',
@@ -603,6 +658,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'プリセット名:', renamePreset: 'プリセットの新しい名前:',
             deletePreset: 'プリセット「{name}」を削除しますか?',
             presetExists: '同名のプリセットが存在します。上書きしますか?',
+            importOk: '{count} 件のプリセットをインポートしました。',
+            importNoPresets: 'この JSON ファイルに有効なプリセットが見つかりませんでした。',
+            importFailed: 'JSON ファイルの読み込みに失敗しました。',
+            exportSelectFirst: '先にプリセットを選択してください。',
+            exportNoPresets: 'エクスポートするプリセットがありません。',
             dark: 'ダーク', light: 'ライト', simple: 'シンプル', advanced: '詳細',
             helpTitle: 'ヒントとヘルプ', helpGettingStarted: 'はじめに',
             helpStart1: '左側のテキスト欄に入力します。',
@@ -615,6 +675,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'プリセット',
             helpPresets1: '保存・読み込み・名前変更・削除ができます。',
             helpPresets2: 'プリセットはブラウザに保存されます。',
+            helpPresets3: 'JSON をインポート — .json ファイルから 1 つまたは複数のプリセットを読み込みます。エクスポート — 選択中のプリセットをダウンロードします。すべてエクスポート — すべてのプリセットを 1 ファイルでダウンロードします。',
             helpAutoSave: '自動保存',
             helpAutoSave1: 'テキスト・色・設定は自動的に保存されます。',
             helpColorModes: 'カラーモード',
@@ -632,6 +693,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: '언어', theme: '테마', uiMode: '모드',
             presets: '프리셋', selectPreset: '— 프리셋 선택 —',
             save: '저장', load: '불러오기', rename: '이름 변경', delete: '삭제',
+            import: 'JSON 가져오기', export: '내보내기', exportAll: '모두 내보내기',
             text: '텍스트', userId: '사용자 ID',
             solid: '단색', gradient: '그라데이션', rainbow: '무지개',
             colorSource: '색상 소스', modeOption: '모드 (단색 / 그라데이션 / 무지개)', gradientPoints: '그라데이션 포인트',
@@ -656,6 +718,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: '프리셋 이름:', renamePreset: '프리셋 새 이름:',
             deletePreset: '프리셋 "{name}"을(를) 삭제할까요?',
             presetExists: '같은 이름의 프리셋이 있습니다. 덮어쓸까요?',
+            importOk: '{count}개의 프리셋을 가져왔습니다.',
+            importNoPresets: '이 JSON 파일에서 유효한 프리셋을 찾지 못했습니다.',
+            importFailed: 'JSON 파일을 읽지 못했습니다.',
+            exportSelectFirst: '먼저 프리셋을 선택하세요.',
+            exportNoPresets: '내보낼 프리셋이 없습니다.',
             dark: '어두움', light: '밝음', simple: '간단', advanced: '고급',
             helpTitle: '도움말 및 팁', helpGettingStarted: '시작하기',
             helpStart1: '왼쪽 텍스트 필드에 입력하세요.',
@@ -668,6 +735,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: '프리셋',
             helpPresets1: '저장, 불러오기, 이름 변경, 삭제가 가능합니다.',
             helpPresets2: '프리셋은 브라우저에 저장됩니다.',
+            helpPresets3: 'JSON 가져오기 — .json 파일에서 하나 또는 여러 개의 프리셋을 불러옵니다. 내보내기 — 선택한 프리셋을 다운로드합니다. 모두 내보내기 — 모든 프리셋을 한 파일로 다운로드합니다.',
             helpAutoSave: '자동 저장',
             helpAutoSave1: '텍스트, 색상, 설정이 자동으로 저장됩니다.',
             helpColorModes: '색상 모드',
@@ -685,6 +753,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: '语言', theme: '主题', uiMode: '模式',
             presets: '预设', selectPreset: '— 选择一个预设 —',
             save: '保存', load: '加载', rename: '重命名', delete: '删除',
+            import: '导入 JSON', export: '导出', exportAll: '全部导出',
             text: '文本', userId: '用户 ID',
             solid: '纯色', gradient: '渐变', rainbow: '彩虹',
             colorSource: '颜色来源', modeOption: '模式 (纯色 / 渐变 / 彩虹)', gradientPoints: '渐变点',
@@ -709,6 +778,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: '预设名称:', renamePreset: '将预设重命名为:',
             deletePreset: '删除预设 "{name}"?',
             presetExists: '已存在同名预设。是否覆盖?',
+            importOk: '已导入 {count} 个预设。',
+            importNoPresets: '此 JSON 文件中未找到有效的预设。',
+            importFailed: '无法解析 JSON 文件。',
+            exportSelectFirst: '请先选择一个预设。',
+            exportNoPresets: '没有可导出的预设。',
             dark: '暗色', light: '亮色', simple: '简易', advanced: '高级',
             helpTitle: '帮助与提示', helpGettingStarted: '开始使用',
             helpStart1: '在左侧文本框中输入文本。',
@@ -721,6 +795,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: '预设',
             helpPresets1: '使用按钮保存、加载、重命名和删除预设。',
             helpPresets2: '预设保存在浏览器本地。',
+            helpPresets3: '导入 JSON — 从 .json 文件加载一个或多个预设。导出 — 下载当前选中的预设。全部导出 — 将所有预设下载为一个文件。',
             helpAutoSave: '自动保存',
             helpAutoSave1: '文本、颜色和设置会自动保存。',
             helpColorModes: '颜色模式',
@@ -738,6 +813,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: 'اللغة', theme: 'السمة', uiMode: 'الوضع',
             presets: 'الإعدادات المسبقة', selectPreset: '— اختر إعداداً مسبقاً —',
             save: 'حفظ', load: 'تحميل', rename: 'إعادة تسمية', delete: 'حذف',
+            import: 'استيراد JSON', export: 'تصدير', exportAll: 'تصدير الكل',
             text: 'النص', userId: 'معرف المستخدم',
             solid: 'لون واحد', gradient: 'تدرج', rainbow: 'قوس قزح',
             colorSource: 'مصدر اللون', modeOption: 'الوضع (لون واحد / تدرج / قوس قزح)', gradientPoints: 'نقاط التدرج',
@@ -762,6 +838,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'اسم الإعداد المسبق:', renamePreset: 'إعادة تسمية الإعداد إلى:',
             deletePreset: 'حذف الإعداد "{name}"?',
             presetExists: 'يوجد إعداد بهذا الاسم بالفعل. هل تريد الكتابة فوقه؟',
+            importOk: 'تم استيراد {count} إعداد(ات).',
+            importNoPresets: 'لم يتم العثور على إعدادات صالحة في ملف JSON هذا.',
+            importFailed: 'فشل في تحليل ملف JSON.',
+            exportSelectFirst: 'اختر إعداداً أولاً.',
+            exportNoPresets: 'لا توجد إعدادات للتصدير.',
             dark: 'داكن', light: 'فاتح', simple: 'بسيط', advanced: 'متقدم',
             helpTitle: 'نصائح ومساعدة', helpGettingStarted: 'البدء',
             helpStart1: 'اكتب نصك في الحقل على اليسار.',
@@ -774,6 +855,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'الإعدادات المسبقة',
             helpPresets1: 'احفظ وحدد وأعد التسمية واحذف الإعدادات المسبقة.',
             helpPresets2: 'يتم تخزين الإعدادات محلياً في المتصفح.',
+            helpPresets3: 'استيراد JSON — حمّل إعداداً واحداً أو عدة إعدادات من ملف .json. تصدير — نزّل الإعداد المحدد. تصدير الكل — نزّل جميع الإعدادات في ملف واحد.',
             helpAutoSave: 'الحفظ التلقائي',
             helpAutoSave1: 'يتم حفظ النص والألوان والإعدادات تلقائياً.',
             helpColorModes: 'أنماط الألوان',
@@ -791,6 +873,7 @@ document.addEventListener('DOMContentLoaded', function () {
             language: 'भाषा', theme: 'थीम', uiMode: 'मोड',
             presets: 'प्रीसेट', selectPreset: '— एक प्रीसेट चुनें —',
             save: 'सहेजें', load: 'लोड करें', rename: 'नाम बदलें', delete: 'हटाएं',
+            import: 'JSON आयात करें', export: 'निर्यात करें', exportAll: 'सभी निर्यात करें',
             text: 'टेक्स्ट', userId: 'यूज़र आईडी',
             solid: 'ठोस', gradient: 'ग्रेडिएंट', rainbow: 'इंद्रधनुष',
             colorSource: 'रंग स्रोत', modeOption: 'मोड (ठोस / ग्रेडिएंट / इंद्रधनुष)', gradientPoints: 'ग्रेडिएंट पॉइंट',
@@ -815,6 +898,11 @@ document.addEventListener('DOMContentLoaded', function () {
             presetName: 'प्रीसेट नाम:', renamePreset: 'प्रीसेट का नया नाम:',
             deletePreset: 'प्रीसेट "{name}" हटाएं?',
             presetExists: 'इस नाम का प्रीसेट पहले से है। अधिलेखित करें?',
+            importOk: '{count} प्रीसेट आयात किए गए।',
+            importNoPresets: 'इस JSON फ़ाइल में कोई मान्य प्रीसेट नहीं मिला।',
+            importFailed: 'JSON फ़ाइल पढ़ने में विफल।',
+            exportSelectFirst: 'पहले एक प्रीसेट चुनें।',
+            exportNoPresets: 'निर्यात करने के लिए कोई प्रीसेट नहीं।',
             dark: 'डार्क', light: 'लाइट', simple: 'सरल', advanced: 'उन्नत',
             helpTitle: 'सुझाव और सहायता', helpGettingStarted: 'शुरू करें',
             helpStart1: 'बाईं ओर टेक्स्ट फ़ील्ड में अपना टेक्स्ट लिखें।',
@@ -827,6 +915,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpPresets: 'प्रीसेट',
             helpPresets1: 'बटनों से प्रीसेट सहेजें, लोड करें, नाम बदलें और हटाएं।',
             helpPresets2: 'प्रीसेट ब्राउज़र में स्थानीय रूप से संग्रहीत होते हैं।',
+            helpPresets3: 'JSON आयात करें — .json फ़ाइल से एक या कई प्रीसेट लोड करें। निर्यात करें — चयनित प्रीसेट डाउनलोड करें। सभी निर्यात करें — सभी प्रीसेट एक फ़ाइल में डाउनलोड करें।',
             helpAutoSave: 'स्वतः सहेजें',
             helpAutoSave1: 'टेक्स्ट, रंग और सेटिंग्स स्वतः सहेजे जाते हैं।',
             helpColorModes: 'रंग मोड',
@@ -1066,9 +1155,16 @@ document.addEventListener('DOMContentLoaded', function () {
         return globalTrans;
     }
 
+    // ===== Point markers =====
+    // Маркеры рендерятся в отдельном слое — на .preview-wrap (для маленького)
+    // и .preview-modal-body (для большого). Так они не зависят от transform
+    // самого текста и всегда позиционируются через getBoundingClientRect.
     function getMarkerLayerFor(targetEl) {
         if (targetEl === elements.previewLarge) return elements.previewModalBody;
-        return elements.previewWrap || (elements.preview ? elements.preview.parentElement : null);
+        if (elements.preview && elements.preview.parentElement) {
+            return elements.preview.parentElement;
+        }
+        return null;
     }
 
     function refreshPointMarkers() {
@@ -1111,7 +1207,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const globalTrans = opts.trans;
         const usePoints = opts.usePoints;
 
-        const spanByIndex = {};
         cells.forEach(cell => {
             if (cell.isBreak) {
                 frag.appendChild(document.createElement('br'));
@@ -1139,7 +1234,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (selectedChars.has(cell.index)) span.classList.add('selected');
             if (selectedPoint === cell.index) span.classList.add('selected-point');
 
-            spanByIndex[cell.index] = span;
             frag.appendChild(span);
         });
 
@@ -1182,9 +1276,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 el.classList.toggle('selected-point', Number(el.dataset.index) === selectedPoint);
             });
         });
-        document.querySelectorAll('.point-marker').forEach(m => {
-            m.classList.remove('selected');
-        });
+        document.querySelectorAll('.point-marker').forEach(m => m.classList.remove('selected'));
         refreshPointMarkers();
     }
 
@@ -1581,7 +1673,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         const closeAnimation = () => {
             if (animationOpened) {
-                out += `</AnimateStyle>`;
+                out += `<AnimateStyle=/>`;
                 animationOpened = false;
             }
         };
@@ -1996,6 +2088,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // ===== Zoom =====
     let zoomRafHandle = null;
     let zoomTimeoutHandle = null;
 
@@ -2018,7 +2111,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (elements.previewLarge) void elements.previewLarge.offsetWidth;
             if (elements.preview) void elements.preview.offsetWidth;
             refreshPointMarkers();
-        }, 100);
+        }, 500);
     }
 
     function applyPreviewZoom(z) {
@@ -2056,6 +2149,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { passive: false });
     }
 
+    // ===== Pan =====
     const PAN_LIMIT = 500;
     const PAN_TAP_THRESHOLD = 5;
     let panX = 0;
@@ -2374,13 +2468,145 @@ document.addEventListener('DOMContentLoaded', function () {
         const presets = loadPresets();
         const current = elements.presetSelect.value;
         elements.presetSelect.innerHTML = '';
-        elements.presetSelect.add(new Option(t('selectPreset'), ''));
+        elements.presetSelect.appendChild(new Option(t('selectPreset'), ''));
         Object.keys(presets).sort((a, b) => a.localeCompare(b)).forEach(name => {
-            elements.presetSelect.add(new Option(name, name));
+            elements.presetSelect.appendChild(new Option(name, name));
         });
         if (current && presets[current]) {
             elements.presetSelect.value = current;
         }
+    }
+
+    // ===== Preset import / export =====
+    function downloadJson(filename, data) {
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function sanitizeFilename(name) {
+        return String(name).replace(/[^a-zA-Z0-9_\-]+/g, '_').slice(0, 60) || 'preset';
+    }
+
+    function parseImportedPresets(data, fallbackName) {
+        const result = {};
+        if (!data || typeof data !== 'object') return result;
+
+        // Case 1: single preset as { name: "X", state: {...} }
+        if (data.name && data.state && typeof data.state === 'object') {
+            result[String(data.name)] = data.state;
+            return result;
+        }
+
+        // Case 2: single state object with known keys
+        const knownKeys = ['text', 'colorMode', 'colorSource', 'outputFormat', 'fontFamily', 'charColors', 'gradientPoints'];
+        const hasAnyKnownKey = knownKeys.some(k => data[k] !== undefined);
+        if (hasAnyKnownKey) {
+            result[fallbackName || 'Imported'] = data;
+            return result;
+        }
+
+        // Case 3: object of multiple presets: { "Name1": {...}, "Name2": {...} }
+        Object.keys(data).forEach(key => {
+            const value = data[key];
+            if (value && typeof value === 'object') {
+                if (value.state && typeof value.state === 'object') {
+                    result[key] = value.state;
+                } else {
+                    result[key] = value;
+                }
+            }
+        });
+
+        return result;
+    }
+
+    if (elements.presetImport) {
+        elements.presetImport.addEventListener('click', () => {
+            if (elements.presetFileInput) {
+                elements.presetFileInput.value = '';
+                elements.presetFileInput.click();
+            }
+        });
+    }
+
+    if (elements.presetFileInput) {
+        elements.presetFileInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(reader.result);
+                    const fallbackName = file.name.replace(/\.json$/i, '') || 'Imported';
+                    const parsed = parseImportedPresets(data, fallbackName);
+                    const keys = Object.keys(parsed);
+                    if (keys.length === 0) {
+                        alert(t('importNoPresets'));
+                        return;
+                    }
+                    const presets = loadPresets();
+                    let overwritten = 0;
+                    keys.forEach(name => {
+                        if (presets[name]) overwritten++;
+                    });
+                    if (overwritten > 0) {
+                        if (!confirm(t('presetExists') + ` (${overwritten})`)) {
+                            // Отменяем перезапись, но продолжаем с добавлением
+                        }
+                    }
+                    keys.forEach(name => {
+                        presets[name] = parsed[name];
+                    });
+                    savePresets(presets);
+                    refreshPresetSelect();
+                    if (keys.length === 1) {
+                        elements.presetSelect.value = keys[0];
+                    }
+                    alert(t('importOk').replace('{count}', keys.length));
+                } catch (err) {
+                    console.warn('Failed to parse preset JSON', err);
+                    alert(t('importFailed'));
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    if (elements.presetExport) {
+        elements.presetExport.addEventListener('click', () => {
+            const name = elements.presetSelect.value;
+            if (!name) {
+                alert(t('exportSelectFirst'));
+                return;
+            }
+            const presets = loadPresets();
+            if (!presets[name]) return;
+            const payload = {
+                name: name,
+                state: presets[name]
+            };
+            downloadJson(sanitizeFilename(name) + '.json', payload);
+        });
+    }
+
+    if (elements.presetExportAll) {
+        elements.presetExportAll.addEventListener('click', () => {
+            const presets = loadPresets();
+            const keys = Object.keys(presets);
+            if (keys.length === 0) {
+                alert(t('exportNoPresets'));
+                return;
+            }
+            downloadJson('richTextGenPresets.json', presets);
+        });
     }
 
     elements.presetSave.addEventListener('click', () => {
