@@ -8,6 +8,7 @@ A rich text generator for Roblox. Create styled text with gradients, strokes, pe
 - **Gradient Points** — place color stops on any character; colors and transparency blend between them
 - **Per-character colors** — click any character to give it a custom color and transparency
 - **Transparency** — global, per-character, and per-point (merged when the difference is ≤ 0.1)
+- **RGB Colors** — output colors as `rgb(r, g, b)` instead of `#rrggbb`
 - **Formatting** — bold, italic, underline, strikethrough
 - **Stroke** — adjustable color and width
 - **Line breaks** — keep or collapse newlines
@@ -16,7 +17,13 @@ A rich text generator for Roblox. Create styled text with gradients, strokes, pe
 - **Two output formats:**
   - **Roblox RichText (native)** — `<font>`, `<stroke>`, `<b>`, `<i>`, `<u>`, `<s>`, `<br/>`
   - **Defaultio RichText Module** — animated markup for Defaultio's RichText module with `<Color=...>`, `<AnimateStyle=...>`, and more
-- **Outputs** — Rich Text, Defaultio Module Text, and JSON snippet
+- **Outputs** — Rich Text, Defaultio Module Text, and JSON / Lua snippet
+- **Expanded preview** — click ⛶ to open a large interactive preview with zoom (slider + mouse wheel) and pan (drag empty space; double-click to reset); editing works right there
+- **Presets** — save, load, rename, and delete your own presets
+- **Auto-save** — your current text, colors, gradient points, and settings are saved automatically between visits
+- **Languages** — 12 supported languages
+- **Themes** — Dark (default) and Light
+- **UI modes** — Simple (default, only essentials) and Advanced (all features)
 - **Tips panel** — the `?` button in the corner explains everything
 
 ## Usage
