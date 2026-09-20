@@ -464,6 +464,7 @@ select:focus {
     position: relative;
     user-select: none;
     -webkit-user-select: none;
+    touch-action: none;
 }
 
 .preview-modal-body.panning {
@@ -481,6 +482,7 @@ select:focus {
     position: relative;
     user-select: none;
     -webkit-user-select: none;
+    -webkit-touch-callout: none;
     cursor: text;
     white-space: pre-wrap;
     word-break: break-word;
@@ -594,6 +596,27 @@ textarea[readonly] {
     margin-bottom: 8px;
 }
 
+.char-editor-row.char-format-row {
+    flex-wrap: wrap;
+}
+
+.char-format-check {
+    padding: 4px 8px;
+    min-width: 32px;
+    justify-content: center;
+}
+
+.char-editor-mini-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    min-width: 70px;
+    margin: 0;
+}
+
+.char-editor .range-group {
+    flex: 1;
+}
+
 .char-editor-row input[type="color"] {
     width: 40px;
     height: 36px;
@@ -616,6 +639,10 @@ textarea[readonly] {
 
 .char-editor-row input[type="text"]::placeholder {
     color: var(--text-muted);
+}
+
+.char-editor-row select {
+    flex: 1;
 }
 
 .mini-btn {
