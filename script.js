@@ -79,6 +79,8 @@ document.addEventListener('DOMContentLoaded', function () {
         charApply: $('charApply'),
         charReset: $('charReset'),
         charResetAll: $('charResetAll'),
+        charMakePoint: $('charMakePoint'),
+        charMakePointRow: $('charMakePointRow'),
         pointsEditor: $('pointsEditor'),
         pointsEditorTitle: $('pointsEditorTitle'),
         pointColor: $('pointColor'),
@@ -87,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
         pointApply: $('pointApply'),
         pointDelete: $('pointDelete'),
         pointsResetAll: $('pointsResetAll'),
+        pointSelectChar: $('pointSelectChar'),
         helpBtn: $('helpBtn'),
         helpOverlay: $('helpOverlay'),
         helpClose: $('helpClose'),
@@ -264,6 +267,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: 'Select a preset first.',
             exportNoPresets: 'No presets to export.',
             dark: 'Dark', light: 'Light', simple: 'Simple', advanced: 'Advanced',
+            makeGradientPoint: 'Make Gradient Point',
+            selectCharForFormatting: 'Select char for formatting',
             helpTitle: 'Tips & Help', helpGettingStarted: 'Getting started',
             helpStart1: 'Type your text in the Text field on the left.',
             helpStart2: 'The Preview on the right updates live.',
@@ -324,6 +329,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: 'Selecciona un ajuste primero.',
             exportNoPresets: 'No hay ajustes para exportar.',
             dark: 'Oscuro', light: 'Claro', simple: 'Simple', advanced: 'Avanzado',
+            makeGradientPoint: 'Crear punto de degradado',
+            selectCharForFormatting: 'Seleccionar carácter para formato',
             helpTitle: 'Ayuda y consejos', helpGettingStarted: 'Primeros pasos',
             helpStart1: 'Escribe tu texto en el campo Texto de la izquierda.',
             helpStart2: 'La vista previa se actualiza en vivo.',
@@ -384,6 +391,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: 'Sélectionnez d\'abord un préréglage.',
             exportNoPresets: 'Aucun préréglage à exporter.',
             dark: 'Sombre', light: 'Clair', simple: 'Simple', advanced: 'Avancé',
+            makeGradientPoint: 'Créer un point de dégradé',
+            selectCharForFormatting: 'Sélectionner le caractère',
             helpTitle: 'Aide et astuces', helpGettingStarted: 'Pour commencer',
             helpStart1: 'Saisissez votre texte à gauche.',
             helpStart2: "L'aperçu se met à jour en direct.",
@@ -444,6 +453,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: 'Bitte zuerst eine Voreinstellung auswählen.',
             exportNoPresets: 'Keine Voreinstellungen zum Exportieren.',
             dark: 'Dunkel', light: 'Hell', simple: 'Einfach', advanced: 'Erweitert',
+            makeGradientPoint: 'Verlaufspunkt erstellen',
+            selectCharForFormatting: 'Zeichen auswählen',
             helpTitle: 'Tipps & Hilfe', helpGettingStarted: 'Erste Schritte',
             helpStart1: 'Gib deinen Text links ein.',
             helpStart2: 'Die Vorschau aktualisiert sich live.',
@@ -504,6 +515,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: 'Seleziona prima un preset.',
             exportNoPresets: 'Nessun preset da esportare.',
             dark: 'Scuro', light: 'Chiaro', simple: 'Semplice', advanced: 'Avanzato',
+            makeGradientPoint: 'Crea punto sfumatura',
+            selectCharForFormatting: 'Seleziona carattere',
             helpTitle: 'Suggerimenti e aiuto', helpGettingStarted: 'Per iniziare',
             helpStart1: 'Scrivi il testo a sinistra.',
             helpStart2: "L'anteprima si aggiorna in tempo reale.",
@@ -564,6 +577,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: 'Selecione um preset primeiro.',
             exportNoPresets: 'Nenhum preset para exportar.',
             dark: 'Escuro', light: 'Claro', simple: 'Simples', advanced: 'Avançado',
+            makeGradientPoint: 'Criar ponto de gradiente',
+            selectCharForFormatting: 'Selecionar caractere',
             helpTitle: 'Dicas e ajuda', helpGettingStarted: 'Primeiros passos',
             helpStart1: 'Digite seu texto à esquerda.',
             helpStart2: 'A pré-visualização é atualizada ao vivo.',
@@ -624,6 +639,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: 'Сначала выберите пресет.',
             exportNoPresets: 'Нет пресетов для экспорта.',
             dark: 'Тёмная', light: 'Светлая', simple: 'Простой', advanced: 'Продвинутый',
+            makeGradientPoint: 'Сделать точкой градиента',
+            selectCharForFormatting: 'Выбрать букву',
             helpTitle: 'Справка и советы', helpGettingStarted: 'С чего начать',
             helpStart1: 'Введите текст в поле слева.',
             helpStart2: 'Превью справа обновляется в реальном времени.',
@@ -684,6 +701,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: '先にプリセットを選択してください。',
             exportNoPresets: 'エクスポートするプリセットがありません。',
             dark: 'ダーク', light: 'ライト', simple: 'シンプル', advanced: '詳細',
+            makeGradientPoint: 'グラデーションポイントにする',
+            selectCharForFormatting: '書式設定する文字を選択',
             helpTitle: 'ヒントとヘルプ', helpGettingStarted: 'はじめに',
             helpStart1: '左側のテキスト欄に入力します。',
             helpStart2: '右側のプレビューがリアルタイムで更新されます。',
@@ -744,6 +763,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: '먼저 프리셋을 선택하세요.',
             exportNoPresets: '내보낼 프리셋이 없습니다.',
             dark: '어두움', light: '밝음', simple: '간단', advanced: '고급',
+            makeGradientPoint: '그라데이션 포인트 만들기',
+            selectCharForFormatting: '서식 지정할 문자 선택',
             helpTitle: '도움말 및 팁', helpGettingStarted: '시작하기',
             helpStart1: '왼쪽 텍스트 필드에 입력하세요.',
             helpStart2: '오른쪽 미리보기가 실시간으로 업데이트됩니다.',
@@ -804,6 +825,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: '请先选择一个预设。',
             exportNoPresets: '没有可导出的预设。',
             dark: '暗色', light: '亮色', simple: '简易', advanced: '高级',
+            makeGradientPoint: '设为渐变点',
+            selectCharForFormatting: '选择字符以设置格式',
             helpTitle: '帮助与提示', helpGettingStarted: '开始使用',
             helpStart1: '在左侧文本框中输入文本。',
             helpStart2: '右侧预览会实时更新。',
@@ -864,6 +887,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: 'اختر إعداداً أولاً.',
             exportNoPresets: 'لا توجد إعدادات للتصدير.',
             dark: 'داكن', light: 'فاتح', simple: 'بسيط', advanced: 'متقدم',
+            makeGradientPoint: 'إنشاء نقطة تدرج',
+            selectCharForFormatting: 'اختر حرفاً للتنسيق',
             helpTitle: 'نصائح ومساعدة', helpGettingStarted: 'البدء',
             helpStart1: 'اكتب نصك في الحقل على اليسار.',
             helpStart2: 'تتحدث المعاينة على اليمين مباشرة.',
@@ -924,6 +949,8 @@ document.addEventListener('DOMContentLoaded', function () {
             exportSelectFirst: 'पहले एक प्रीसेट चुनें।',
             exportNoPresets: 'निर्यात करने के लिए कोई प्रीसेट नहीं।',
             dark: 'डार्क', light: 'लाइट', simple: 'सरल', advanced: 'उन्नत',
+            makeGradientPoint: 'ग्रेडिएंट पॉइंट बनाएं',
+            selectCharForFormatting: 'फ़ॉर्मेटिंग के लिए अक्षर चुनें',
             helpTitle: 'सुझाव और सहायता', helpGettingStarted: 'शुरू करें',
             helpStart1: 'बाईं ओर टेक्स्ट फ़ील्ड में अपना टेक्स्ट लिखें।',
             helpStart2: 'दाईं ओर पूर्वावलोकन लाइव अपडेट होता है।',
@@ -1316,12 +1343,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateCharEditor() {
+        const isPoints = elements.colorSource.value === 'points';
+
         if (selectedChars.size === 0) {
             elements.charEditor.classList.add('hidden');
             return;
         }
         refreshEditorHost();
         elements.charEditor.classList.remove('hidden');
+
+        if (elements.charMakePointRow) {
+            elements.charMakePointRow.style.display = isPoints ? 'flex' : 'none';
+        }
 
         const arr = [...selectedChars].sort((a, b) => a - b);
         const raw = elements.textInput.value;
@@ -1400,6 +1433,10 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshEditorHost();
         elements.pointsEditor.classList.remove('hidden');
 
+        if (elements.pointSelectChar) {
+            elements.pointSelectChar.style.display = 'inline-block';
+        }
+
         if (selectedPoint === null || gradientPoints[selectedPoint] === undefined) {
             const count = Object.keys(gradientPoints).length;
             elements.pointsEditorTitle.textContent = count > 0
@@ -1426,13 +1463,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (gradientPoints[index] !== undefined) {
             setSelectedPoint(index);
+            setSelection([]);
         } else {
             const color = isValidHex(elements.pointColorHex.value)
                 ? elements.pointColorHex.value
                 : elements.pointColor.value;
             gradientPoints[index] = color;
             setSelectedPoint(index);
+            setSelection([]);
         }
+        generate();
+    }
+
+    function makePointsFromSelectedChars() {
+        if (selectedChars.size === 0) return;
+        const raw = elements.textInput.value;
+        const color = isValidHex(elements.pointColorHex.value)
+            ? elements.pointColorHex.value
+            : elements.pointColor.value;
+
+        selectedChars.forEach(i => {
+            if (raw[i] === '\n') return;
+            gradientPoints[i] = charColors[i] || color;
+            const t2 = charTransparency[i];
+            if (t2 !== undefined) gradientPointTransparency[i] = t2;
+        });
+
+        const arr = [...selectedChars].sort((a, b) => a - b);
+        if (arr.length > 0) setSelectedPoint(arr[0]);
+        setSelection([]);
         generate();
     }
 
@@ -1449,7 +1508,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const idx = Number(target.dataset.index);
 
             if (elements.colorSource.value === 'points') {
-                handlePointClick(idx);
+                if (e.altKey || gradientPoints[idx] !== undefined) {
+                    handlePointClick(idx);
+                } else {
+                    isMouseDown = true;
+                    dragMode = selectedChars.has(idx) ? 'remove' : 'add';
+                    if (dragMode === 'add') setSelection([...selectedChars, idx]);
+                    else {
+                        const s = new Set(selectedChars);
+                        s.delete(idx);
+                        setSelection([...s]);
+                    }
+                }
                 e.preventDefault();
                 return;
             }
@@ -1467,10 +1537,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         el.addEventListener('mouseover', e => {
             if (!isMouseDown) return;
-            if (elements.colorSource.value === 'points') return;
             const target = e.target.closest('.char');
             if (!target) return;
             const idx = Number(target.dataset.index);
+            if (elements.colorSource.value === 'points') {
+                if (gradientPoints[idx] !== undefined) return;
+            }
             if (dragMode === 'add') {
                 if (!selectedChars.has(idx)) setSelection([...selectedChars, idx]);
             } else {
@@ -1488,9 +1560,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const idx = Number(target.dataset.index);
 
             if (elements.colorSource.value === 'points') {
-                handlePointClick(idx);
-                e.preventDefault();
-                return;
+                if (gradientPoints[idx] !== undefined) {
+                    handlePointClick(idx);
+                    e.preventDefault();
+                    return;
+                }
             }
 
             touchStartIndex = idx;
@@ -1517,7 +1591,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         el.addEventListener('touchmove', e => {
             if (touchStartIndex === null) return;
-            if (elements.colorSource.value === 'points') return;
 
             const touch = e.touches[0];
             if (!touch) return;
@@ -1530,6 +1603,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const idx = Number(charEl.dataset.index);
             if (idx === touchCurrentIndex) return;
             touchCurrentIndex = idx;
+
+            if (elements.colorSource.value === 'points' && gradientPoints[idx] !== undefined) {
+                return;
+            }
 
             if (touchDragMode === 'add') {
                 if (!selectedChars.has(idx)) setSelection([...selectedChars, idx]);
@@ -1670,6 +1747,10 @@ document.addEventListener('DOMContentLoaded', function () {
         generate();
     });
 
+    if (elements.charMakePoint) {
+        elements.charMakePoint.addEventListener('click', makePointsFromSelectedChars);
+    }
+
     elements.charEditorClose.addEventListener('click', () => {
         setSelection([]);
     });
@@ -1709,6 +1790,15 @@ document.addEventListener('DOMContentLoaded', function () {
         updatePointsEditor();
         generate();
     });
+
+    if (elements.pointSelectChar) {
+        elements.pointSelectChar.addEventListener('click', () => {
+            if (selectedPoint === null) return;
+            const idx = selectedPoint;
+            setSelectedPoint(null);
+            setSelection([idx]);
+        });
+    }
 
     function pruneCharColors() {
         const len = elements.textInput.value.length;
@@ -2061,6 +2151,7 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshPointMarkers();
 
         updatePointsEditor();
+        updateCharEditor();
         saveState();
     }
 
