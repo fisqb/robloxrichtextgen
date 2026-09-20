@@ -1006,10 +1006,24 @@ document.addEventListener('DOMContentLoaded', function () {
     function applyUiMode(mode) {
         currentUiMode = (mode === 'advanced') ? 'advanced' : 'simple';
         if (elements.uiModeSelect) elements.uiModeSelect.value = currentUiMode;
+
         document.querySelectorAll('.advanced-only').forEach(el => {
             el.classList.toggle('hidden-for-mode', currentUiMode !== 'advanced');
         });
+
+        if (currentUiMode === 'simple') {
+            if (elements.colorSource && elements.colorSource.value === 'points') {
+                elements.colorSource.value = 'mode';
+            }
+            selectedPoint = null;
+            setSelection([]);
+        }
+
         toggleDefaultioControls();
+        toggleColorSourceControls();
+        refreshEditorHost();
+        updateCharEditor();
+        updatePointsEditor();
     }
 
     function applyLanguage(lang) {
@@ -1249,7 +1263,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const colorFn = opts.colorFn;
         const globalTrans = opts.trans;
         const usePoints = opts.usePoints;
-        const isAdvanced = currentUiMode === 'advanced';
 
         cells.forEach(cell => {
             if (cell.isBreak) {
@@ -1278,19 +1291,17 @@ document.addEventListener('DOMContentLoaded', function () {
             if (charStrike[cell.index]) deco.push('line-through');
             if (deco.length) textSpan.style.textDecoration = deco.join(' ');
 
-            if (isAdvanced) {
-                if (charFont[cell.index]) textSpan.style.fontFamily = charFont[cell.index];
+            if (charFont[cell.index]) textSpan.style.fontFamily = charFont[cell.index];
 
-                const customStrokeColor = charStrokeColor[cell.index];
-                const customStrokeThickness = charStrokeThickness[cell.index];
-                if (customStrokeColor || customStrokeThickness !== undefined) {
-                    const sc = customStrokeColor || elements.strokeColor.value;
-                    const st = customStrokeThickness !== undefined
-                        ? customStrokeThickness
-                        : parseFloat(elements.strokeThickness.value);
-                    if (st > 0) {
-                        textSpan.style.webkitTextStroke = st + 'px ' + sc;
-                    }
+            const customStrokeColor = charStrokeColor[cell.index];
+            const customStrokeThickness = charStrokeThickness[cell.index];
+            if (customStrokeColor || customStrokeThickness !== undefined) {
+                const sc = customStrokeColor || elements.strokeColor.value;
+                const st = customStrokeThickness !== undefined
+                    ? customStrokeThickness
+                    : parseFloat(elements.strokeThickness.value);
+                if (st > 0) {
+                    textSpan.style.webkitTextStroke = st + 'px ' + sc;
                 }
             }
 
@@ -1425,7 +1436,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updatePointsEditor() {
-        const isPointsMode = elements.colorSource.value === 'points';
+        const isPointsMode = elements.colorSource.value === 'points' && currentUiMode === 'advanced';
         if (!isPointsMode) {
             elements.pointsEditor.classList.add('hidden');
             return;
@@ -1458,6 +1469,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function handlePointClick(index) {
+        if (currentUiMode !== 'advanced') return;
         const raw = elements.textInput.value;
         if (raw[index] === '\n') return;
 
@@ -1507,7 +1519,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!target) return;
             const idx = Number(target.dataset.index);
 
-            if (elements.colorSource.value === 'points') {
+            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced') {
                 if (e.altKey || gradientPoints[idx] !== undefined) {
                     handlePointClick(idx);
                 } else {
@@ -1540,7 +1552,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const target = e.target.closest('.char');
             if (!target) return;
             const idx = Number(target.dataset.index);
-            if (elements.colorSource.value === 'points') {
+            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced') {
                 if (gradientPoints[idx] !== undefined) return;
             }
             if (dragMode === 'add') {
@@ -1559,7 +1571,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!target) return;
             const idx = Number(target.dataset.index);
 
-            if (elements.colorSource.value === 'points') {
+            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced') {
                 if (gradientPoints[idx] !== undefined) {
                     handlePointClick(idx);
                     e.preventDefault();
@@ -1604,7 +1616,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (idx === touchCurrentIndex) return;
             touchCurrentIndex = idx;
 
-            if (elements.colorSource.value === 'points' && gradientPoints[idx] !== undefined) {
+            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced' && gradientPoints[idx] !== undefined) {
                 return;
             }
 
@@ -1681,28 +1693,20 @@ document.addEventListener('DOMContentLoaded', function () {
         setFlag(charUnderline, elements.charUnderline);
         setFlag(charStrike, elements.charStrike);
 
-        if (currentUiMode === 'advanced') {
-            const chosenFont = elements.charFont.value;
-            if (chosenFont === '') {
-                selectedChars.forEach(i => delete charFont[i]);
-            } else {
-                selectedChars.forEach(i => { charFont[i] = chosenFont; });
-            }
-
-            const chosenStroke = isValidHex(elements.charStrokeColorHex.value)
-                ? elements.charStrokeColorHex.value
-                : elements.charStrokeColor.value;
-            selectedChars.forEach(i => { charStrokeColor[i] = chosenStroke; });
-
-            const chosenThickness = parseFloat(elements.charStrokeThickness.value);
-            selectedChars.forEach(i => { charStrokeThickness[i] = chosenThickness; });
+        const chosenFont = elements.charFont.value;
+        if (chosenFont === '') {
+            selectedChars.forEach(i => delete charFont[i]);
         } else {
-            selectedChars.forEach(i => {
-                delete charFont[i];
-                delete charStrokeColor[i];
-                delete charStrokeThickness[i];
-            });
+            selectedChars.forEach(i => { charFont[i] = chosenFont; });
         }
+
+        const chosenStroke = isValidHex(elements.charStrokeColorHex.value)
+            ? elements.charStrokeColorHex.value
+            : elements.charStrokeColor.value;
+        selectedChars.forEach(i => { charStrokeColor[i] = chosenStroke; });
+
+        const chosenThickness = parseFloat(elements.charStrokeThickness.value);
+        selectedChars.forEach(i => { charStrokeThickness[i] = chosenThickness; });
 
         if (!hasTrans) {
             selectedChars.forEach(i => { charColors[i] = color; });
@@ -1930,8 +1934,8 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         const enableLineBreaks = elements.lineBreaks.checked;
-        const usePoints = source === 'points' && getSortedPointIndexes().length > 0;
         const isAdvanced = currentUiMode === 'advanced';
+        const usePoints = isAdvanced && source === 'points' && getSortedPointIndexes().length > 0;
 
         pruneCharColors();
 
@@ -1960,12 +1964,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const isUnderline = charUnderline[i] !== undefined ? !!charUnderline[i] : globalFormatting.underline;
             const isStrike = charStrike[i] !== undefined ? !!charStrike[i] : globalFormatting.strikethrough;
 
-            const font = isAdvanced && charFont[i] !== undefined ? charFont[i] : globalFont;
+            const font = charFont[i] !== undefined ? charFont[i] : globalFont;
 
-            const strokeColor = isAdvanced && charStrokeColor[i] !== undefined
+            const strokeColor = charStrokeColor[i] !== undefined
                 ? charStrokeColor[i]
                 : globalStroke;
-            const strokeThickness = isAdvanced && charStrokeThickness[i] !== undefined
+            const strokeThickness = charStrokeThickness[i] !== undefined
                 ? charStrokeThickness[i]
                 : globalThickness;
 
@@ -2237,7 +2241,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function toggleColorSourceControls() {
-        const isPoints = elements.colorSource.value === 'points';
+        const isAdvanced = currentUiMode === 'advanced';
+        const isPoints = isAdvanced && elements.colorSource.value === 'points';
 
         if (elements.modeControls) {
             elements.modeControls.style.display = isPoints ? 'none' : 'block';
@@ -2254,7 +2259,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     elements.colorMode.addEventListener('change', function () {
-        if (elements.colorSource.value === 'points') {
+        if (elements.colorSource.value === 'points' && currentUiMode === 'advanced') {
             syncGradientTypeFromMode();
             generate();
             return;
@@ -2982,6 +2987,7 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.uiModeSelect.addEventListener('change', function () {
             applyUiMode(this.value);
             saveSettings();
+            generate();
         });
     }
 
