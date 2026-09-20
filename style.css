@@ -645,6 +645,10 @@ textarea[readonly] {
     flex: 1;
 }
 
+.char-editor-row .mini-btn {
+    flex: 1;
+}
+
 .mini-btn {
     padding: 6px 10px;
     background: var(--accent);
