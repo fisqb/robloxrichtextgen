@@ -1,6 +1,6 @@
-# Roblox Rich Text Generator
+# Roblox Rich Text Editor / Generator
 
-A rich text generator for Roblox. Create styled text with gradients, strokes, per-character colors, and formatting.
+A rich text editor (generator) for Roblox. Create styled text with gradients, strokes, per-character colors, and formatting.
 
 ## Features
 
