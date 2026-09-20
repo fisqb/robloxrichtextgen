@@ -67,6 +67,15 @@ document.addEventListener('DOMContentLoaded', function () {
         charColor: $('charColor'),
         charColorHex: $('charColorHex'),
         charTransparency: $('charTransparency'),
+        charBold: $('charBold'),
+        charItalic: $('charItalic'),
+        charUnderline: $('charUnderline'),
+        charStrike: $('charStrike'),
+        charFont: $('charFont'),
+        charStrokeColor: $('charStrokeColor'),
+        charStrokeColorHex: $('charStrokeColorHex'),
+        charStrokeThickness: $('charStrokeThickness'),
+        charStrokeThicknessValue: $('charStrokeThicknessValue'),
         charApply: $('charApply'),
         charReset: $('charReset'),
         charResetAll: $('charResetAll'),
@@ -113,8 +122,20 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     elements.fontFamily.value = 'SpecialElite';
 
+    ALL_FONTS.forEach(font => {
+        const option = new Option(font, font);
+        elements.charFont.add(option);
+    });
+
     let charColors = {};
     let charTransparency = {};
+    let charBold = {};
+    let charItalic = {};
+    let charUnderline = {};
+    let charStrike = {};
+    let charFont = {};
+    let charStrokeColor = {};
+    let charStrokeThickness = {};
     let selectedChars = new Set();
 
     let gradientPoints = {};
@@ -185,27 +206,26 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const applyFormatting = (text, { bold, italic, underline, strikethrough }) => {
-        if (strikethrough) text = `<s>${text}</s>`;
-        if (underline) text = `<u>${text}</u>`;
-        if (italic) text = `<i>${text}</i>`;
-        if (bold) text = `<b>${text}</b>`;
+        if (strikethrough) text = '<s>' + text + '</s>';
+        if (underline) text = '<u>' + text + '</u>';
+        if (italic) text = '<i>' + text + '</i>';
+        if (bold) text = '<b>' + text + '</b>';
         return text;
     };
 
     const hexToDefaultioColor = (hex) => {
         const c = hexToRgb(hex);
         if (!c) return '255,255,255';
-        return `${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)}`;
+        return Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b);
     };
 
     const formatColor = (hex) => {
         if (!elements.rgbColors || !elements.rgbColors.checked) return hex;
         const c = hexToRgb(hex);
         if (!c) return hex;
-        return `rgb(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)})`;
+        return 'rgb(' + Math.round(c.r) + ', ' + Math.round(c.g) + ', ' + Math.round(c.b) + ')';
     };
 
-    // ===== Settings: language, theme, UI mode =====
     const SETTINGS_KEY = 'richTextGenSettings';
 
     const translations = {
@@ -1155,10 +1175,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return globalTrans;
     }
 
-    // ===== Point markers =====
-    // Маркеры рендерятся в отдельном слое — на .preview-wrap (для маленького)
-    // и .preview-modal-body (для большого). Так они не зависят от transform
-    // самого текста и всегда позиционируются через getBoundingClientRect.
     function getMarkerLayerFor(targetEl) {
         if (targetEl === elements.previewLarge) return elements.previewModalBody;
         if (elements.preview && elements.preview.parentElement) {
@@ -1185,7 +1201,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const layerRect = layer.getBoundingClientRect();
 
             Object.keys(gradientPoints).map(Number).sort((a, b) => a - b).forEach(idx => {
-                const span = textEl.querySelector(`.char[data-index="${idx}"]`);
+                const span = textEl.querySelector('.char[data-index="' + idx + '"]');
                 if (!span) return;
                 const spanRect = span.getBoundingClientRect();
                 const marker = document.createElement('div');
@@ -1206,6 +1222,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const colorFn = opts.colorFn;
         const globalTrans = opts.trans;
         const usePoints = opts.usePoints;
+        const isAdvanced = currentUiMode === 'advanced';
 
         cells.forEach(cell => {
             if (cell.isBreak) {
@@ -1227,6 +1244,29 @@ document.addEventListener('DOMContentLoaded', function () {
             const t2 = transparencyForIndex(cell.index, globalTrans, usePoints);
             if (t2 > 0) textSpan.style.opacity = String(1 - t2);
 
+            if (charBold[cell.index]) textSpan.style.fontWeight = 'bold';
+            if (charItalic[cell.index]) textSpan.style.fontStyle = 'italic';
+            const deco = [];
+            if (charUnderline[cell.index]) deco.push('underline');
+            if (charStrike[cell.index]) deco.push('line-through');
+            if (deco.length) textSpan.style.textDecoration = deco.join(' ');
+
+            if (isAdvanced) {
+                if (charFont[cell.index]) textSpan.style.fontFamily = charFont[cell.index];
+
+                const customStrokeColor = charStrokeColor[cell.index];
+                const customStrokeThickness = charStrokeThickness[cell.index];
+                if (customStrokeColor || customStrokeThickness !== undefined) {
+                    const sc = customStrokeColor || elements.strokeColor.value;
+                    const st = customStrokeThickness !== undefined
+                        ? customStrokeThickness
+                        : parseFloat(elements.strokeThickness.value);
+                    if (st > 0) {
+                        textSpan.style.webkitTextStroke = st + 'px ' + sc;
+                    }
+                }
+            }
+
             span.appendChild(textSpan);
 
             if (charColors[cell.index]) span.classList.add('has-color');
@@ -1240,11 +1280,6 @@ document.addEventListener('DOMContentLoaded', function () {
         targetEl.innerHTML = '';
         targetEl.appendChild(frag);
         targetEl.style.fontFamily = opts.font;
-        targetEl.style.fontWeight = opts.bold ? 'bold' : 'normal';
-        targetEl.style.fontStyle = opts.italic ? 'italic' : 'normal';
-        targetEl.style.textDecoration = opts.underline ? 'underline'
-            : opts.strikethrough ? 'line-through' : 'none';
-
         targetEl.classList.toggle('points-mode', usePoints);
     }
 
@@ -1294,8 +1329,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const preview = chars.length > 20 ? chars.slice(0, 20) + '…' : chars;
         elements.charEditorTitle.textContent =
             arr.length === 1
-                ? `${t('character')}: "${raw[arr[0]] === '\n' ? '⏎' : raw[arr[0]] || ''}"`
-                : `${arr.length} (${preview})`;
+                ? t('character') + ': "' + (raw[arr[0]] === '\n' ? '⏎' : raw[arr[0]] || '') + '"'
+                : arr.length + ' (' + preview + ')';
 
         const colors = new Set(arr.map(i => charColors[i] || null));
         if (colors.size === 1) {
@@ -1311,10 +1346,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 ? String(roundTransparency(charTransparency[i]))
                 : ''
         ));
-        if (transps.size === 1) {
-            elements.charTransparency.value = [...transps][0] || '';
+        elements.charTransparency.value = transps.size === 1 ? ([...transps][0] || '') : '';
+
+        const setAllOrMixed = (dict, checkbox) => {
+            const values = arr.map(i => !!dict[i]);
+            const allTrue = values.every(v => v === true);
+            const allFalse = values.every(v => v === false);
+            checkbox.checked = allTrue;
+            checkbox.indeterminate = !allTrue && !allFalse;
+        };
+        setAllOrMixed(charBold, elements.charBold);
+        setAllOrMixed(charItalic, elements.charItalic);
+        setAllOrMixed(charUnderline, elements.charUnderline);
+        setAllOrMixed(charStrike, elements.charStrike);
+
+        const fonts = new Set(arr.map(i => charFont[i] || ''));
+        if (fonts.size === 1) {
+            const f = [...fonts][0];
+            elements.charFont.value = f || '';
         } else {
-            elements.charTransparency.value = '';
+            elements.charFont.value = '';
+        }
+
+        const strokes = new Set(arr.map(i => charStrokeColor[i] || ''));
+        if (strokes.size === 1) {
+            const s = [...strokes][0];
+            if (s) {
+                elements.charStrokeColor.value = s;
+                elements.charStrokeColorHex.value = s;
+            }
+        }
+
+        const thicknesses = new Set(arr.map(i =>
+            charStrokeThickness[i] !== undefined
+                ? String(roundTransparency(charStrokeThickness[i]))
+                : ''
+        ));
+        if (thicknesses.size === 1) {
+            const v = [...thicknesses][0];
+            if (v) {
+                elements.charStrokeThickness.value = v;
+                elements.charStrokeThicknessValue.textContent = v;
+            }
         }
     }
 
@@ -1330,7 +1403,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (selectedPoint === null || gradientPoints[selectedPoint] === undefined) {
             const count = Object.keys(gradientPoints).length;
             elements.pointsEditorTitle.textContent = count > 0
-                ? `${t('gradientPoints')} (${count})`
+                ? t('gradientPoints') + ' (' + count + ')'
                 : t('gradientPoints');
             elements.pointTransparency.value = '';
             return;
@@ -1338,7 +1411,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const raw = elements.textInput.value;
         const ch = raw[selectedPoint] === '\n' ? '⏎' : (raw[selectedPoint] || '');
-        elements.pointsEditorTitle.textContent = `${t('gradientPoints')} "${ch}" (#${selectedPoint})`;
+        elements.pointsEditorTitle.textContent = t('gradientPoints') + ' "' + ch + '" (#' + selectedPoint + ')';
         const c = gradientPoints[selectedPoint];
         elements.pointColor.value = c;
         elements.pointColorHex.value = c;
@@ -1496,7 +1569,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     syncCharColorInputs(elements.charColor, elements.charColorHex);
+    syncCharColorInputs(elements.charStrokeColor, elements.charStrokeColorHex);
     syncCharColorInputs(elements.pointColor, elements.pointColorHex);
+
+    elements.charStrokeThickness.addEventListener('input', () => {
+        elements.charStrokeThicknessValue.textContent = elements.charStrokeThickness.value;
+    });
+
+    ['charBold', 'charItalic', 'charUnderline', 'charStrike'].forEach(id => {
+        elements[id].addEventListener('change', () => {
+            elements[id].indeterminate = false;
+        });
+    });
 
     elements.charApply.addEventListener('click', () => {
         if (selectedChars.size === 0) return;
@@ -1507,6 +1591,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const transRaw = elements.charTransparency.value.trim();
         const hasTrans = transRaw !== '';
+
+        const setFlag = (dict, checkbox) => {
+            if (checkbox.indeterminate) return;
+            selectedChars.forEach(i => {
+                if (checkbox.checked) dict[i] = true;
+                else delete dict[i];
+            });
+        };
+        setFlag(charBold, elements.charBold);
+        setFlag(charItalic, elements.charItalic);
+        setFlag(charUnderline, elements.charUnderline);
+        setFlag(charStrike, elements.charStrike);
+
+        if (currentUiMode === 'advanced') {
+            const chosenFont = elements.charFont.value;
+            if (chosenFont === '') {
+                selectedChars.forEach(i => delete charFont[i]);
+            } else {
+                selectedChars.forEach(i => { charFont[i] = chosenFont; });
+            }
+
+            const chosenStroke = isValidHex(elements.charStrokeColorHex.value)
+                ? elements.charStrokeColorHex.value
+                : elements.charStrokeColor.value;
+            selectedChars.forEach(i => { charStrokeColor[i] = chosenStroke; });
+
+            const chosenThickness = parseFloat(elements.charStrokeThickness.value);
+            selectedChars.forEach(i => { charStrokeThickness[i] = chosenThickness; });
+        } else {
+            selectedChars.forEach(i => {
+                delete charFont[i];
+                delete charStrokeColor[i];
+                delete charStrokeThickness[i];
+            });
+        }
 
         if (!hasTrans) {
             selectedChars.forEach(i => { charColors[i] = color; });
@@ -1527,6 +1646,13 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedChars.forEach(i => {
             delete charColors[i];
             delete charTransparency[i];
+            delete charBold[i];
+            delete charItalic[i];
+            delete charUnderline[i];
+            delete charStrike[i];
+            delete charFont[i];
+            delete charStrokeColor[i];
+            delete charStrokeThickness[i];
         });
         generate();
     });
@@ -1534,6 +1660,13 @@ document.addEventListener('DOMContentLoaded', function () {
     elements.charResetAll.addEventListener('click', () => {
         charColors = {};
         charTransparency = {};
+        charBold = {};
+        charItalic = {};
+        charUnderline = {};
+        charStrike = {};
+        charFont = {};
+        charStrokeColor = {};
+        charStrokeThickness = {};
         generate();
     });
 
@@ -1579,12 +1712,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function pruneCharColors() {
         const len = elements.textInput.value.length;
-        Object.keys(charColors).forEach(k => {
-            if (Number(k) >= len) delete charColors[k];
-        });
-        Object.keys(charTransparency).forEach(k => {
-            if (Number(k) >= len) delete charTransparency[k];
-        });
+        const prune = dict => {
+            Object.keys(dict).forEach(k => {
+                if (Number(k) >= len) delete dict[k];
+            });
+        };
+        prune(charColors);
+        prune(charTransparency);
+        prune(charBold);
+        prune(charItalic);
+        prune(charUnderline);
+        prune(charStrike);
+        prune(charFont);
+        prune(charStrokeColor);
+        prune(charStrokeThickness);
         Object.keys(gradientPoints).forEach(k => {
             if (Number(k) >= len) {
                 delete gradientPoints[k];
@@ -1593,44 +1734,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         [...selectedChars].forEach(i => { if (i >= len) selectedChars.delete(i); });
         if (selectedPoint !== null && selectedPoint >= len) selectedPoint = null;
-    }
-
-    function buildTransparencyGroups(rawText, enableLineBreaks, colorFn, transFn) {
-        const groups = [];
-        let current = null;
-
-        const pushChar = (ch, color, trans) => {
-            if (current === null || !transAreSimilar(current.trans, trans)) {
-                current = { trans, items: [] };
-                groups.push(current);
-            }
-            const items = current.items;
-            const last = items[items.length - 1];
-            if (last && last.color === color) {
-                last.text += ch;
-            } else {
-                items.push({ text: ch, color });
-            }
-        };
-
-        for (let i = 0; i < rawText.length; i++) {
-            const ch = rawText[i];
-            if (ch === '\n') {
-                if (enableLineBreaks) {
-                    groups.push({ isBreak: true });
-                    current = null;
-                } else {
-                    const c = colorFn(i) || null;
-                    const t2 = transFn(i);
-                    pushChar(' ', c, t2);
-                }
-                continue;
-            }
-            const color = colorFn(i);
-            const t2 = transFn(i);
-            pushChar(ch, color, t2);
-        }
-        return groups;
     }
 
     function buildDefaultioText(rawText, enableLineBreaks, options) {
@@ -1643,37 +1746,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let out = '';
 
-        if (font) out += `<Font=${font}>`;
+        if (font) out += '<Font=' + font + '>';
         if (animateGrouping && animateGrouping !== 'Letter') {
-            out += `<AnimateStepGrouping=${animateGrouping}>`;
+            out += '<AnimateStepGrouping=' + animateGrouping + '>';
         }
-        if (animateStepTime > 0) out += `<AnimateStepTime=${animateStepTime}>`;
+        if (animateStepTime > 0) out += '<AnimateStepTime=' + animateStepTime + '>';
         if (animateStepFrequency && Number(animateStepFrequency) > 0 && Number(animateStepFrequency) !== 4) {
-            out += `<AnimateStepFrequency=${animateStepFrequency}>`;
+            out += '<AnimateStepFrequency=' + animateStepFrequency + '>';
         }
         if (animateStyleTime > 0 && animateStyleTime !== 0.5) {
-            out += `<AnimateStyleTime=${animateStyleTime}>`;
+            out += '<AnimateStyleTime=' + animateStyleTime + '>';
         }
 
         if (strokeColor && strokeThickness > 0) {
-            out += `<StrokeColor=${hexToDefaultioColor(strokeColor)}>`;
-            out += `<TextStrokeTransparency=0>`;
+            out += '<StrokeColor=' + hexToDefaultioColor(strokeColor) + '>';
+            out += '<TextStrokeTransparency=0>';
         }
 
-        if (trans > 0) out += `<TextTransparency=${roundTransparency(trans)}>`;
+        if (trans > 0) out += '<TextTransparency=' + roundTransparency(trans) + '>';
 
         let lastColor = null;
         let animationOpened = false;
 
         const openAnimation = () => {
             if (animateStyle && !animationOpened) {
-                out += `<AnimateStyle=${animateStyle}>`;
+                out += '<AnimateStyle=' + animateStyle + '>';
                 animationOpened = true;
             }
         };
         const closeAnimation = () => {
             if (animationOpened) {
-                out += `<AnimateStyle=/>`;
+                out += '<AnimateStyle=/>';
                 animationOpened = false;
             }
         };
@@ -1697,7 +1800,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (color !== lastColor) {
                 closeAnimation();
                 if (lastColor !== null) out += '<Color=/>';
-                if (color) out += `<Color=${color}>`;
+                if (color) out += '<Color=' + color + '>';
                 lastColor = color;
             }
 
@@ -1721,24 +1824,24 @@ document.addEventListener('DOMContentLoaded', function () {
     function generate() {
         const rawText = elements.textInput.value || 'Your Text';
         const userId = elements.userId.value || '0';
-        const font = elements.fontFamily.value;
-        const stroke = elements.strokeColor.value;
-        const thickness = parseFloat(elements.strokeThickness.value);
+        const globalFont = elements.fontFamily.value;
+        const globalStroke = elements.strokeColor.value;
+        const globalThickness = parseFloat(elements.strokeThickness.value);
         const mode = elements.colorMode.value;
         const source = elements.colorSource.value;
         const format = elements.outputFormat.value;
-        const trans = parseFloat(elements.transparency.value);
+        const globalTrans = parseFloat(elements.transparency.value);
 
-        const formatting = {
+        const globalFormatting = {
             bold: elements.bold.checked,
             italic: elements.italic.checked,
             underline: elements.underline.checked,
             strikethrough: elements.strikethrough.checked
         };
 
-        const fixColors = elements.fixColors.checked;
         const enableLineBreaks = elements.lineBreaks.checked;
         const usePoints = source === 'points' && getSortedPointIndexes().length > 0;
+        const isAdvanced = currentUiMode === 'advanced';
 
         pruneCharColors();
 
@@ -1761,66 +1864,168 @@ document.addEventListener('DOMContentLoaded', function () {
             usePoints
         });
 
-        const transFn = (i) => transparencyForIndex(i, trans, usePoints);
+        const buildCharProps = (i) => {
+            const isBold = charBold[i] !== undefined ? !!charBold[i] : globalFormatting.bold;
+            const isItalic = charItalic[i] !== undefined ? !!charItalic[i] : globalFormatting.italic;
+            const isUnderline = charUnderline[i] !== undefined ? !!charUnderline[i] : globalFormatting.underline;
+            const isStrike = charStrike[i] !== undefined ? !!charStrike[i] : globalFormatting.strikethrough;
 
-        const groups = buildTransparencyGroups(rawText, enableLineBreaks, colorFn, transFn);
+            const font = isAdvanced && charFont[i] !== undefined ? charFont[i] : globalFont;
+
+            const strokeColor = isAdvanced && charStrokeColor[i] !== undefined
+                ? charStrokeColor[i]
+                : globalStroke;
+            const strokeThickness = isAdvanced && charStrokeThickness[i] !== undefined
+                ? charStrokeThickness[i]
+                : globalThickness;
+
+            const trans = transparencyForIndex(i, globalTrans, usePoints);
+            const color = colorFn(i) || null;
+
+            return { isBold, isItalic, isUnderline, isStrike, font, strokeColor, strokeThickness, trans, color };
+        };
+
+        const runs = [];
+        let buffer = '';
+        let bufferProps = null;
+
+        const propsEqual = (a, b) => {
+            if (!a || !b) return false;
+            return a.isBold === b.isBold
+                && a.isItalic === b.isItalic
+                && a.isUnderline === b.isUnderline
+                && a.isStrike === b.isStrike
+                && a.font === b.font
+                && a.strokeColor === b.strokeColor
+                && Math.abs(a.strokeThickness - b.strokeThickness) < 0.001
+                && transAreSimilar(a.trans, b.trans)
+                && a.color === b.color;
+        };
+
+        const flush = () => {
+            if (buffer.length) {
+                runs.push({ text: buffer, props: bufferProps });
+                buffer = '';
+            }
+        };
+
+        for (let i = 0; i < rawText.length; i++) {
+            const ch = rawText[i];
+            const props = buildCharProps(i);
+
+            if (ch === '\n' && enableLineBreaks) {
+                flush();
+                runs.push({ isBreak: true });
+                bufferProps = null;
+                continue;
+            }
+
+            const actualCh = ch === '\n' ? ' ' : ch;
+            if (propsEqual(bufferProps, props)) {
+                buffer += actualCh;
+            } else {
+                flush();
+                bufferProps = props;
+                buffer += actualCh;
+            }
+        }
+        flush();
 
         let inner = '';
-        groups.forEach(g => {
-            if (g.isBreak) {
+        let openStack = [];
+
+        runs.forEach(run => {
+            if (run.isBreak) {
+                while (openStack.length > 0) {
+                    const top = openStack.pop();
+                    inner += top.close;
+                }
                 inner += '<br/>';
                 return;
             }
 
-            let groupInner = '';
-            g.items.forEach(item => {
-                if (item.color) {
-                    if (fixColors) {
-                        const parts = item.text.split(/( +)/);
-                        parts.forEach(p => {
-                            if (p === '') return;
-                            if (/^ +$/.test(p)) groupInner += p;
-                            else groupInner += `<font color='${formatColor(item.color)}'>${p}</font>`;
-                        });
-                    } else {
-                        groupInner += `<font color='${formatColor(item.color)}'>${item.text}</font>`;
-                    }
-                } else {
-                    groupInner += item.text;
-                }
+            const p = run.props;
+
+            const desiredKeys = [];
+            const desiredOpen = [];
+
+            const fontKey = 'font:' + p.font;
+            desiredKeys.push(fontKey);
+            desiredOpen.push({ open: '<font face=\'' + p.font + '\'>', close: '</font>' });
+
+            const hasStroke = p.strokeThickness > 0;
+            if (hasStroke) {
+                const strokeKey = 'stroke:' + p.strokeColor + ':' + p.strokeThickness;
+                desiredKeys.push(strokeKey);
+                desiredOpen.push({
+                    open: '<stroke color=\'' + formatColor(p.strokeColor) + '\' thickness=\'' + p.strokeThickness + '\'>',
+                    close: '</stroke>'
+                });
+            }
+
+            const hasCustomTrans = !transAreSimilar(p.trans, globalTrans);
+            if (hasCustomTrans) {
+                const transKey = 'trans:' + roundTransparency(p.trans);
+                desiredKeys.push(transKey);
+                desiredOpen.push({
+                    open: '<font transparency=\'' + roundTransparency(p.trans) + '\'>',
+                    close: '</font>'
+                });
+            }
+
+            const fmtTags = [];
+            if (p.isStrike) fmtTags.push('s');
+            if (p.isUnderline) fmtTags.push('u');
+            if (p.isItalic) fmtTags.push('i');
+            if (p.isBold) fmtTags.push('b');
+            fmtTags.forEach(tag => {
+                desiredKeys.push('fmt:' + tag);
+                desiredOpen.push({ open: '<' + tag + '>', close: '</' + tag + '>' });
             });
 
-            if (transAreSimilar(g.trans, trans)) {
-                inner += groupInner;
-            } else {
-                const transAttr = (g.trans !== null && g.trans !== undefined)
-                    ? ` transparency='${roundTransparency(g.trans)}'`
-                    : '';
-                inner += `<font${transAttr}>${groupInner}</font>`;
+            if (p.color) {
+                const colorKey = 'color:' + p.color;
+                desiredKeys.push(colorKey);
+                desiredOpen.push({
+                    open: '<font color=\'' + formatColor(p.color) + '\'>',
+                    close: '</font>'
+                });
             }
+
+            let commonLen = 0;
+            while (commonLen < openStack.length
+                && commonLen < desiredKeys.length
+                && openStack[commonLen].key === desiredKeys[commonLen]) {
+                commonLen++;
+            }
+            while (openStack.length > commonLen) {
+                const top = openStack.pop();
+                inner += top.close;
+            }
+            for (let k = commonLen; k < desiredKeys.length; k++) {
+                inner += desiredOpen[k].open;
+                openStack.push({ key: desiredKeys[k], close: desiredOpen[k].close });
+            }
+
+            inner += run.text;
         });
 
-        const formattedInner = inner
-            .split('<br/>')
-            .map(part => part === '' ? '' : applyFormatting(part, formatting))
-            .join('<br/>');
+        while (openStack.length > 0) {
+            const top = openStack.pop();
+            inner += top.close;
+        }
 
-        const globalTransAttr = trans > 0 ? ` transparency='${roundTransparency(trans)}'` : '';
-        const openFont = `<font face='${font}'${globalTransAttr}>`;
-        const hasStroke = thickness > 0;
-        const openStroke = hasStroke ? `<stroke color='${formatColor(stroke)}' thickness='${thickness}'>` : '';
-        const closeStroke = hasStroke ? '</stroke>' : '';
-        const richText = `${openFont}${openStroke}${formattedInner}${closeStroke}</font>`;
+        const richText = inner;
 
         elements.outputCode.value = richText;
 
         if (format === 'defaultio') {
             const defaultioText = buildDefaultioText(rawText, enableLineBreaks, {
                 colorFn,
-                font,
-                strokeColor: stroke,
-                strokeThickness: thickness,
-                trans,
+                font: globalFont,
+                strokeColor: globalStroke,
+                strokeThickness: globalThickness,
+                trans: globalTrans,
                 animateStyle: elements.animateStyle.value,
                 animateGrouping: elements.animateGrouping.value,
                 animateStepTime: parseFloat(elements.animateStepTime.value),
@@ -1831,26 +2036,26 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.outputDefaultio.value = defaultioText;
 
             const luaSnippet =
-                `local richText = require(script.Parent:FindFirstChild("RichText") or script.Parent.Parent)\n` +
-                `local text = "${defaultioText.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"\n` +
-                `local textObject = richText:New(frame, text, {Font = "${font}"})\n` +
-                `textObject:Animate(true)`;
+                'local richText = require(script.Parent:FindFirstChild("RichText") or script.Parent.Parent)\n' +
+                'local text = "' + defaultioText.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n' +
+                'local textObject = richText:New(frame, text, {Font = "' + globalFont + '"})\n' +
+                'textObject:Animate(true)';
 
             elements.outputJson.value = luaSnippet;
         } else {
             elements.outputDefaultio.value = '';
-            elements.outputJson.value = `"${userId}": "${richText}"\n\n,`;
+            elements.outputJson.value = '"' + userId + '": "' + richText + '"\n\n,';
         }
 
         renderPreview(rawText, enableLineBreaks, {
             colorFn,
             usePoints,
-            font,
-            bold: formatting.bold,
-            italic: formatting.italic,
-            underline: formatting.underline,
-            strikethrough: formatting.strikethrough,
-            trans
+            font: globalFont,
+            bold: globalFormatting.bold,
+            italic: globalFormatting.italic,
+            underline: globalFormatting.underline,
+            strikethrough: globalFormatting.strikethrough,
+            trans: globalTrans
         });
 
         refreshPointMarkers();
@@ -2088,7 +2293,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ===== Zoom =====
     let zoomRafHandle = null;
     let zoomTimeoutHandle = null;
 
@@ -2111,7 +2315,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (elements.previewLarge) void elements.previewLarge.offsetWidth;
             if (elements.preview) void elements.preview.offsetWidth;
             refreshPointMarkers();
-        }, 500);
+        }, 100);
     }
 
     function applyPreviewZoom(z) {
@@ -2149,7 +2353,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { passive: false });
     }
 
-    // ===== Pan =====
     const PAN_LIMIT = 500;
     const PAN_TAP_THRESHOLD = 5;
     let panX = 0;
@@ -2167,7 +2370,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const py = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panY));
         panX = px;
         panY = py;
-        elements.previewLarge.style.transform = `translate(${px}px, ${py}px)`;
+        elements.previewLarge.style.transform = 'translate(' + px + 'px, ' + py + 'px)';
         refreshPointMarkers();
     }
 
@@ -2333,6 +2536,13 @@ document.addEventListener('DOMContentLoaded', function () {
             fontFamily: elements.fontFamily.value,
             charColors: charColors,
             charTransparency: charTransparency,
+            charBold: charBold,
+            charItalic: charItalic,
+            charUnderline: charUnderline,
+            charStrike: charStrike,
+            charFont: charFont,
+            charStrokeColor: charStrokeColor,
+            charStrokeThickness: charStrokeThickness,
             gradientPoints: gradientPoints,
             gradientPointTransparency: gradientPointTransparency,
             animateStyle: elements.animateStyle.value,
@@ -2398,6 +2608,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             charColors = (s.charColors && typeof s.charColors === 'object') ? { ...s.charColors } : {};
             charTransparency = (s.charTransparency && typeof s.charTransparency === 'object') ? { ...s.charTransparency } : {};
+            charBold = (s.charBold && typeof s.charBold === 'object') ? { ...s.charBold } : {};
+            charItalic = (s.charItalic && typeof s.charItalic === 'object') ? { ...s.charItalic } : {};
+            charUnderline = (s.charUnderline && typeof s.charUnderline === 'object') ? { ...s.charUnderline } : {};
+            charStrike = (s.charStrike && typeof s.charStrike === 'object') ? { ...s.charStrike } : {};
+            charFont = (s.charFont && typeof s.charFont === 'object') ? { ...s.charFont } : {};
+            charStrokeColor = (s.charStrokeColor && typeof s.charStrokeColor === 'object') ? { ...s.charStrokeColor } : {};
+            charStrokeThickness = (s.charStrokeThickness && typeof s.charStrokeThickness === 'object') ? { ...s.charStrokeThickness } : {};
             gradientPoints = (s.gradientPoints && typeof s.gradientPoints === 'object') ? { ...s.gradientPoints } : {};
             gradientPointTransparency = (s.gradientPointTransparency && typeof s.gradientPointTransparency === 'object') ? { ...s.gradientPointTransparency } : {};
 
@@ -2477,7 +2694,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ===== Preset import / export =====
     function downloadJson(filename, data) {
         const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
@@ -2499,13 +2715,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const result = {};
         if (!data || typeof data !== 'object') return result;
 
-        // Case 1: single preset as { name: "X", state: {...} }
         if (data.name && data.state && typeof data.state === 'object') {
             result[String(data.name)] = data.state;
             return result;
         }
 
-        // Case 2: single state object with known keys
         const knownKeys = ['text', 'colorMode', 'colorSource', 'outputFormat', 'fontFamily', 'charColors', 'gradientPoints'];
         const hasAnyKnownKey = knownKeys.some(k => data[k] !== undefined);
         if (hasAnyKnownKey) {
@@ -2513,7 +2727,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return result;
         }
 
-        // Case 3: object of multiple presets: { "Name1": {...}, "Name2": {...} }
         Object.keys(data).forEach(key => {
             const value = data[key];
             if (value && typeof value === 'object') {
@@ -2558,8 +2771,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (presets[name]) overwritten++;
                     });
                     if (overwritten > 0) {
-                        if (!confirm(t('presetExists') + ` (${overwritten})`)) {
-                            // Отменяем перезапись, но продолжаем с добавлением
+                        if (!confirm(t('presetExists') + ' (' + overwritten + ')')) {
+                            return;
                         }
                     }
                     keys.forEach(name => {
