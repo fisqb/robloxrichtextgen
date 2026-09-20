@@ -4,7 +4,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rich Text Gen for Roblox</title>
+    <meta name="keywords" content="richetexteditor, richtext, richtexteditor, richtextformat, richtextjson, roblox, robloxcolortextedit, robloxrichtexteditor, robloxrichtextgenerator, robloxtext, robloxtexteditor, robloxtools, robloxwebtextgenerator, webrichtextgen, roblox rich text generator, roblox rich text editor, roblox color text, roblox text formatting, roblox fonts, roblox stroke text, roblox gradient text, defaultio richtext, roblox gui text, roblox ui text" />
+    <meta name="description" content="Free Roblox Rich Text Editor, Generator - create styled text with gradients, per-character colors, strokes, RGB, all Roblox fonts and formats. Export to Rich Text, Rich Text Markup module or JSON/Lua." />
+    <meta name="robots" content="index, follow" />
+    <title>🔨 Rich Text Gen for Roblox</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -390,6 +393,40 @@
                 <input type="text" id="charTransparency" data-i18n-placeholder="transparencyPlaceholder" placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
                 <button type="button" id="charApply" class="mini-btn" data-i18n="apply">Apply</button>
             </div>
+            <div class="char-editor-row char-format-row">
+                <label class="checkbox-label char-format-check">
+                    <input type="checkbox" id="charBold" />
+                    <span>B</span>
+                </label>
+                <label class="checkbox-label char-format-check">
+                    <input type="checkbox" id="charItalic" />
+                    <span>I</span>
+                </label>
+                <label class="checkbox-label char-format-check">
+                    <input type="checkbox" id="charUnderline" />
+                    <span>U</span>
+                </label>
+                <label class="checkbox-label char-format-check">
+                    <input type="checkbox" id="charStrike" />
+                    <span>S</span>
+                </label>
+            </div>
+            <div class="char-editor-row advanced-only">
+                <label class="char-editor-mini-label" data-i18n="font">Font</label>
+                <select id="charFont"></select>
+            </div>
+            <div class="char-editor-row advanced-only">
+                <label class="char-editor-mini-label" data-i18n="stroke">Stroke</label>
+                <input type="color" id="charStrokeColor" value="#0a0a1a" />
+                <input type="text" id="charStrokeColorHex" value="#0a0a1a" />
+            </div>
+            <div class="char-editor-row advanced-only">
+                <label class="char-editor-mini-label" data-i18n="strokeWidth">Stroke Width</label>
+                <div class="range-group">
+                    <input type="range" id="charStrokeThickness" min="0" max="5" step="0.5" value="2" />
+                    <span id="charStrokeThicknessValue">2</span>
+                </div>
+            </div>
             <div class="char-editor-row">
                 <button type="button" id="charReset" class="mini-btn ghost" data-i18n="resetColor">Reset color</button>
                 <button type="button" id="charResetAll" class="mini-btn ghost" data-i18n="resetAllChars">Reset all characters</button>
@@ -414,7 +451,7 @@
             </div>
         </div>
 
-        <div class="credit">made by ifisch</div>
+        <div class="credit">made by fisqb - Discord: ifisch</div>
     </div>
 
     <script src="script.js"></script>
