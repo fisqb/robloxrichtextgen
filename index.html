@@ -4,10 +4,19 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="keywords" content="richetexteditor, richtext, richtexteditor, richtextformat, richtextjson, roblox, robloxcolortextedit, robloxrichtexteditor, robloxrichtextgenerator, robloxtext, robloxtexteditor, robloxtools, robloxwebtextgenerator, webrichtextgen, roblox rich text generator, roblox rich text editor, roblox color text, roblox text formatting, roblox fonts, roblox stroke text, roblox gradient text, defaultio richtext, roblox gui text, roblox ui text" />
-    <meta name="description" content="Free Roblox Rich Text Editor, Generator - create styled text with gradients, per-character colors, strokes, RGB, all Roblox fonts and formats. Export to Rich Text, Rich Text Markup module or JSON/Lua." />
+    <meta name="keywords"
+        content="richetexteditor, richtext, richtexteditor, richtextformat, richtextjson, roblox, robloxcolortextedit, robloxrichtexteditor, robloxrichtextgenerator, robloxtext, robloxtexteditor, robloxtools, robloxwebtextgenerator, webrichtextgen, roblox rich text generator, roblox rich text editor, roblox color text, roblox text formatting, roblox fonts, roblox stroke text, roblox gradient text, defaultio richtext, roblox gui text, roblox ui text" />
+    <meta name="description"
+        content="Free Roblox Rich Text Editor, Generator - create styled text with gradients, per-character colors, strokes, RGB, all Roblox fonts and formats. Export to Rich Text, Rich Text Markup module or JSON/Lua." />
     <meta name="robots" content="index, follow" />
     <title>🔨 Rich Text Gen for Roblox</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Bangers&family=Creepster&family=Denk+One&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Fondamento&family=Fredoka+One&family=Grenze+Gotisch:wght@400;700&family=Indie+Flower&family=Josefin+Sans:ital,wght@0,400;0,700;1,400&family=Jura:wght@400;700&family=Kalam:wght@400;700&family=Libre+Bodoni:ital,wght@0,400;0,700;1,400&family=Luckiest+Guy&family=MedievalSharp&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Michroma&family=Montserrat:ital,wght@0,400;0,500;0,700;0,900;1,400&family=Nunito:ital,wght@0,400;0,700;1,400&family=Orbitron:wght@400;700&family=Oswald:wght@400;700&family=Overpass:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&family=Permanent+Marker&family=Press+Start+2P&family=Roboto:ital,wght@0,400;0,700;1,400&family=Roboto+Condensed:ital,wght@0,400;0,700;1,400&family=Roboto+Mono:ital,wght@0,400;0,700;1,400&family=Sarpanch:wght@400;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Special+Elite&family=Titillium+Web:ital,wght@0,400;0,700;1,400&family=Ubuntu:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet" />
+
     <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -64,13 +73,18 @@
                     </div>
                     <div class="presets-row">
                         <button type="button" id="presetLoad" class="mini-btn ghost" data-i18n="load">Load</button>
-                        <button type="button" id="presetRename" class="mini-btn ghost" data-i18n="rename">Rename</button>
-                        <button type="button" id="presetDelete" class="mini-btn ghost" data-i18n="delete">Delete</button>
+                        <button type="button" id="presetRename" class="mini-btn ghost"
+                            data-i18n="rename">Rename</button>
+                        <button type="button" id="presetDelete" class="mini-btn ghost"
+                            data-i18n="delete">Delete</button>
                     </div>
                     <div class="presets-row advanced-only">
-                        <button type="button" id="presetImport" class="mini-btn ghost" data-i18n="import">Import JSON</button>
-                        <button type="button" id="presetExport" class="mini-btn ghost" data-i18n="export">Export</button>
-                        <button type="button" id="presetExportAll" class="mini-btn ghost" data-i18n="exportAll">Export All</button>
+                        <button type="button" id="presetImport" class="mini-btn ghost" data-i18n="import">Import
+                            JSON</button>
+                        <button type="button" id="presetExport" class="mini-btn ghost"
+                            data-i18n="export">Export</button>
+                        <button type="button" id="presetExportAll" class="mini-btn ghost" data-i18n="exportAll">Export
+                            All</button>
                     </div>
                     <input type="file" id="presetFileInput" accept="application/json,.json" style="display:none" />
                 </div>
@@ -263,8 +277,9 @@
 
             <div class="panel">
                 <div class="preview-wrap">
-                    <div class="preview" id="preview">Text</div>
-                    <button type="button" class="preview-expand-btn" id="previewExpandBtn" title="Expand preview">⛶</button>
+                    <canvas class="preview" id="preview" width="800" height="160" aria-label="Text preview"></canvas>
+                    <button type="button" class="preview-expand-btn" id="previewExpandBtn" title="Expand preview"
+                        aria-label="Expand preview">⛶</button>
                 </div>
 
                 <div id="editorHostMain"></div>
@@ -301,7 +316,8 @@
                     </div>
                 </div>
                 <div class="preview-modal-body" id="previewModalBody">
-                    <div class="preview preview-large" id="previewLarge">Text</div>
+                    <canvas class="preview preview-large" id="previewLarge" width="1200" height="400"
+                        aria-label="Large text preview"></canvas>
                 </div>
                 <div class="preview-modal-editors" id="editorHostModal"></div>
                 <div class="preview-modal-footer" data-i18n="previewHint">
@@ -330,25 +346,32 @@
                     <section class="help-section">
                         <h3 data-i18n="helpSettings">Settings</h3>
                         <ul>
-                            <li data-i18n="helpSettings1">Use the Language, Theme and Mode selectors next to the title.</li>
-                            <li data-i18n="helpSettings2">Dark and Simple are the defaults. Your choices are saved between visits.</li>
-                            <li data-i18n="helpSettings3">Switch to Advanced for all features (per-character colors, Gradient Points, Defaultio, JSON output).</li>
+                            <li data-i18n="helpSettings1">Use the Language, Theme and Mode selectors next to the title.
+                            </li>
+                            <li data-i18n="helpSettings2">Dark and Simple are the defaults. Your choices are saved
+                                between visits.</li>
+                            <li data-i18n="helpSettings3">Switch to Advanced for all features (per-character colors,
+                                Gradient Points, Defaultio, JSON output).</li>
                         </ul>
                     </section>
 
                     <section class="help-section">
                         <h3 data-i18n="helpPresets">Presets</h3>
                         <ul>
-                            <li data-i18n="helpPresets1">Save, load, rename and delete presets with the buttons above.</li>
+                            <li data-i18n="helpPresets1">Save, load, rename and delete presets with the buttons above.
+                            </li>
                             <li data-i18n="helpPresets2">Presets are stored locally in your browser.</li>
-                            <li data-i18n="helpPresets3">Import JSON — load one or many presets from a .json file. Export — download the selected preset. Export All — download every preset in one file.</li>
+                            <li data-i18n="helpPresets3">Import JSON — load one or many presets from a .json file.
+                                Export — download the selected preset. Export All — download every preset in one file.
+                            </li>
                         </ul>
                     </section>
 
                     <section class="help-section">
                         <h3 data-i18n="helpAutoSave">Auto-save</h3>
                         <ul>
-                            <li data-i18n="helpAutoSave1">Your current text, colors, gradient points and settings are saved automatically.</li>
+                            <li data-i18n="helpAutoSave1">Your current text, colors, gradient points and settings are
+                                saved automatically.</li>
                         </ul>
                     </section>
 
@@ -356,7 +379,8 @@
                         <h3 data-i18n="helpColorModes">Color modes</h3>
                         <ul>
                             <li data-i18n="helpColorModes1">Solid — one color for the entire text.</li>
-                            <li data-i18n="helpColorModes2">Gradient — colors blend horizontally between Color 1 and Color 2.</li>
+                            <li data-i18n="helpColorModes2">Gradient — colors blend horizontally between Color 1 and
+                                Color 2.</li>
                             <li data-i18n="helpColorModes3">Rainbow — full hue spectrum across the text.</li>
                         </ul>
                     </section>
@@ -364,8 +388,10 @@
                     <section class="help-section">
                         <h3 data-i18n="helpAdvanced">Advanced features</h3>
                         <ul>
-                            <li data-i18n="helpAdvanced1">Per-character colors, Gradient Points, Defaultio module output and JSON/Lua output are available in Advanced mode.</li>
-                            <li data-i18n="helpAdvanced2">Click the ⛶ button to expand the preview; you can edit characters right there and pan around by dragging empty space.</li>
+                            <li data-i18n="helpAdvanced1">Per-character colors, Gradient Points, Defaultio module output
+                                and JSON/Lua output are available in Advanced mode.</li>
+                            <li data-i18n="helpAdvanced2">Click the ⛶ button to expand the preview; you can edit
+                                characters right there and pan around by dragging empty space.</li>
                         </ul>
                     </section>
 
@@ -390,7 +416,8 @@
                 <input type="text" id="charColorHex" value="#ff8c00" />
             </div>
             <div class="char-editor-row">
-                <input type="text" id="charTransparency" data-i18n-placeholder="transparencyPlaceholder" placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
+                <input type="text" id="charTransparency" data-i18n-placeholder="transparencyPlaceholder"
+                    placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
                 <button type="button" id="charApply" class="mini-btn" data-i18n="apply">Apply</button>
             </div>
             <div class="char-editor-row char-format-row">
@@ -428,11 +455,13 @@
                 </div>
             </div>
             <div class="char-editor-row" id="charMakePointRow" style="display:none">
-                <button type="button" id="charMakePoint" class="mini-btn" data-i18n="makeGradientPoint">Make Gradient Point</button>
+                <button type="button" id="charMakePoint" class="mini-btn" data-i18n="makeGradientPoint">Make Gradient
+                    Point</button>
             </div>
             <div class="char-editor-row">
                 <button type="button" id="charReset" class="mini-btn ghost" data-i18n="resetColor">Reset color</button>
-                <button type="button" id="charResetAll" class="mini-btn ghost" data-i18n="resetAllChars">Reset all characters</button>
+                <button type="button" id="charResetAll" class="mini-btn ghost" data-i18n="resetAllChars">Reset all
+                    characters</button>
             </div>
         </div>
 
@@ -445,20 +474,30 @@
                 <input type="text" id="pointColorHex" value="#ff8c00" />
             </div>
             <div class="char-editor-row">
-                <input type="text" id="pointTransparency" data-i18n-placeholder="transparencyPlaceholder" placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
+                <input type="text" id="pointTransparency" data-i18n-placeholder="transparencyPlaceholder"
+                    placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
                 <button type="button" id="pointApply" class="mini-btn" data-i18n="apply">Apply</button>
             </div>
             <div class="char-editor-row">
-                <button type="button" id="pointSelectChar" class="mini-btn ghost" data-i18n="selectCharForFormatting">Select char for formatting</button>
+                <button type="button" id="pointSelectChar" class="mini-btn ghost"
+                    data-i18n="selectCharForFormatting">Select char for formatting</button>
             </div>
             <div class="char-editor-row">
-                <button type="button" id="pointDelete" class="mini-btn ghost" data-i18n="deletePoint">Delete point</button>
-                <button type="button" id="pointsResetAll" class="mini-btn ghost" data-i18n="resetAllPoints">Reset all points</button>
+                <button type="button" id="pointDelete" class="mini-btn ghost" data-i18n="deletePoint">Delete
+                    point</button>
+                <button type="button" id="pointsResetAll" class="mini-btn ghost" data-i18n="resetAllPoints">Reset all
+                    points</button>
             </div>
         </div>
 
         <div class="credit">made by fisqb - Discord: ifisch</div>
     </div>
+
+    <noscript>
+        <div style="padding:20px;color:#e0e0e0;background:#1a1a1a;font-family:sans-serif;text-align:center;">
+            This tool requires JavaScript to render the preview and generate Rich Text.
+        </div>
+    </noscript>
 
     <script src="script.js"></script>
 </body>
