@@ -14,6 +14,63 @@ document.addEventListener('DOMContentLoaded', function () {
         'BuilderSansExtraBold', 'Arimo', 'ArimoBold'
     ].sort();
 
+    const FONT_FALLBACK_MAP = {
+        'Legacy': 'Arial, sans-serif',
+        'Arial': 'Arial, sans-serif',
+        'ArialBold': 'Arial, sans-serif',
+        'SourceSans': '"Source Sans 3", "Source Sans Pro", sans-serif',
+        'SourceSansBold': '"Source Sans 3", "Source Sans Pro", sans-serif',
+        'SourceSansLight': '"Source Sans 3", "Source Sans Pro", sans-serif',
+        'SourceSansItalic': '"Source Sans 3", "Source Sans Pro", sans-serif',
+        'SourceSansSemibold': '"Source Sans 3", "Source Sans Pro", sans-serif',
+        'Bodoni': '"Libre Bodoni", "Bodoni MT", serif',
+        'Garamond': '"EB Garamond", Garamond, serif',
+        'Cartoon': '"Comic Sans MS", cursive',
+        'Code': '"Roboto Mono", monospace',
+        'Highway': '"Overpass", "Highway Gothic", sans-serif',
+        'SciFi': '"Orbitron", "Michroma", sans-serif',
+        'Arcade': '"Press Start 2P", monospace',
+        'Fantasy': '"MedievalSharp", "Grenze Gotisch", serif',
+        'Antique': '"IM Fell English", "EB Garamond", serif',
+        'Gotham': 'Montserrat, sans-serif',
+        'GothamMedium': 'Montserrat, sans-serif',
+        'GothamBold': 'Montserrat, sans-serif',
+        'GothamBlack': 'Montserrat, sans-serif',
+        'BuilderSans': 'Montserrat, sans-serif',
+        'BuilderSansMedium': 'Montserrat, sans-serif',
+        'BuilderSansBold': 'Montserrat, sans-serif',
+        'BuilderSansExtraBold': 'Montserrat, sans-serif',
+        'AmaticSC': '"Amatic SC", cursive',
+        'Bangers': 'Bangers, cursive',
+        'Creepster': 'Creepster, cursive',
+        'DenkOne': '"Denk One", sans-serif',
+        'Fondamento': 'Fondamento, cursive',
+        'FredokaOne': '"Fredoka One", cursive',
+        'GrenzeGotisch': '"Grenze Gotisch", serif',
+        'IndieFlower': '"Indie Flower", cursive',
+        'JosefinSans': '"Josefin Sans", sans-serif',
+        'Jura': 'Jura, sans-serif',
+        'Kalam': 'Kalam, cursive',
+        'LuckiestGuy': '"Luckiest Guy", cursive',
+        'Merriweather': 'Merriweather, serif',
+        'Michroma': 'Michroma, sans-serif',
+        'Nunito': 'Nunito, sans-serif',
+        'Oswald': 'Oswald, sans-serif',
+        'PatrickHand': '"Patrick Hand", cursive',
+        'PermanentMarker': '"Permanent Marker", cursive',
+        'Roboto': 'Roboto, sans-serif',
+        'RobotoCondensed': '"Roboto Condensed", sans-serif',
+        'RobotoMono': '"Roboto Mono", monospace',
+        'Sarpanch': 'Sarpanch, sans-serif',
+        'SpecialElite': '"Special Elite", cursive',
+        'TitilliumWeb': '"Titillium Web", sans-serif',
+        'Ubuntu': 'Ubuntu, sans-serif',
+        'Arimo': 'Arimo, sans-serif',
+        'ArimoBold': 'Arimo, sans-serif'
+    };
+
+    const fontFamilyFor = (robloxFont) => FONT_FALLBACK_MAP[robloxFont] || robloxFont || 'Arial, sans-serif';
+
     const $ = id => document.getElementById(id);
     const elements = {
         textInput: $('textInput'),
@@ -120,14 +177,12 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     ALL_FONTS.forEach(font => {
-        const option = new Option(font, font);
-        elements.fontFamily.add(option);
+        elements.fontFamily.add(new Option(font, font));
     });
     elements.fontFamily.value = 'SpecialElite';
 
     ALL_FONTS.forEach(font => {
-        const option = new Option(font, font);
-        elements.charFont.add(option);
+        elements.charFont.add(new Option(font, font));
     });
 
     let charColors = {};
@@ -145,11 +200,17 @@ document.addEventListener('DOMContentLoaded', function () {
     let gradientPointTransparency = {};
     let selectedPoint = null;
 
+    let currentRawText = '';
+    let currentEnableLineBreaks = true;
+
+    let selectionAnchor = null;
+    let selectionFocus = null;
+
     const isValidHex = hex => /^#[0-9A-F]{6}$/i.test(hex);
     const isValidTransparency = v => v !== '' && !isNaN(v) && Number(v) >= 0 && Number(v) <= 1;
-    const roundTransparency = (t) => Math.round(Number(t) * 10) / 10;
+    const roundTransparency = t => Math.round(Number(t) * 10) / 10;
 
-    const TRANSPARENCY_MERGE_THRESHOLD = 0.1;
+    const TRANSPARENCY_MERGE_THRESHOLD = 0.001;
     const transAreSimilar = (a, b) => {
         const an = (a === null || a === undefined);
         const bn = (b === null || b === undefined);
@@ -171,7 +232,6 @@ document.addEventListener('DOMContentLoaded', function () {
         .map(x => Math.round(x).toString(16).padStart(2, '0')).join('');
 
     const lerp = (a, b, t) => a + (b - a) * t;
-
     const lerpColor = (c1, c2, t) => ({
         r: lerp(c1.r, c2.r, t),
         g: lerp(c1.g, c2.g, t),
@@ -196,7 +256,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const c1 = hexToRgb(color1Hex);
         const c2 = hexToRgb(color2Hex);
         if (!c1 || !c2) return [];
-
         return Array.from({ length: steps }, (_, i) => {
             const t = steps === 1 ? 0 : i / (steps - 1);
             if (type === 'rainbow') {
@@ -208,13 +267,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    const applyFormatting = (text, { bold, italic, underline, strikethrough }) => {
-        if (strikethrough) text = '<s>' + text + '</s>';
-        if (underline) text = '<u>' + text + '</u>';
-        if (italic) text = '<i>' + text + '</i>';
-        if (bold) text = '<b>' + text + '</b>';
-        return text;
-    };
+    const escapeRichText = str => String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
 
     const hexToDefaultioColor = (hex) => {
         const c = hexToRgb(hex);
@@ -230,7 +288,6 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const SETTINGS_KEY = 'richTextGenSettings';
-
     const translations = {
         en: {
             language: 'Language', theme: 'Theme', uiMode: 'Mode',
@@ -269,6 +326,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'Dark', light: 'Light', simple: 'Simple', advanced: 'Advanced',
             makeGradientPoint: 'Make Gradient Point',
             selectCharForFormatting: 'Select char for formatting',
+            invalidTransparency: 'Transparency must be a number between 0 and 1.',
+            defaultioSkipChars: 'Warning: "<" and ">" characters were skipped in the Defaultio output.',
+            confirmSwitchPointsToGradient: 'Switching to Gradient/Solid will delete all Gradient Points. Continue?',
+            confirmSwitchGradientToPoints: 'Switching to Gradient Points will reset per-character colors. Continue?',
             helpTitle: 'Tips & Help', helpGettingStarted: 'Getting started',
             helpStart1: 'Type your text in the Text field on the left.',
             helpStart2: 'The Preview on the right updates live.',
@@ -331,6 +392,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'Oscuro', light: 'Claro', simple: 'Simple', advanced: 'Avanzado',
             makeGradientPoint: 'Crear punto de degradado',
             selectCharForFormatting: 'Seleccionar carácter para formato',
+            invalidTransparency: 'La transparencia debe ser un número entre 0 y 1.',
+            defaultioSkipChars: 'Aviso: los caracteres "<" y ">" se omitieron en la salida de Defaultio.',
+            confirmSwitchPointsToGradient: 'Cambiar a Degradado/Sólido eliminará todos los Puntos de degradado. ¿Continuar?',
+            confirmSwitchGradientToPoints: 'Cambiar a Puntos de degradado restablecerá los colores por carácter. ¿Continuar?',
             helpTitle: 'Ayuda y consejos', helpGettingStarted: 'Primeros pasos',
             helpStart1: 'Escribe tu texto en el campo Texto de la izquierda.',
             helpStart2: 'La vista previa se actualiza en vivo.',
@@ -393,6 +458,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'Sombre', light: 'Clair', simple: 'Simple', advanced: 'Avancé',
             makeGradientPoint: 'Créer un point de dégradé',
             selectCharForFormatting: 'Sélectionner le caractère',
+            invalidTransparency: 'La transparence doit être un nombre entre 0 et 1.',
+            defaultioSkipChars: 'Attention : les caractères "<" et ">" ont été ignorés dans la sortie Defaultio.',
+            confirmSwitchPointsToGradient: 'Passer à Dégradé/Uni supprimera tous les Points de dégradé. Continuer ?',
+            confirmSwitchGradientToPoints: 'Passer à Points de dégradé réinitialisera les couleurs par caractère. Continuer ?',
             helpTitle: 'Aide et astuces', helpGettingStarted: 'Pour commencer',
             helpStart1: 'Saisissez votre texte à gauche.',
             helpStart2: "L'aperçu se met à jour en direct.",
@@ -455,6 +524,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'Dunkel', light: 'Hell', simple: 'Einfach', advanced: 'Erweitert',
             makeGradientPoint: 'Verlaufspunkt erstellen',
             selectCharForFormatting: 'Zeichen auswählen',
+            invalidTransparency: 'Die Transparenz muss eine Zahl zwischen 0 und 1 sein.',
+            defaultioSkipChars: 'Warnung: Die Zeichen "<" und ">" wurden in der Defaultio-Ausgabe übersprungen.',
+            confirmSwitchPointsToGradient: 'Beim Wechsel zu Verlauf/Einfarbig werden alle Verlaufspunkte gelöscht. Fortfahren?',
+            confirmSwitchGradientToPoints: 'Beim Wechsel zu Verlaufspunkten werden Zeichenfarben zurückgesetzt. Fortfahren?',
             helpTitle: 'Tipps & Hilfe', helpGettingStarted: 'Erste Schritte',
             helpStart1: 'Gib deinen Text links ein.',
             helpStart2: 'Die Vorschau aktualisiert sich live.',
@@ -517,6 +590,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'Scuro', light: 'Chiaro', simple: 'Semplice', advanced: 'Avanzato',
             makeGradientPoint: 'Crea punto sfumatura',
             selectCharForFormatting: 'Seleziona carattere',
+            invalidTransparency: 'La trasparenza deve essere un numero tra 0 e 1.',
+            defaultioSkipChars: 'Attenzione: i caratteri "<" e ">" sono stati saltati nell\'output Defaultio.',
+            confirmSwitchPointsToGradient: 'Passando a Sfumatura/Tinta unita verranno eliminati tutti i Punti sfumatura. Continuare?',
+            confirmSwitchGradientToPoints: 'Passando a Punti sfumatura verranno reimpostati i colori per carattere. Continuare?',
             helpTitle: 'Suggerimenti e aiuto', helpGettingStarted: 'Per iniziare',
             helpStart1: 'Scrivi il testo a sinistra.',
             helpStart2: "L'anteprima si aggiorna in tempo reale.",
@@ -579,6 +656,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'Escuro', light: 'Claro', simple: 'Simples', advanced: 'Avançado',
             makeGradientPoint: 'Criar ponto de gradiente',
             selectCharForFormatting: 'Selecionar caractere',
+            invalidTransparency: 'A transparência deve ser um número entre 0 e 1.',
+            defaultioSkipChars: 'Aviso: os caracteres "<" e ">" foram ignorados na saída do Defaultio.',
+            confirmSwitchPointsToGradient: 'Mudar para Gradiente/Sólido excluirá todos os Pontos de gradiente. Continuar?',
+            confirmSwitchGradientToPoints: 'Mudar para Pontos de gradiente redefinirá as cores por caractere. Continuar?',
             helpTitle: 'Dicas e ajuda', helpGettingStarted: 'Primeiros passos',
             helpStart1: 'Digite seu texto à esquerda.',
             helpStart2: 'A pré-visualização é atualizada ao vivo.',
@@ -641,6 +722,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'Тёмная', light: 'Светлая', simple: 'Простой', advanced: 'Продвинутый',
             makeGradientPoint: 'Сделать точкой градиента',
             selectCharForFormatting: 'Выбрать букву',
+            invalidTransparency: 'Прозрачность должна быть числом от 0 до 1.',
+            defaultioSkipChars: 'Внимание: символы "<" и ">" были пропущены в выводе Defaultio.',
+            confirmSwitchPointsToGradient: 'Переключение на Gradient/Solid удалит все точки градиента. Продолжить?',
+            confirmSwitchGradientToPoints: 'Переключение на Gradient Points сбросит посимвольные цвета. Продолжить?',
             helpTitle: 'Справка и советы', helpGettingStarted: 'С чего начать',
             helpStart1: 'Введите текст в поле слева.',
             helpStart2: 'Превью справа обновляется в реальном времени.',
@@ -703,6 +788,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'ダーク', light: 'ライト', simple: 'シンプル', advanced: '詳細',
             makeGradientPoint: 'グラデーションポイントにする',
             selectCharForFormatting: '書式設定する文字を選択',
+            invalidTransparency: '透明度は 0 から 1 の数値で指定してください。',
+            defaultioSkipChars: '警告: Defaultio 出力では "<" と ">" はスキップされました。',
+            confirmSwitchPointsToGradient: 'グラデーション/単色に切り替えると、すべてのグラデーションポイントが削除されます。続行しますか?',
+            confirmSwitchGradientToPoints: 'グラデーションポイントに切り替えると、文字ごとの色がリセットされます。続行しますか?',
             helpTitle: 'ヒントとヘルプ', helpGettingStarted: 'はじめに',
             helpStart1: '左側のテキスト欄に入力します。',
             helpStart2: '右側のプレビューがリアルタイムで更新されます。',
@@ -765,6 +854,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: '어두움', light: '밝음', simple: '간단', advanced: '고급',
             makeGradientPoint: '그라데이션 포인트 만들기',
             selectCharForFormatting: '서식 지정할 문자 선택',
+            invalidTransparency: '투명도는 0에서 1 사이의 숫자여야 합니다.',
+            defaultioSkipChars: '경고: Defaultio 출력에서 "<" 및 ">" 문자가 건너뛰어졌습니다.',
+            confirmSwitchPointsToGradient: '그라데이션/단색으로 전환하면 모든 그라데이션 포인트가 삭제됩니다. 계속할까요?',
+            confirmSwitchGradientToPoints: '그라데이션 포인트로 전환하면 문자별 색상이 초기화됩니다. 계속할까요?',
             helpTitle: '도움말 및 팁', helpGettingStarted: '시작하기',
             helpStart1: '왼쪽 텍스트 필드에 입력하세요.',
             helpStart2: '오른쪽 미리보기가 실시간으로 업데이트됩니다.',
@@ -827,6 +920,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: '暗色', light: '亮色', simple: '简易', advanced: '高级',
             makeGradientPoint: '设为渐变点',
             selectCharForFormatting: '选择字符以设置格式',
+            invalidTransparency: '透明度必须是 0 到 1 之间的数字。',
+            defaultioSkipChars: '警告: Defaultio 输出中的 "<" 和 ">" 字符已被跳过。',
+            confirmSwitchPointsToGradient: '切换到渐变/纯色将删除所有渐变点。是否继续?',
+            confirmSwitchGradientToPoints: '切换到渐变点将重置逐字颜色。是否继续?',
             helpTitle: '帮助与提示', helpGettingStarted: '开始使用',
             helpStart1: '在左侧文本框中输入文本。',
             helpStart2: '右侧预览会实时更新。',
@@ -889,6 +986,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'داكن', light: 'فاتح', simple: 'بسيط', advanced: 'متقدم',
             makeGradientPoint: 'إنشاء نقطة تدرج',
             selectCharForFormatting: 'اختر حرفاً للتنسيق',
+            invalidTransparency: 'يجب أن تكون الشفافية رقماً بين 0 و 1.',
+            defaultioSkipChars: 'تحذير: تم تخطي الحرفين "<" و ">" في إخراج Defaultio.',
+            confirmSwitchPointsToGradient: 'التبديل إلى التدرج/اللون الواحد سيحذف جميع نقاط التدرج. متابعة؟',
+            confirmSwitchGradientToPoints: 'التبديل إلى نقاط التدرج سيعيد تعيين ألوان الحروف. متابعة؟',
             helpTitle: 'نصائح ومساعدة', helpGettingStarted: 'البدء',
             helpStart1: 'اكتب نصك في الحقل على اليسار.',
             helpStart2: 'تتحدث المعاينة على اليمين مباشرة.',
@@ -951,6 +1052,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dark: 'डार्क', light: 'लाइट', simple: 'सरल', advanced: 'उन्नत',
             makeGradientPoint: 'ग्रेडिएंट पॉइंट बनाएं',
             selectCharForFormatting: 'फ़ॉर्मेटिंग के लिए अक्षर चुनें',
+            invalidTransparency: 'पारदर्शिता 0 और 1 के बीच की संख्या होनी चाहिए।',
+            defaultioSkipChars: 'चेतावनी: Defaultio आउटपुट में "<" और ">" अक्षर छोड़ दिए गए।',
+            confirmSwitchPointsToGradient: 'ग्रेडिएंट/ठोस पर स्विच करने से सभी ग्रेडिएंट पॉइंट हट जाएंगे। जारी रखें?',
+            confirmSwitchGradientToPoints: 'ग्रेडिएंट पॉइंट पर स्विच करने से प्रति-अक्षर रंग रीसेट हो जाएंगे। जारी रखें?',
             helpTitle: 'सुझाव और सहायता', helpGettingStarted: 'शुरू करें',
             helpStart1: 'बाईं ओर टेक्स्ट फ़ील्ड में अपना टेक्स्ट लिखें।',
             helpStart2: 'दाईं ओर पूर्वावलोकन लाइव अपडेट होता है।',
@@ -1041,9 +1146,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 theme: currentTheme,
                 uiMode: currentUiMode
             }));
-        } catch (e) {
-            console.warn('Failed to save settings', e);
-        }
+        } catch (e) { }
     }
 
     function loadSettings() {
@@ -1051,9 +1154,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const raw = localStorage.getItem(SETTINGS_KEY);
             if (!raw) return null;
             return JSON.parse(raw);
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     }
 
     function isPreviewOpen() {
@@ -1083,10 +1184,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const points = getSortedPointIndexes();
         if (points.length === 0) return null;
         if (points.length === 1) return gradientPoints[points[0]];
-
         if (index <= points[0]) return gradientPoints[points[0]];
         if (index >= points[points.length - 1]) return gradientPoints[points[points.length - 1]];
-
         for (let i = 0; i < points.length - 1; i++) {
             const a = points[i];
             const b = points[i + 1];
@@ -1105,16 +1204,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function getPointTransparencyForIndex(index) {
         const points = getSortedPointIndexes();
         if (points.length === 0) return null;
-
-        const valueAt = (i) => gradientPointTransparency[i] !== undefined
-            ? gradientPointTransparency[i]
-            : null;
-
+        const valueAt = i => gradientPointTransparency[i] !== undefined ? gradientPointTransparency[i] : null;
         if (points.length === 1) return valueAt(points[0]);
-
         if (index <= points[0]) return valueAt(points[0]);
         if (index >= points[points.length - 1]) return valueAt(points[points.length - 1]);
-
         for (let i = 0; i < points.length - 1; i++) {
             const a = points[i];
             const b = points[i + 1];
@@ -1129,6 +1222,80 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         return valueAt(points[0]);
+    }
+
+    function makeGradientIndexer(rawText, gradientColors) {
+        const total = rawText.length;
+        const steps = gradientColors.length;
+        if (steps === 0 || total === 0) return () => null;
+        return i => {
+            if (total === 1) return gradientColors[0];
+            const stepIndex = Math.min(Math.floor((i / total) * steps), steps - 1);
+            return gradientColors[stepIndex];
+        };
+    }
+
+    function makeRainbowIndexer(rawText) {
+        const total = rawText.length;
+        if (total === 0) return () => null;
+        return i => {
+            const tt = total === 1 ? 0 : i / (total - 1);
+            const rgb = hsvToRgb(tt * 360, 1, 1);
+            return rgbToHex(rgb.r, rgb.g, rgb.b);
+        };
+    }
+
+    function colorForIndexFactory(rawText, options) {
+        const { mode, solidColor, gradientColors, usePoints } = options;
+        const gradientIndexer = (mode === 'gradient' && gradientColors.length)
+            ? makeGradientIndexer(rawText, gradientColors)
+            : null;
+        const rainbowIndexer = (mode === 'rainbow')
+            ? makeRainbowIndexer(rawText)
+            : null;
+        return i => {
+            const custom = charColors[i];
+            if (custom) return custom;
+            if (usePoints) {
+                const pc = getPointColorForIndex(i);
+                if (pc) return pc;
+            }
+            if (mode === 'solid') return solidColor;
+            if (gradientIndexer) return gradientIndexer(i);
+            if (rainbowIndexer) return rainbowIndexer(i);
+            return null;
+        };
+    }
+
+    function transparencyForIndex(i, globalTrans, usePoints) {
+        const custom = charTransparency[i];
+        if (custom !== undefined) return custom;
+        if (usePoints) {
+            const pt = getPointTransparencyForIndex(i);
+            if (pt !== null) return pt;
+        }
+        return globalTrans;
+    }
+
+    const canvasStates = new Map();
+
+    function getCanvasState(canvas) {
+        if (!canvasStates.has(canvas)) {
+            const ctx = canvas.getContext('2d');
+            canvasStates.set(canvas, {
+                canvas,
+                ctx,
+                glyphs: [],
+                byIndex: new Map(),
+                lines: [],
+                dpr: 1,
+                font: '24px Arial, sans-serif',
+                fontSize: 24,
+                lineHeight: 1.3,
+                padding: 20
+            });
+        }
+        return canvasStates.get(canvas);
     }
 
     function buildCharCells(rawText, enableLineBreaks) {
@@ -1150,212 +1317,766 @@ document.addEventListener('DOMContentLoaded', function () {
         return cells;
     }
 
-    function makeGradientIndexer(rawText, gradientColors) {
-        const total = rawText.length;
-        const steps = gradientColors.length;
-        if (steps === 0 || total === 0) return () => null;
-        return (i) => {
-            if (total === 1) return gradientColors[0];
-            const stepIndex = Math.min(
-                Math.floor((i / total) * steps),
-                steps - 1
-            );
-            return gradientColors[stepIndex];
-        };
-    }
+    function layoutText(state, rawText, enableLineBreaks, options) {
+        const {
+            colorFn,
+            usePoints,
+            fontCss,
+            fontSize,
+            globalTrans,
+            animate
+        } = options;
 
-    function makeRainbowIndexer(rawText) {
-        const total = rawText.length;
-        if (total === 0) return () => null;
-        return (i) => {
-            const tt = total === 1 ? 0 : i / (total - 1);
-            const rgb = hsvToRgb(tt * 360, 1, 1);
-            return rgbToHex(rgb.r, rgb.g, rgb.b);
-        };
-    }
-
-    function colorForIndexFactory(rawText, options) {
-        const { mode, solidColor, gradientColors, usePoints } = options;
-
-        const gradientIndexer = (mode === 'gradient' && gradientColors.length)
-            ? makeGradientIndexer(rawText, gradientColors)
-            : null;
-
-        const rainbowIndexer = (mode === 'rainbow')
-            ? makeRainbowIndexer(rawText)
-            : null;
-
-        return (i) => {
-            const custom = charColors[i];
-            if (custom) return custom;
-
-            if (usePoints) {
-                const pc = getPointColorForIndex(i);
-                if (pc) return pc;
-            }
-
-            if (mode === 'solid') return solidColor;
-
-            if (gradientIndexer) return gradientIndexer(i);
-
-            if (rainbowIndexer) return rainbowIndexer(i);
-
-            return null;
-        };
-    }
-
-    function transparencyForIndex(i, globalTrans, usePoints) {
-        const custom = charTransparency[i];
-        if (custom !== undefined) return custom;
-
-        if (usePoints) {
-            const pt = getPointTransparencyForIndex(i);
-            if (pt !== null) return pt;
-        }
-
-        return globalTrans;
-    }
-
-    function getMarkerLayerFor(targetEl) {
-        if (targetEl === elements.previewLarge) return elements.previewModalBody;
-        if (elements.preview && elements.preview.parentElement) {
-            return elements.preview.parentElement;
-        }
-        return null;
-    }
-
-    function refreshPointMarkers() {
-        const usePoints = elements.colorSource.value === 'points' && getSortedPointIndexes().length > 0;
-
-        const targets = [
-            { textEl: elements.preview, layer: getMarkerLayerFor(elements.preview) },
-            { textEl: elements.previewLarge, layer: getMarkerLayerFor(elements.previewLarge) }
-        ];
-
-        targets.forEach(({ textEl, layer }) => {
-            if (!textEl || !layer) return;
-
-            layer.querySelectorAll('.point-marker[data-owner="' + (textEl.id || 'preview') + '"]').forEach(m => m.remove());
-
-            if (!usePoints) return;
-
-            const layerRect = layer.getBoundingClientRect();
-
-            Object.keys(gradientPoints).map(Number).sort((a, b) => a - b).forEach(idx => {
-                const span = textEl.querySelector('.char[data-index="' + idx + '"]');
-                if (!span) return;
-                const spanRect = span.getBoundingClientRect();
-                const marker = document.createElement('div');
-                marker.className = 'point-marker';
-                marker.dataset.owner = textEl.id || 'preview';
-                if (selectedPoint === idx) marker.classList.add('selected');
-                marker.style.background = gradientPoints[idx];
-                marker.style.left = (spanRect.left - layerRect.left + spanRect.width / 2) + 'px';
-                marker.style.top = (spanRect.top - layerRect.top - 8) + 'px';
-                layer.appendChild(marker);
-            });
-        });
-    }
-
-    function renderInto(targetEl, rawText, enableLineBreaks, opts) {
-        const frag = document.createDocumentFragment();
         const cells = buildCharCells(rawText, enableLineBreaks);
-        const colorFn = opts.colorFn;
-        const globalTrans = opts.trans;
-        const usePoints = opts.usePoints;
+        const ctx = state.ctx;
+        const fontSpec = fontSize + 'px ' + fontCss;
+        state.font = fontSpec;
+        state.fontSize = fontSize;
+        const lineHeight = Math.round(fontSize * 1.3);
+        state.lineHeight = lineHeight;
+
+        ctx.font = fontSpec;
+
+        const padding = state.padding;
+        const logicalWidth = state.canvas.width / state.dpr;
+        const maxWidth = logicalWidth - padding * 2;
+
+        const glyphs = [];
+        const lines = [];
+
+        let gLine = [];
+        let gLineWidth = 0;
+        let gLineY = padding;
+        let gLineIdx = 0;
+        let gLastSpacePos = -1;
+
+        const metricsCache = new Map();
+        const measure = ch => {
+            if (metricsCache.has(ch)) return metricsCache.get(ch);
+            const m = ctx.measureText(ch === ' ' ? ' ' : ch);
+            const w = m.width;
+            metricsCache.set(ch, w);
+            return w;
+        };
+
+        const flushGlyphLine = () => {
+            const lineW = Math.min(gLineWidth, maxWidth);
+            const startX = padding + Math.max(0, (maxWidth - lineW) / 2);
+
+            let cursorX = startX;
+            gLine.forEach(g => {
+                g.x = cursorX;
+                cursorX += g.w;
+                glyphs.push(g);
+            });
+
+            lines.push({
+                startX,
+                startY: gLineY,
+                width: lineW,
+                height: lineHeight,
+                glyphIndices: gLine.map(g => g.index),
+                lineIndex: gLineIdx,
+                startCharIndex: gLine.length ? gLine[0].index : -1,
+                endCharIndex: gLine.length ? gLine[gLine.length - 1].index : -1
+            });
+
+            gLine = [];
+            gLineWidth = 0;
+            gLineY += lineHeight;
+            gLineIdx++;
+            gLastSpacePos = -1;
+        };
 
         cells.forEach(cell => {
             if (cell.isBreak) {
-                frag.appendChild(document.createElement('br'));
+                flushGlyphLine();
                 return;
             }
-            const span = document.createElement('span');
-            span.className = 'char';
-            span.dataset.index = cell.index;
-
-            const textSpan = document.createElement('span');
-            textSpan.className = 'char-text';
-            textSpan.textContent = cell.char === ' ' ? '\u00A0' : cell.char;
-            if (cell.char === ' ') textSpan.style.whiteSpace = 'pre';
-
-            const color = colorFn(cell.index);
-            if (color) textSpan.style.color = color;
-
-            const t2 = transparencyForIndex(cell.index, globalTrans, usePoints);
-            if (t2 > 0) textSpan.style.opacity = String(1 - t2);
-
-            if (charBold[cell.index]) textSpan.style.fontWeight = 'bold';
-            if (charItalic[cell.index]) textSpan.style.fontStyle = 'italic';
-            const deco = [];
-            if (charUnderline[cell.index]) deco.push('underline');
-            if (charStrike[cell.index]) deco.push('line-through');
-            if (deco.length) textSpan.style.textDecoration = deco.join(' ');
-
-            if (charFont[cell.index]) textSpan.style.fontFamily = charFont[cell.index];
-
-            const customStrokeColor = charStrokeColor[cell.index];
-            const customStrokeThickness = charStrokeThickness[cell.index];
-            if (customStrokeColor || customStrokeThickness !== undefined) {
-                const sc = customStrokeColor || elements.strokeColor.value;
-                const st = customStrokeThickness !== undefined
-                    ? customStrokeThickness
-                    : parseFloat(elements.strokeThickness.value);
-                if (st > 0) {
-                    textSpan.style.webkitTextStroke = st + 'px ' + sc;
+            const w = measure(cell.char);
+            if (gLine.length > 0 && gLineWidth + w > maxWidth) {
+                if (gLastSpacePos > 0 && gLastSpacePos < gLine.length) {
+                    const carry = gLine.splice(gLastSpacePos + 1);
+                    flushGlyphLine();
+                    gLine = carry;
+                    gLineWidth = carry.reduce((s, gg) => s + gg.w, 0);
+                    gLastSpacePos = -1;
+                    for (let i = 0; i < gLine.length; i++) {
+                        if (gLine[i].char === ' ') gLastSpacePos = i;
+                    }
+                } else {
+                    flushGlyphLine();
                 }
             }
-
-            span.appendChild(textSpan);
-
-            if (charColors[cell.index]) span.classList.add('has-color');
-
-            if (selectedChars.has(cell.index)) span.classList.add('selected');
-            if (selectedPoint === cell.index) span.classList.add('selected-point');
-
-            frag.appendChild(span);
+            const glyph = {
+                index: cell.index,
+                char: cell.char,
+                x: 0,
+                y: gLineY,
+                w,
+                h: lineHeight,
+                line: gLineIdx,
+                isBreak: false
+            };
+            gLine.push(glyph);
+            if (cell.char === ' ') gLastSpacePos = gLine.length - 1;
+            gLineWidth += w;
         });
+        flushGlyphLine();
 
-        targetEl.innerHTML = '';
-        targetEl.appendChild(frag);
-        targetEl.style.fontFamily = opts.font;
-        targetEl.classList.toggle('points-mode', usePoints);
+        state.glyphs = glyphs;
+        state.lines = lines;
+        state.byIndex.clear();
+        glyphs.forEach(g => state.byIndex.set(g.index, g));
+
+        return { glyphs, lines, lineHeight, padding, maxWidth };
+    }
+
+    function drawCanvas(state, options) {
+        const { canvas, ctx, glyphs } = state;
+        const dpr = state.dpr;
+        const W = canvas.width / dpr;
+        const H = canvas.height / dpr;
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+
+        const style = getComputedStyle(document.documentElement);
+        const previewBg = style.getPropertyValue('--preview-bg').trim() || '#333';
+        ctx.fillStyle = previewBg;
+        ctx.fillRect(0, 0, W, H);
+
+        const {
+            colorFn,
+            usePoints,
+            fontCss,
+            fontSize,
+            globalTrans,
+            globalBold,
+            globalItalic,
+            globalUnderline,
+            globalStrike,
+            animate
+        } = options;
+
+        drawSelectionRects(state, ctx);
+        drawPointMarkers(state, ctx);
+
+        glyphs.forEach(g => {
+            const color = colorFn(g.index) || '#ffffff';
+            const trans = transparencyForIndex(g.index, globalTrans, usePoints);
+            const alpha = Math.max(0, Math.min(1, 1 - (trans || 0)));
+
+            const isBold = charBold[g.index] !== undefined ? !!charBold[g.index] : globalBold;
+            const isItalic = charItalic[g.index] !== undefined ? !!charItalic[g.index] : globalItalic;
+            const isUnderline = charUnderline[g.index] !== undefined ? !!charUnderline[g.index] : globalUnderline;
+            const isStrike = charStrike[g.index] !== undefined ? !!charStrike[g.index] : globalStrike;
+
+            const perFont = charFont[g.index];
+            const fontName = perFont || options.globalFontName || 'SpecialElite';
+            const fontFamily = fontFamilyFor(fontName);
+            let fontSpec = '';
+            if (isItalic) fontSpec += 'italic ';
+            if (isBold) fontSpec += 'bold ';
+            fontSpec += fontSize + 'px ' + fontFamily;
+
+            let dx = 0, dy = 0, rot = 0, scale = 1, animAlpha = 1;
+            if (animate && animate.style) {
+                const res = computeAnimation(animate, g, state);
+                dx = res.dx; dy = res.dy; rot = res.rot; scale = res.scale; animAlpha = res.alpha;
+            }
+
+            ctx.save();
+            ctx.translate(g.x + g.w / 2 + dx, g.y + g.h * 0.75 + dy);
+            if (rot) ctx.rotate(rot);
+            if (scale !== 1) ctx.scale(scale, scale);
+
+            ctx.globalAlpha = alpha * animAlpha;
+            ctx.font = fontSpec;
+            ctx.textBaseline = 'alphabetic';
+
+            const strokeColor = charStrokeColor[g.index] || options.globalStrokeColor;
+            const strokeThickness = charStrokeThickness[g.index] !== undefined
+                ? charStrokeThickness[g.index]
+                : options.globalStrokeThickness;
+
+            if (strokeThickness > 0 && strokeColor) {
+                ctx.lineJoin = 'miter';
+                ctx.miterLimit = 2;
+                ctx.lineWidth = strokeThickness * 2;
+                ctx.strokeStyle = strokeColor;
+                ctx.strokeText(g.char, -g.w / 2, 0);
+            }
+
+            ctx.fillStyle = color;
+            ctx.fillText(g.char, -g.w / 2, 0);
+
+            ctx.restore();
+
+            ctx.save();
+            ctx.globalAlpha = alpha * animAlpha;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = Math.max(1, fontSize / 18);
+            if (isUnderline) {
+                ctx.beginPath();
+                const yU = g.y + g.h * 0.75 + fontSize * 0.12 + dy;
+                ctx.moveTo(g.x + dx, yU);
+                ctx.lineTo(g.x + g.w + dx, yU);
+                ctx.stroke();
+            }
+            if (isStrike) {
+                ctx.beginPath();
+                const yS = g.y + g.h * 0.75 - fontSize * 0.28 + dy;
+                ctx.moveTo(g.x + dx, yS);
+                ctx.lineTo(g.x + g.w + dx, yS);
+                ctx.stroke();
+            }
+            ctx.restore();
+        });
+    }
+
+    function drawSelectionRects(state, ctx) {
+        if (selectedChars.size === 0) return;
+        const style = getComputedStyle(document.documentElement);
+        const selColor = style.getPropertyValue('--selected-bg').trim() || 'rgba(255,140,0,0.45)';
+        ctx.save();
+        ctx.fillStyle = selColor;
+        state.glyphs.forEach(g => {
+            if (selectedChars.has(g.index)) {
+                ctx.fillRect(g.x, g.y, g.w, g.h);
+            }
+        });
+        ctx.restore();
+    }
+
+    function drawPointMarkers(state, ctx) {
+        const usePoints = elements.colorSource.value === 'points' && getSortedPointIndexes().length > 0;
+        if (!usePoints) return;
+        ctx.save();
+        getSortedPointIndexes().forEach(idx => {
+            const g = state.byIndex.get(idx);
+            if (!g) return;
+            const cx = g.x + g.w / 2;
+            const cy = g.y - 8;
+            const size = (selectedPoint === idx) ? 7 : 5;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(Math.PI / 4);
+            ctx.fillStyle = gradientPoints[idx];
+            ctx.strokeStyle = selectedPoint === idx ? '#fff' : 'rgba(0,0,0,0.6)';
+            ctx.lineWidth = selectedPoint === idx ? 2 : 1;
+            ctx.fillRect(-size, -size, size * 2, size * 2);
+            ctx.strokeRect(-size, -size, size * 2, size * 2);
+            ctx.restore();
+        });
+        ctx.restore();
+    }
+
+    let animationStart = performance.now();
+    let animationRaf = null;
+
+    function computeAnimation(anim, glyph, state) {
+        const t = (performance.now() - animationStart) / 1000;
+        const style = anim.style;
+        const grouping = anim.grouping || 'Letter';
+        const stepTime = anim.stepTime || 0;
+        const stepFreq = anim.stepFreq || 4;
+        const styleTime = anim.styleTime || 0.5;
+
+        let groupIndex;
+        if (grouping === 'All') {
+            groupIndex = 0;
+        } else if (grouping === 'Word') {
+            groupIndex = wordGroupIndex(glyph.index, state);
+        } else {
+            groupIndex = glyph.index;
+        }
+        const phase = t * stepFreq - groupIndex * stepTime;
+
+        let dx = 0, dy = 0, rot = 0, scale = 1, alpha = 1;
+
+        switch (style) {
+            case 'Appear': {
+                const cycle = (t / Math.max(0.01, styleTime * 2 + stepTime * 10)) % 1;
+                const local = (cycle * 20 - groupIndex * (stepTime * 5));
+                alpha = Math.max(0, Math.min(1, local));
+                break;
+            }
+            case 'Fade': {
+                const a = 0.5 + 0.5 * Math.sin(phase * 2);
+                alpha = a;
+                break;
+            }
+            case 'Wiggle': {
+                dy = Math.sin(phase * 2) * 4;
+                break;
+            }
+            case 'Swing': {
+                rot = Math.sin(phase * 2) * 0.2;
+                break;
+            }
+            case 'Spin': {
+                rot = t * 2 + groupIndex * 0.1;
+                break;
+            }
+            case 'Rainbow':
+                break;
+            default:
+                break;
+        }
+
+        return { dx, dy, rot, scale, alpha };
+    }
+
+    function wordGroupIndex(index, state) {
+        const glyphs = state.glyphs;
+        if (!glyphs.length) return 0;
+        let start = index;
+        while (start > 0 && glyphs[start - 1] && glyphs[start - 1].char !== ' ') start--;
+        let count = 0;
+        let inWord = false;
+        for (let i = 0; i < glyphs.length; i++) {
+            const isSpace = glyphs[i].char === ' ';
+            if (!isSpace && !inWord) {
+                if (i >= start) break;
+                inWord = true;
+                count++;
+            } else if (isSpace) {
+                inWord = false;
+            }
+        }
+        return count;
     }
 
     function renderPreview(rawText, enableLineBreaks, opts) {
-        if (elements.preview) renderInto(elements.preview, rawText, enableLineBreaks, opts);
-        if (elements.previewLarge) renderInto(elements.previewLarge, rawText, enableLineBreaks, opts);
+        currentRawText = rawText;
+        currentEnableLineBreaks = enableLineBreaks;
+
+        if (elements.preview) {
+            renderOneCanvas(elements.preview, rawText, enableLineBreaks, {
+                ...opts,
+                fontSize: 24
+            });
+        }
+        if (elements.previewLarge) {
+            renderOneCanvas(elements.previewLarge, rawText, enableLineBreaks, {
+                ...opts,
+                fontSize: currentLargeFontSize()
+            });
+        }
+
+        updateDomMirror(rawText, enableLineBreaks);
     }
 
-    let isMouseDown = false;
-    let dragMode = null;
+    function renderOneCanvas(canvas, rawText, enableLineBreaks, opts) {
+        const state = getCanvasState(canvas);
+        const dpr = window.devicePixelRatio || 1;
+        state.dpr = dpr;
+
+        const rect = canvas.getBoundingClientRect();
+        const cssW = Math.max(rect.width || 600, 100);
+        const logicalW = cssW;
+
+        canvas.width = Math.floor(logicalW * dpr);
+        canvas.height = Math.floor(2000 * dpr);
+        canvas.style.width = logicalW + 'px';
+        canvas.style.height = '2000px';
+
+        const fontSize = opts.fontSize || 24;
+        const layout = layoutText(state, rawText, enableLineBreaks, {
+            colorFn: opts.colorFn,
+            usePoints: opts.usePoints,
+            fontCss: fontFamilyFor(opts.globalFontName || elements.fontFamily.value),
+            fontSize,
+            globalTrans: opts.trans,
+            animate: opts.animate
+        });
+
+        const neededH = layout.lines.length > 0
+            ? layout.lines[layout.lines.length - 1].startY + layout.lineHeight + layout.padding
+            : layout.padding * 2 + layout.lineHeight;
+        const finalH = Math.max(neededH, opts.minHeight || 80);
+        canvas.width = Math.floor(logicalW * dpr);
+        canvas.height = Math.floor(finalH * dpr);
+        canvas.style.width = logicalW + 'px';
+        canvas.style.height = finalH + 'px';
+
+        state.canvas.width = Math.floor(logicalW * dpr);
+        state.canvas.height = Math.floor(finalH * dpr);
+        canvas.width = state.canvas.width;
+        canvas.height = state.canvas.height;
+
+        layoutText(state, rawText, enableLineBreaks, {
+            colorFn: opts.colorFn,
+            usePoints: opts.usePoints,
+            fontCss: fontFamilyFor(opts.globalFontName || elements.fontFamily.value),
+            fontSize,
+            globalTrans: opts.trans,
+            animate: opts.animate
+        });
+
+        drawCanvas(state, {
+            ...opts,
+            fontCss: fontFamilyFor(opts.globalFontName || elements.fontFamily.value),
+            fontSize,
+            globalFontName: opts.globalFontName || elements.fontFamily.value,
+            globalStrokeColor: elements.strokeColor.value,
+            globalStrokeThickness: parseFloat(elements.strokeThickness.value),
+            globalBold: elements.bold.checked,
+            globalItalic: elements.italic.checked,
+            globalUnderline: elements.underline.checked,
+            globalStrike: elements.strikethrough.checked,
+            usePoints: opts.usePoints,
+            colorFn: opts.colorFn,
+            globalTrans: opts.trans,
+            animate: opts.animate
+        });
+    }
+
+    function updateDomMirror(rawText, enableLineBreaks) {
+        let mirror = document.querySelector('body > .sr-mirror');
+        if (!mirror) {
+            mirror = document.createElement('div');
+            mirror.className = 'sr-mirror';
+            mirror.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(mirror);
+        }
+        mirror.textContent = rawText;
+
+        document.querySelectorAll('.preview-wrap > .sr-mirror, .preview-modal-body > .sr-mirror')
+            .forEach(el => el.remove());
+    }
+
+    function findGlyphAt(state, clientX, clientY) {
+        const rect = state.canvas.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        let best = null;
+        let bestDist = Infinity;
+        for (const g of state.glyphs) {
+            const cx = Math.max(g.x, Math.min(x, g.x + g.w));
+            const cy = Math.max(g.y, Math.min(y, g.y + g.h));
+            const dx = x - cx;
+            const dy = y - cy;
+            const d = dx * dx + dy * dy;
+            if (d < bestDist) {
+                bestDist = d;
+                best = g;
+            }
+        }
+        return best;
+    }
+
+    function setSelectionFromRange(a, b) {
+        if (a === null || b === null) {
+            setSelection([]);
+            return;
+        }
+        const lo = Math.min(a, b);
+        const hi = Math.max(a, b);
+        const set = new Set();
+        for (let i = lo; i <= hi; i++) set.add(i);
+        setSelection([...set]);
+    }
+
+    let pointerDown = false;
+    let pointerMode = null;
+
+    function attachCanvasSelection(canvas) {
+        if (!canvas) return;
+
+        canvas.style.userSelect = 'none';
+        canvas.style.webkitUserSelect = 'none';
+        canvas.style.touchAction = 'none';
+
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+        canvas.addEventListener('mousedown', e => {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+
+            const state = getCanvasState(canvas);
+            const glyph = findGlyphAt(state, e.clientX, e.clientY);
+
+            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced') {
+                if (glyph && (e.altKey || gradientPoints[glyph.index] !== undefined)) {
+                    handlePointClick(glyph.index);
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            if (!glyph) {
+                if (canvas === elements.previewLarge) {
+                    startPan(e.clientX, e.clientY);
+                    pointerMode = 'pan';
+                    e.preventDefault();
+                } else {
+                    setSelection([]);
+                    selectionAnchor = null;
+                    selectionFocus = null;
+                }
+                return;
+            }
+
+            if (e.shiftKey && selectionAnchor !== null) {
+                selectionFocus = glyph.index;
+                setSelectionFromRange(selectionAnchor, selectionFocus);
+                pointerDown = true;
+                pointerMode = 'select';
+                e.preventDefault();
+                return;
+            }
+
+            pointerDown = true;
+            pointerMode = 'select';
+            const multi = e.ctrlKey || e.metaKey;
+            const wasSelected = selectedChars.has(glyph.index);
+
+            if (wasSelected && !multi) {
+                selectionAnchor = glyph.index;
+                selectionFocus = glyph.index;
+                pointerMode = 'select-remove';
+                setSelectionFromRange(selectionAnchor, selectionFocus);
+            } else {
+                selectionAnchor = glyph.index;
+                selectionFocus = glyph.index;
+                if (!multi) setSelection([glyph.index]);
+                else setSelection([...selectedChars, glyph.index]);
+            }
+            e.preventDefault();
+        });
+
+        canvas.addEventListener('touchstart', e => {
+            e.stopPropagation();
+            const touch = e.touches[0];
+            if (!touch) return;
+            const state = getCanvasState(canvas);
+            const glyph = findGlyphAt(state, touch.clientX, touch.clientY);
+
+            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced') {
+                if (glyph && gradientPoints[glyph.index] !== undefined) {
+                    handlePointClick(glyph.index);
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            if (!glyph) {
+                if (canvas === elements.previewLarge) {
+                    startPan(touch.clientX, touch.clientY);
+                    pointerMode = 'pan';
+                }
+                return;
+            }
+
+            pointerDown = true;
+            pointerMode = 'select';
+            selectionAnchor = glyph.index;
+            selectionFocus = glyph.index;
+            setSelection([glyph.index]);
+            e.preventDefault();
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', e => {
+            if (!pointerDown || pointerMode !== 'select') return;
+            const touch = e.touches[0];
+            if (!touch) return;
+            const state = getCanvasState(canvas);
+            const glyph = findGlyphAt(state, touch.clientX, touch.clientY);
+            if (!glyph) return;
+            selectionFocus = glyph.index;
+            setSelectionFromRange(selectionAnchor, selectionFocus);
+            e.preventDefault();
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', () => {
+            pointerDown = false;
+            pointerMode = null;
+        });
+    }
+
+    document.addEventListener('mousemove', e => {
+        if (!pointerDown || pointerMode !== 'select') return;
+        const canvases = [elements.preview, elements.previewLarge].filter(Boolean);
+        for (const canvas of canvases) {
+            const rect = canvas.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                const state = getCanvasState(canvas);
+                const glyph = findGlyphAt(state, e.clientX, e.clientY);
+                if (glyph) {
+                    selectionFocus = glyph.index;
+                    if (pointerMode === 'select-remove') {
+                        const lo = Math.min(selectionAnchor, selectionFocus);
+                        const hi = Math.max(selectionAnchor, selectionFocus);
+                        const next = new Set(selectedChars);
+                        for (let i = lo; i <= hi; i++) next.delete(i);
+                        setSelection([...next]);
+                    } else {
+                        setSelectionFromRange(selectionAnchor, selectionFocus);
+                    }
+                }
+                break;
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        pointerDown = false;
+        pointerMode = null;
+    });
+
+    document.addEventListener('keydown', e => {
+        const isTyping = document.activeElement &&
+            (document.activeElement.tagName === 'INPUT' ||
+                document.activeElement.tagName === 'TEXTAREA' ||
+                document.activeElement.tagName === 'SELECT');
+        if (isTyping) return;
+
+        if (e.key === 'Escape') {
+            setSelection([]);
+            selectionAnchor = null;
+            selectionFocus = null;
+            return;
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+            e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            if (selectedChars.size === 0) return;
+            const arr = [...selectedChars].sort((a, b) => a - b);
+            const cur = e.shiftKey ? arr[arr.length - 1] : arr[0];
+            let next = cur;
+            if (e.key === 'ArrowLeft') next = Math.max(0, cur - 1);
+            if (e.key === 'ArrowRight') next = Math.min(currentRawText.length - 1, cur + 1);
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                const canvases = [elements.preview, elements.previewLarge].filter(Boolean);
+                for (const canvas of canvases) {
+                    const state = getCanvasState(canvas);
+                    const g = state.byIndex.get(cur);
+                    if (!g) continue;
+                    const targetLine = g.line + (e.key === 'ArrowUp' ? -1 : 1);
+                    const line = state.lines.find(l => l.lineIndex === targetLine);
+                    if (!line) break;
+                    const targetGlyphs = line.glyphIndices
+                        .map(i => state.byIndex.get(i))
+                        .filter(Boolean);
+                    if (targetGlyphs.length === 0) break;
+                    let closest = targetGlyphs[0];
+                    let bestDx = Math.abs(closest.x - g.x);
+                    targetGlyphs.forEach(tg => {
+                        const dx = Math.abs(tg.x - g.x);
+                        if (dx < bestDx) { bestDx = dx; closest = tg; }
+                    });
+                    next = closest.index;
+                    break;
+                }
+            }
+            if (e.shiftKey && selectionAnchor !== null) {
+                selectionFocus = next;
+                setSelectionFromRange(selectionAnchor, selectionFocus);
+            } else {
+                selectionAnchor = next;
+                selectionFocus = next;
+                setSelection([next]);
+            }
+            e.preventDefault();
+        }
+    });
 
     function setSelection(indexes) {
         selectedChars = new Set(indexes);
-        [elements.preview, elements.previewLarge].forEach(p => {
-            if (!p) return;
-            p.querySelectorAll('.char').forEach(el => {
-                el.classList.toggle('selected', selectedChars.has(Number(el.dataset.index)));
-            });
-        });
         updateCharEditor();
+        redrawCanvasesOnly();
     }
 
-    function setSelectedPoint(index) {
-        selectedPoint = index;
-        updatePointsEditor();
-        [elements.preview, elements.previewLarge].forEach(p => {
-            if (!p) return;
-            p.querySelectorAll('.char').forEach(el => {
-                el.classList.toggle('selected-point', Number(el.dataset.index) === selectedPoint);
+    function redrawCanvasesOnly() {
+        const canvases = [elements.preview, elements.previewLarge].filter(Boolean);
+        canvases.forEach(canvas => {
+            const state = getCanvasState(canvas);
+            if (!state.glyphs.length) return;
+            const rawText = currentRawText || 'Your Text';
+            const mode = elements.colorMode.value;
+            const source = elements.colorSource.value;
+            const isAdvanced = currentUiMode === 'advanced';
+            const usePoints = isAdvanced && source === 'points' && getSortedPointIndexes().length > 0;
+            const globalTrans = parseFloat(elements.transparency.value);
+
+            let gradientColors = [];
+            if (mode === 'gradient') {
+                const gType = (elements.gradientType && elements.gradientType.value) ? elements.gradientType.value : 'horizontal';
+                gradientColors = generateGradientColors(
+                    elements.gradientColor1.value,
+                    elements.gradientColor2.value,
+                    parseInt(elements.gradientSteps.value),
+                    gType
+                );
+            }
+            const colorFn = colorForIndexFactory(rawText, {
+                mode,
+                solidColor: elements.textColor.value,
+                gradientColors,
+                usePoints
+            });
+
+            const animateState = getAnimateState();
+            drawCanvas(state, {
+                colorFn,
+                usePoints,
+                fontCss: fontFamilyFor(elements.fontFamily.value),
+                fontSize: canvas === elements.previewLarge ? currentLargeFontSize() : 24,
+                globalTrans,
+                globalFontName: elements.fontFamily.value,
+                globalStrokeColor: elements.strokeColor.value,
+                globalStrokeThickness: parseFloat(elements.strokeThickness.value),
+                globalBold: elements.bold.checked,
+                globalItalic: elements.italic.checked,
+                globalUnderline: elements.underline.checked,
+                globalStrike: elements.strikethrough.checked,
+                animate: animateState
             });
         });
-        document.querySelectorAll('.point-marker').forEach(m => m.classList.remove('selected'));
-        refreshPointMarkers();
+    }
+
+    function getAnimateState() {
+        const style = elements.animateStyle.value;
+        if (!style) return null;
+        return {
+            style,
+            grouping: elements.animateGrouping.value,
+            stepTime: parseFloat(elements.animateStepTime.value) || 0,
+            stepFreq: parseFloat(elements.animateStepFrequency.value) || 4,
+            styleTime: parseFloat(elements.animateStyleTime.value) || 0.5
+        };
+    }
+
+    function currentLargeFontSize() {
+        const z = elements.previewZoom ? parseFloat(elements.previewZoom.value) : 1.5;
+        return 24 * z;
+    }
+
+    function startAnimationLoop() {
+        if (animationRaf !== null) return;
+        const tick = () => {
+            const style = elements.animateStyle.value;
+            if (style) {
+                redrawCanvasesOnly();
+                animationRaf = requestAnimationFrame(tick);
+            } else {
+                animationRaf = null;
+            }
+        };
+        animationRaf = requestAnimationFrame(tick);
+    }
+
+    function stopAnimationLoop() {
+        if (animationRaf !== null) {
+            cancelAnimationFrame(animationRaf);
+            animationRaf = null;
+        }
     }
 
     function updateCharEditor() {
         const isPoints = elements.colorSource.value === 'points';
-
         if (selectedChars.size === 0) {
             elements.charEditor.classList.add('hidden');
             return;
@@ -1379,16 +2100,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const colors = new Set(arr.map(i => charColors[i] || null));
         if (colors.size === 1) {
             const c = [...colors][0];
-            if (c) {
-                elements.charColor.value = c;
-                elements.charColorHex.value = c;
-            }
+            if (c) { elements.charColor.value = c; elements.charColorHex.value = c; }
         }
 
         const transps = new Set(arr.map(i =>
-            charTransparency[i] !== undefined
-                ? String(roundTransparency(charTransparency[i]))
-                : ''
+            charTransparency[i] !== undefined ? String(roundTransparency(charTransparency[i])) : ''
         ));
         elements.charTransparency.value = transps.size === 1 ? ([...transps][0] || '') : '';
 
@@ -1405,26 +2121,16 @@ document.addEventListener('DOMContentLoaded', function () {
         setAllOrMixed(charStrike, elements.charStrike);
 
         const fonts = new Set(arr.map(i => charFont[i] || ''));
-        if (fonts.size === 1) {
-            const f = [...fonts][0];
-            elements.charFont.value = f || '';
-        } else {
-            elements.charFont.value = '';
-        }
+        elements.charFont.value = fonts.size === 1 ? ([...fonts][0] || '') : '';
 
         const strokes = new Set(arr.map(i => charStrokeColor[i] || ''));
         if (strokes.size === 1) {
             const s = [...strokes][0];
-            if (s) {
-                elements.charStrokeColor.value = s;
-                elements.charStrokeColorHex.value = s;
-            }
+            if (s) { elements.charStrokeColor.value = s; elements.charStrokeColorHex.value = s; }
         }
 
         const thicknesses = new Set(arr.map(i =>
-            charStrokeThickness[i] !== undefined
-                ? String(roundTransparency(charStrokeThickness[i]))
-                : ''
+            charStrokeThickness[i] !== undefined ? String(roundTransparency(charStrokeThickness[i])) : ''
         ));
         if (thicknesses.size === 1) {
             const v = [...thicknesses][0];
@@ -1444,10 +2150,6 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshEditorHost();
         elements.pointsEditor.classList.remove('hidden');
 
-        if (elements.pointSelectChar) {
-            elements.pointSelectChar.style.display = 'inline-block';
-        }
-
         if (selectedPoint === null || gradientPoints[selectedPoint] === undefined) {
             const count = Object.keys(gradientPoints).length;
             elements.pointsEditorTitle.textContent = count > 0
@@ -1463,7 +2165,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const c = gradientPoints[selectedPoint];
         elements.pointColor.value = c;
         elements.pointColorHex.value = c;
-
         const t2 = gradientPointTransparency[selectedPoint];
         elements.pointTransparency.value = (t2 !== undefined) ? String(roundTransparency(t2)) : '';
     }
@@ -1499,6 +2200,8 @@ document.addEventListener('DOMContentLoaded', function () {
             gradientPoints[i] = charColors[i] || color;
             const t2 = charTransparency[i];
             if (t2 !== undefined) gradientPointTransparency[i] = t2;
+            delete charColors[i];
+            delete charTransparency[i];
         });
 
         const arr = [...selectedChars].sort((a, b) => a - b);
@@ -1507,149 +2210,14 @@ document.addEventListener('DOMContentLoaded', function () {
         generate();
     }
 
-    let touchStartIndex = null;
-    let touchDragMode = null;
-    let touchCurrentIndex = null;
-
-    function attachPreviewHandlers(el) {
-        if (!el) return;
-
-        el.addEventListener('mousedown', e => {
-            const target = e.target.closest('.char');
-            if (!target) return;
-            const idx = Number(target.dataset.index);
-
-            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced') {
-                if (e.altKey || gradientPoints[idx] !== undefined) {
-                    handlePointClick(idx);
-                } else {
-                    isMouseDown = true;
-                    dragMode = selectedChars.has(idx) ? 'remove' : 'add';
-                    if (dragMode === 'add') setSelection([...selectedChars, idx]);
-                    else {
-                        const s = new Set(selectedChars);
-                        s.delete(idx);
-                        setSelection([...s]);
-                    }
-                }
-                e.preventDefault();
-                return;
-            }
-
-            isMouseDown = true;
-            dragMode = selectedChars.has(idx) ? 'remove' : 'add';
-            if (dragMode === 'add') setSelection([...selectedChars, idx]);
-            else {
-                const s = new Set(selectedChars);
-                s.delete(idx);
-                setSelection([...s]);
-            }
-            e.preventDefault();
-        });
-
-        el.addEventListener('mouseover', e => {
-            if (!isMouseDown) return;
-            const target = e.target.closest('.char');
-            if (!target) return;
-            const idx = Number(target.dataset.index);
-            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced') {
-                if (gradientPoints[idx] !== undefined) return;
-            }
-            if (dragMode === 'add') {
-                if (!selectedChars.has(idx)) setSelection([...selectedChars, idx]);
-            } else {
-                if (selectedChars.has(idx)) {
-                    const s = new Set(selectedChars);
-                    s.delete(idx);
-                    setSelection([...s]);
-                }
-            }
-        });
-
-        el.addEventListener('touchstart', e => {
-            const target = e.target.closest('.char');
-            if (!target) return;
-            const idx = Number(target.dataset.index);
-
-            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced') {
-                if (gradientPoints[idx] !== undefined) {
-                    handlePointClick(idx);
-                    e.preventDefault();
-                    return;
-                }
-            }
-
-            touchStartIndex = idx;
-            touchCurrentIndex = idx;
-
-            if (selectedChars.has(idx) && selectedChars.size === 1) {
-                touchDragMode = null;
-                const s = new Set(selectedChars);
-                s.delete(idx);
-                setSelection([...s]);
-            } else {
-                touchDragMode = selectedChars.has(idx) ? 'remove' : 'add';
-                if (touchDragMode === 'add') {
-                    setSelection([...selectedChars, idx]);
-                } else {
-                    const s = new Set(selectedChars);
-                    s.delete(idx);
-                    setSelection([...s]);
-                }
-            }
-
-            e.preventDefault();
-        }, { passive: false });
-
-        el.addEventListener('touchmove', e => {
-            if (touchStartIndex === null) return;
-
-            const touch = e.touches[0];
-            if (!touch) return;
-
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (!target) return;
-            const charEl = target.closest('.char');
-            if (!charEl || !el.contains(charEl)) return;
-
-            const idx = Number(charEl.dataset.index);
-            if (idx === touchCurrentIndex) return;
-            touchCurrentIndex = idx;
-
-            if (elements.colorSource.value === 'points' && currentUiMode === 'advanced' && gradientPoints[idx] !== undefined) {
-                return;
-            }
-
-            if (touchDragMode === 'add') {
-                if (!selectedChars.has(idx)) setSelection([...selectedChars, idx]);
-            } else if (touchDragMode === 'remove') {
-                if (selectedChars.has(idx)) {
-                    const s = new Set(selectedChars);
-                    s.delete(idx);
-                    setSelection([...s]);
-                }
-            }
-
-            e.preventDefault();
-        }, { passive: false });
-
-        el.addEventListener('touchend', () => {
-            touchStartIndex = null;
-            touchDragMode = null;
-            touchCurrentIndex = null;
-        });
-
-        el.addEventListener('touchcancel', () => {
-            touchStartIndex = null;
-            touchDragMode = null;
-            touchCurrentIndex = null;
-        });
+    function setSelectedPoint(index) {
+        selectedPoint = index;
+        updatePointsEditor();
+        redrawCanvasesOnly();
     }
 
-    attachPreviewHandlers(elements.preview);
-    attachPreviewHandlers(elements.previewLarge);
-
-    document.addEventListener('mouseup', () => { isMouseDown = false; dragMode = null; });
+    attachCanvasSelection(elements.preview);
+    attachCanvasSelection(elements.previewLarge);
 
     function syncCharColorInputs(picker, hex) {
         picker.addEventListener('input', () => { hex.value = picker.value; });
@@ -1673,13 +2241,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     elements.charApply.addEventListener('click', () => {
         if (selectedChars.size === 0) return;
+        const transRaw = elements.charTransparency.value.trim();
+        const hasTrans = transRaw !== '';
+        if (hasTrans && !isValidTransparency(transRaw)) {
+            alert(t('invalidTransparency'));
+            return;
+        }
 
         const color = isValidHex(elements.charColorHex.value)
             ? elements.charColorHex.value
             : elements.charColor.value;
-
-        const transRaw = elements.charTransparency.value.trim();
-        const hasTrans = transRaw !== '';
 
         const setFlag = (dict, checkbox) => {
             if (checkbox.indeterminate) return;
@@ -1710,14 +2281,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!hasTrans) {
             selectedChars.forEach(i => { charColors[i] = color; });
-        } else if (isValidTransparency(transRaw)) {
+        } else {
             const t2 = Number(transRaw);
             selectedChars.forEach(i => {
                 charColors[i] = color;
                 charTransparency[i] = t2;
             });
-        } else {
-            return;
         }
 
         generate();
@@ -1761,20 +2330,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     elements.pointApply.addEventListener('click', () => {
         if (selectedPoint === null || gradientPoints[selectedPoint] === undefined) return;
+        const transRaw = elements.pointTransparency.value.trim();
+        if (transRaw !== '' && !isValidTransparency(transRaw)) {
+            alert(t('invalidTransparency'));
+            return;
+        }
         const color = isValidHex(elements.pointColorHex.value)
             ? elements.pointColorHex.value
             : elements.pointColor.value;
         gradientPoints[selectedPoint] = color;
-
-        const transRaw = elements.pointTransparency.value.trim();
         if (transRaw === '') {
             delete gradientPointTransparency[selectedPoint];
-        } else if (isValidTransparency(transRaw)) {
-            gradientPointTransparency[selectedPoint] = Number(transRaw);
         } else {
-            return;
+            gradientPointTransparency[selectedPoint] = Number(transRaw);
         }
-
         generate();
     });
 
@@ -1804,6 +2373,53 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function shiftDictForEdit(dict, oldText, newText) {
+        if (oldText === newText) return dict;
+        let prefix = 0;
+        const minLen = Math.min(oldText.length, newText.length);
+        while (prefix < minLen && oldText[prefix] === newText[prefix]) prefix++;
+        let suffix = 0;
+        while (
+            suffix < (minLen - prefix) &&
+            oldText[oldText.length - 1 - suffix] === newText[newText.length - 1 - suffix]
+        ) suffix++;
+        const oldMidStart = prefix;
+        const oldMidEnd = oldText.length - suffix;
+        const newMidStart = prefix;
+        const newMidEnd = newText.length - suffix;
+        const delta = (newMidEnd - newMidStart) - (oldMidEnd - oldMidStart);
+        if (delta === 0 && oldMidStart === newMidStart && oldMidEnd === newMidEnd) return dict;
+        const result = {};
+        Object.keys(dict).forEach(k => {
+            const idx = Number(k);
+            if (isNaN(idx)) return;
+            if (idx < oldMidStart) result[idx] = dict[k];
+            else if (idx >= oldMidEnd) result[idx + delta] = dict[k];
+        });
+        return result;
+    }
+
+    function shiftIndexedStateForTextChange(oldText, newText) {
+        if (oldText === newText) return;
+        charColors = shiftDictForEdit(charColors, oldText, newText);
+        charTransparency = shiftDictForEdit(charTransparency, oldText, newText);
+        charBold = shiftDictForEdit(charBold, oldText, newText);
+        charItalic = shiftDictForEdit(charItalic, oldText, newText);
+        charUnderline = shiftDictForEdit(charUnderline, oldText, newText);
+        charStrike = shiftDictForEdit(charStrike, oldText, newText);
+        charFont = shiftDictForEdit(charFont, oldText, newText);
+        charStrokeColor = shiftDictForEdit(charStrokeColor, oldText, newText);
+        charStrokeThickness = shiftDictForEdit(charStrokeThickness, oldText, newText);
+        gradientPoints = shiftDictForEdit(gradientPoints, oldText, newText);
+        gradientPointTransparency = shiftDictForEdit(gradientPointTransparency, oldText, newText);
+        const newSel = new Set();
+        selectedChars.forEach(i => {
+            if (i < newText.length) newSel.add(Math.min(i, newText.length - 1));
+        });
+        selectedChars = newSel;
+        if (selectedPoint !== null && selectedPoint >= newText.length) selectedPoint = null;
+    }
+
     function pruneCharColors() {
         const len = elements.textInput.value.length;
         const prune = dict => {
@@ -1811,15 +2427,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (Number(k) >= len) delete dict[k];
             });
         };
-        prune(charColors);
-        prune(charTransparency);
-        prune(charBold);
-        prune(charItalic);
-        prune(charUnderline);
-        prune(charStrike);
-        prune(charFont);
-        prune(charStrokeColor);
-        prune(charStrokeThickness);
+        prune(charColors); prune(charTransparency); prune(charBold); prune(charItalic);
+        prune(charUnderline); prune(charStrike); prune(charFont);
+        prune(charStrokeColor); prune(charStrokeThickness);
         Object.keys(gradientPoints).forEach(k => {
             if (Number(k) >= len) {
                 delete gradientPoints[k];
@@ -1832,13 +2442,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function buildDefaultioText(rawText, enableLineBreaks, options) {
         const {
-            colorFn,
-            font, strokeColor, strokeThickness,
+            colorFn, font, strokeColor, strokeThickness,
             trans, animateStyle, animateGrouping,
             animateStepTime, animateStepFrequency, animateStyleTime
         } = options;
 
         let out = '';
+        let skippedChars = false;
 
         if (font) out += '<Font=' + font + '>';
         if (animateGrouping && animateGrouping !== 'Letter') {
@@ -1851,17 +2461,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (animateStyleTime > 0 && animateStyleTime !== 0.5) {
             out += '<AnimateStyleTime=' + animateStyleTime + '>';
         }
-
         if (strokeColor && strokeThickness > 0) {
             out += '<StrokeColor=' + hexToDefaultioColor(strokeColor) + '>';
             out += '<TextStrokeTransparency=0>';
         }
-
         if (trans > 0) out += '<TextTransparency=' + roundTransparency(trans) + '>';
 
         let lastColor = null;
         let animationOpened = false;
-
         const openAnimation = () => {
             if (animateStyle && !animationOpened) {
                 out += '<AnimateStyle=' + animateStyle + '>';
@@ -1878,41 +2485,27 @@ document.addEventListener('DOMContentLoaded', function () {
         let i = 0;
         for (const ch of rawText) {
             if (ch === '\n') {
-                if (enableLineBreaks) {
-                    closeAnimation();
-                    out += '\n';
-                } else {
-                    out += ' ';
-                }
+                if (enableLineBreaks) { closeAnimation(); out += '\n'; }
+                else { out += ' '; }
                 i++;
                 continue;
             }
-
             const hex = colorFn(i);
             const color = hex ? hexToDefaultioColor(hex) : null;
-
             if (color !== lastColor) {
                 closeAnimation();
                 if (lastColor !== null) out += '<Color=/>';
                 if (color) out += '<Color=' + color + '>';
                 lastColor = color;
             }
-
             openAnimation();
-
-            if (ch === '<' || ch === '>') {
-                console.warn('Defaultio module cannot render "<" or ">" inside text. Skipping.', ch);
-                i++;
-                continue;
-            }
+            if (ch === '<' || ch === '>') { skippedChars = true; i++; continue; }
             out += ch;
             i++;
         }
-
         closeAnimation();
         if (lastColor !== null) out += '<Color=/>';
-
-        return out;
+        return { text: out, skippedChars };
     }
 
     function generate() {
@@ -1941,41 +2534,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let gradientColors = [];
         if (mode === 'gradient') {
+            const gType = (elements.gradientType && elements.gradientType.value) ? elements.gradientType.value : 'horizontal';
             gradientColors = generateGradientColors(
                 elements.gradientColor1.value,
                 elements.gradientColor2.value,
                 parseInt(elements.gradientSteps.value),
-                'horizontal'
+                gType
             );
         }
 
         const solidColor = elements.textColor.value;
 
-        const colorFn = colorForIndexFactory(rawText, {
-            mode,
-            solidColor,
-            gradientColors,
-            usePoints
-        });
+        const colorFn = colorForIndexFactory(rawText, { mode, solidColor, gradientColors, usePoints });
 
         const buildCharProps = (i) => {
             const isBold = charBold[i] !== undefined ? !!charBold[i] : globalFormatting.bold;
             const isItalic = charItalic[i] !== undefined ? !!charItalic[i] : globalFormatting.italic;
             const isUnderline = charUnderline[i] !== undefined ? !!charUnderline[i] : globalFormatting.underline;
             const isStrike = charStrike[i] !== undefined ? !!charStrike[i] : globalFormatting.strikethrough;
-
             const font = charFont[i] !== undefined ? charFont[i] : globalFont;
-
-            const strokeColor = charStrokeColor[i] !== undefined
-                ? charStrokeColor[i]
-                : globalStroke;
-            const strokeThickness = charStrokeThickness[i] !== undefined
-                ? charStrokeThickness[i]
-                : globalThickness;
-
+            const strokeColor = charStrokeColor[i] !== undefined ? charStrokeColor[i] : globalStroke;
+            const strokeThickness = charStrokeThickness[i] !== undefined ? charStrokeThickness[i] : globalThickness;
             const trans = transparencyForIndex(i, globalTrans, usePoints);
             const color = colorFn(i) || null;
-
             return { isBold, isItalic, isUnderline, isStrike, font, strokeColor, strokeThickness, trans, color };
         };
 
@@ -2006,14 +2587,12 @@ document.addEventListener('DOMContentLoaded', function () {
         for (let i = 0; i < rawText.length; i++) {
             const ch = rawText[i];
             const props = buildCharProps(i);
-
             if (ch === '\n' && enableLineBreaks) {
                 flush();
                 runs.push({ isBreak: true });
                 bufferProps = null;
                 continue;
             }
-
             const actualCh = ch === '\n' ? ' ' : ch;
             if (propsEqual(bufferProps, props)) {
                 buffer += actualCh;
@@ -2037,30 +2616,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 inner += '<br/>';
                 return;
             }
-
             const p = run.props;
-
             const desiredKeys = [];
             const desiredOpen = [];
 
-            const fontKey = 'font:' + p.font;
-            desiredKeys.push(fontKey);
+            desiredKeys.push('font:' + p.font);
             desiredOpen.push({ open: '<font face=\'' + p.font + '\'>', close: '</font>' });
 
-            const hasStroke = p.strokeThickness > 0;
-            if (hasStroke) {
-                const strokeKey = 'stroke:' + p.strokeColor + ':' + p.strokeThickness;
-                desiredKeys.push(strokeKey);
+            if (p.strokeThickness > 0) {
+                desiredKeys.push('stroke:' + p.strokeColor + ':' + p.strokeThickness);
                 desiredOpen.push({
                     open: '<stroke color=\'' + formatColor(p.strokeColor) + '\' thickness=\'' + p.strokeThickness + '\'>',
                     close: '</stroke>'
                 });
             }
 
-            const hasCustomTrans = !transAreSimilar(p.trans, globalTrans);
-            if (hasCustomTrans) {
-                const transKey = 'trans:' + roundTransparency(p.trans);
-                desiredKeys.push(transKey);
+            if (p.trans > 0) {
+                desiredKeys.push('trans:' + roundTransparency(p.trans));
                 desiredOpen.push({
                     open: '<font transparency=\'' + roundTransparency(p.trans) + '\'>',
                     close: '</font>'
@@ -2076,10 +2648,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 desiredKeys.push('fmt:' + tag);
                 desiredOpen.push({ open: '<' + tag + '>', close: '</' + tag + '>' });
             });
-
             if (p.color) {
-                const colorKey = 'color:' + p.color;
-                desiredKeys.push(colorKey);
+                desiredKeys.push('color:' + p.color);
                 desiredOpen.push({
                     open: '<font color=\'' + formatColor(p.color) + '\'>',
                     close: '</font>'
@@ -2087,11 +2657,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             let commonLen = 0;
-            while (commonLen < openStack.length
-                && commonLen < desiredKeys.length
-                && openStack[commonLen].key === desiredKeys[commonLen]) {
-                commonLen++;
-            }
+            while (commonLen < openStack.length && commonLen < desiredKeys.length
+                && openStack[commonLen].key === desiredKeys[commonLen]) commonLen++;
             while (openStack.length > commonLen) {
                 const top = openStack.pop();
                 inner += top.close;
@@ -2100,8 +2667,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 inner += desiredOpen[k].open;
                 openStack.push({ key: desiredKeys[k], close: desiredOpen[k].close });
             }
-
-            inner += run.text;
+            inner += escapeRichText(run.text);
         });
 
         while (openStack.length > 0) {
@@ -2110,11 +2676,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const richText = inner;
-
         elements.outputCode.value = richText;
 
         if (format === 'defaultio') {
-            const defaultioText = buildDefaultioText(rawText, enableLineBreaks, {
+            const defaultioResult = buildDefaultioText(rawText, enableLineBreaks, {
                 colorFn,
                 font: globalFont,
                 strokeColor: globalStroke,
@@ -2126,33 +2691,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 animateStepFrequency: elements.animateStepFrequency.value,
                 animateStyleTime: parseFloat(elements.animateStyleTime.value)
             });
-
-            elements.outputDefaultio.value = defaultioText;
+            elements.outputDefaultio.value = defaultioResult.text;
+            if (defaultioResult.skippedChars) console.warn(t('defaultioSkipChars'));
 
             const luaSnippet =
                 'local richText = require(script.Parent:FindFirstChild("RichText") or script.Parent.Parent)\n' +
-                'local text = "' + defaultioText.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n' +
+                'local text = "' + defaultioResult.text.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n' +
                 'local textObject = richText:New(frame, text, {Font = "' + globalFont + '"})\n' +
                 'textObject:Animate(true)';
-
             elements.outputJson.value = luaSnippet;
         } else {
             elements.outputDefaultio.value = '';
             elements.outputJson.value = '"' + userId + '": "' + richText + '"\n\n,';
         }
 
+        const animateState = getAnimateState();
         renderPreview(rawText, enableLineBreaks, {
             colorFn,
             usePoints,
-            font: globalFont,
-            bold: globalFormatting.bold,
-            italic: globalFormatting.italic,
-            underline: globalFormatting.underline,
-            strikethrough: globalFormatting.strikethrough,
-            trans: globalTrans
+            font: fontFamilyFor(globalFont),
+            fontSize: 24,
+            trans: globalTrans,
+            globalFontName: globalFont
         });
 
-        refreshPointMarkers();
+        if (animateState) startAnimationLoop();
+        else stopAnimationLoop();
 
         updatePointsEditor();
         updateCharEditor();
@@ -2160,17 +2724,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const MAX_USER_ID_LENGTH = 20;
-
     elements.userId.addEventListener('input', function () {
         this.value = this.value.replace(/\D/g, '').slice(0, MAX_USER_ID_LENGTH);
         generate();
     });
-
     elements.userId.addEventListener('blur', function () {
-        if (this.value === '') {
-            this.value = '0';
-            generate();
-        }
+        if (this.value === '') { this.value = '0'; generate(); }
     });
 
     const syncColorPickers = (picker, hexInput) => {
@@ -2185,7 +2744,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     };
-
     syncColorPickers(elements.textColor, elements.textColorHex);
     syncColorPickers(elements.gradientColor1, elements.gradientColor1Hex);
     syncColorPickers(elements.gradientColor2, elements.gradientColor2Hex);
@@ -2197,25 +2755,20 @@ document.addEventListener('DOMContentLoaded', function () {
             generate();
         });
     };
-
     syncRange(elements.strokeThickness, elements.strokeThicknessValue);
     syncRange(elements.gradientSteps, elements.gradientStepsValue);
     syncRange(elements.transparency, elements.transparencyValue);
 
     function syncGradientTypeFromMode() {
         const modeValue = elements.colorMode.value;
-        if (modeValue === 'rainbow') {
-            elements.gradientType.value = 'rainbow';
-        } else if (modeValue === 'gradient') {
-            elements.gradientType.value = 'horizontal';
-        }
+        if (modeValue === 'rainbow') elements.gradientType.value = 'rainbow';
+        else if (modeValue === 'gradient') elements.gradientType.value = 'horizontal';
     }
 
     function toggleGradientColorControls() {
         const isRainbow = elements.colorMode.value === 'rainbow';
         const color1Group = elements.gradientColor1.closest('.control-group');
         const color2Group = elements.gradientColor2.closest('.control-group');
-
         if (color1Group) color1Group.style.display = isRainbow ? 'none' : 'block';
         if (color2Group) color2Group.style.display = isRainbow ? 'none' : 'block';
     }
@@ -2224,17 +2777,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const isDefaultio = elements.outputFormat.value === 'defaultio';
         const isAdvanced = currentUiMode === 'advanced';
         const groups = [
-            elements.defaultioControls,
-            elements.defaultioGroupingGroup,
-            elements.defaultioStepTimeGroup,
-            elements.defaultioStepFreqGroup,
+            elements.defaultioControls, elements.defaultioGroupingGroup,
+            elements.defaultioStepTimeGroup, elements.defaultioStepFreqGroup,
             elements.defaultioStyleTimeGroup
         ];
         groups.forEach(el => {
             if (!el) return;
             el.style.display = (isDefaultio && isAdvanced) ? 'block' : 'none';
         });
-
         if (elements.outputDefaultioSection) {
             elements.outputDefaultioSection.style.display = (isDefaultio && isAdvanced) ? 'block' : 'none';
         }
@@ -2243,11 +2793,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function toggleColorSourceControls() {
         const isAdvanced = currentUiMode === 'advanced';
         const isPoints = isAdvanced && elements.colorSource.value === 'points';
-
-        if (elements.modeControls) {
-            elements.modeControls.style.display = isPoints ? 'none' : 'block';
-        }
-
+        if (elements.modeControls) elements.modeControls.style.display = isPoints ? 'none' : 'block';
         if (isPoints) {
             elements.solidControls.classList.add('hidden');
             elements.gradientControls.style.display = 'none';
@@ -2267,38 +2813,38 @@ document.addEventListener('DOMContentLoaded', function () {
         const isSolid = this.value === 'solid';
         elements.solidControls.classList.toggle('hidden', !isSolid);
         elements.gradientControls.style.display = isSolid ? 'none' : 'block';
-        if (!isSolid) setTimeout(() => elements.gradientControls.classList.add('active'), 10);
         syncGradientTypeFromMode();
         toggleGradientColorControls();
         generate();
     });
 
     elements.colorSource.addEventListener('change', function () {
+        const goingToPoints = this.value === 'points';
+        const hasPoints = Object.keys(gradientPoints).length > 0;
+        const hasCharColors = Object.keys(charColors).length > 0;
+        if (goingToPoints && hasCharColors) {
+            if (!confirm(t('confirmSwitchGradientToPoints'))) { this.value = 'mode'; return; }
+        } else if (!goingToPoints && hasPoints) {
+            if (!confirm(t('confirmSwitchPointsToGradient'))) { this.value = 'points'; return; }
+        }
         setSelection([]);
         setSelectedPoint(null);
-
-        if (this.value === 'points') {
+        if (goingToPoints) {
             charColors = {};
             charTransparency = {};
             if (Object.keys(gradientPoints).length === 0) {
                 const firstChar = elements.textInput.value[0];
-                if (firstChar && firstChar !== '\n') {
-                    gradientPoints[0] = elements.gradientColor1.value;
-                }
+                if (firstChar && firstChar !== '\n') gradientPoints[0] = elements.gradientColor1.value;
             }
         } else {
             gradientPoints = {};
             gradientPointTransparency = {};
         }
-
         toggleColorSourceControls();
         generate();
     });
 
-    elements.outputFormat.addEventListener('change', () => {
-        toggleDefaultioControls();
-        generate();
-    });
+    elements.outputFormat.addEventListener('change', () => { toggleDefaultioControls(); generate(); });
 
     ['bold', 'italic', 'underline', 'strikethrough', 'lineBreaks', 'fixColors', 'rgbColors'].forEach(id => {
         elements[id].addEventListener('change', generate);
@@ -2308,32 +2854,52 @@ document.addEventListener('DOMContentLoaded', function () {
         elements[id].addEventListener('input', generate);
         elements[id].addEventListener('change', generate);
     });
-
     elements.animateStepTime.addEventListener('input', () => {
         elements.animateStepTimeValue.textContent = elements.animateStepTime.value;
         generate();
     });
-
     elements.animateStyleTime.addEventListener('input', () => {
         elements.animateStyleTimeValue.textContent = elements.animateStyleTime.value;
         generate();
     });
 
-    elements.textInput.addEventListener('input', generate);
+    let prevText = elements.textInput.value;
+    elements.textInput.addEventListener('input', () => {
+        const newText = elements.textInput.value;
+        shiftIndexedStateForTextChange(prevText, newText);
+        prevText = newText;
+        generate();
+    });
     elements.fontFamily.addEventListener('change', generate);
 
+    async function copyTextFromTextarea(textarea) {
+        if (!textarea) return false;
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(textarea.value);
+                return true;
+            }
+        } catch (e) { }
+        try {
+            textarea.focus();
+            textarea.select();
+            if (typeof textarea.setSelectionRange === 'function') textarea.setSelectionRange(0, 999999);
+            const ok = document.execCommand('copy');
+            if (typeof textarea.setSelectionRange === 'function') textarea.setSelectionRange(0, 0);
+            if (window.getSelection) window.getSelection().removeAllRanges();
+            return ok;
+        } catch (e) { return false; }
+    }
+
     document.querySelectorAll('.copy-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', async function () {
             const textarea = document.getElementById(this.dataset.target);
             if (!textarea) return;
-
-            textarea.select();
-            document.execCommand('copy');
-
+            const ok = await copyTextFromTextarea(textarea);
+            if (!ok) return;
             const originalText = this.textContent;
             this.textContent = t('copied');
             this.classList.add('copied');
-
             setTimeout(() => {
                 this.textContent = originalText;
                 this.classList.remove('copied');
@@ -2345,20 +2911,13 @@ document.addEventListener('DOMContentLoaded', function () {
     syncGradientTypeFromMode();
     elements.solidControls.classList.add('hidden');
     elements.gradientControls.style.display = 'block';
-    setTimeout(() => elements.gradientControls.classList.add('active'), 10);
     elements.fixColors.checked = false;
 
-    function openHelp() {
-        elements.helpOverlay.classList.remove('hidden');
-    }
-    function closeHelp() {
-        elements.helpOverlay.classList.add('hidden');
-    }
-
+    function openHelp() { elements.helpOverlay.classList.remove('hidden'); }
+    function closeHelp() { elements.helpOverlay.classList.add('hidden'); }
     elements.helpBtn.addEventListener('click', openHelp);
     elements.helpClose.addEventListener('click', closeHelp);
-
-    elements.helpOverlay.addEventListener('click', (e) => {
+    elements.helpOverlay.addEventListener('click', e => {
         if (e.target === elements.helpOverlay) closeHelp();
     });
 
@@ -2376,42 +2935,12 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshEditorHost();
         generate();
     }
-
-    if (elements.previewExpandBtn) {
-        elements.previewExpandBtn.addEventListener('click', openPreview);
-    }
-    if (elements.previewClose) {
-        elements.previewClose.addEventListener('click', closePreview);
-    }
+    if (elements.previewExpandBtn) elements.previewExpandBtn.addEventListener('click', openPreview);
+    if (elements.previewClose) elements.previewClose.addEventListener('click', closePreview);
     if (elements.previewOverlay) {
-        elements.previewOverlay.addEventListener('click', (e) => {
+        elements.previewOverlay.addEventListener('click', e => {
             if (e.target === elements.previewOverlay) closePreview();
         });
-    }
-
-    let zoomRafHandle = null;
-    let zoomTimeoutHandle = null;
-
-    function refreshMarkersAfterReflow() {
-        if (elements.previewLarge) void elements.previewLarge.offsetWidth;
-        if (elements.preview) void elements.preview.offsetWidth;
-        refreshPointMarkers();
-
-        if (zoomRafHandle !== null) cancelAnimationFrame(zoomRafHandle);
-        zoomRafHandle = requestAnimationFrame(() => {
-            zoomRafHandle = null;
-            if (elements.previewLarge) void elements.previewLarge.offsetWidth;
-            if (elements.preview) void elements.preview.offsetWidth;
-            refreshPointMarkers();
-        });
-
-        if (zoomTimeoutHandle !== null) clearTimeout(zoomTimeoutHandle);
-        zoomTimeoutHandle = setTimeout(() => {
-            zoomTimeoutHandle = null;
-            if (elements.previewLarge) void elements.previewLarge.offsetWidth;
-            if (elements.preview) void elements.preview.offsetWidth;
-            refreshPointMarkers();
-        }, 100);
     }
 
     function applyPreviewZoom(z) {
@@ -2420,161 +2949,95 @@ document.addEventListener('DOMContentLoaded', function () {
         z = Math.max(min, Math.min(max, z));
         if (elements.previewZoom) elements.previewZoom.value = z.toFixed(1);
         if (elements.previewZoomValue) elements.previewZoomValue.textContent = z.toFixed(1) + 'x';
-        if (elements.previewLarge) {
-            elements.previewLarge.style.fontSize = (24 * z) + 'px';
-        }
-        refreshMarkersAfterReflow();
+        generate();
         return z;
     }
-
     if (elements.previewZoom) {
         elements.previewZoom.addEventListener('input', () => {
             applyPreviewZoom(parseFloat(elements.previewZoom.value));
         });
     }
-
     if (elements.previewModalBody) {
-        elements.previewModalBody.addEventListener('wheel', (e) => {
+        elements.previewModalBody.addEventListener('wheel', e => {
             if (elements.previewOverlay && elements.previewOverlay.classList.contains('hidden')) return;
             if (!elements.previewModalBody.contains(e.target)) return;
-
             e.preventDefault();
-
             const current = elements.previewZoom ? parseFloat(elements.previewZoom.value) : 1.5;
-            const step = 0.1;
             const direction = e.deltaY < 0 ? 1 : -1;
-            const next = current + direction * step;
-
-            applyPreviewZoom(next);
+            applyPreviewZoom(current + direction * 0.1);
         }, { passive: false });
     }
 
     const PAN_LIMIT = 500;
     const PAN_TAP_THRESHOLD = 5;
-    let panX = 0;
-    let panY = 0;
-    let isPanning = false;
-    let panStartX = 0;
-    let panStartY = 0;
-    let panStartOffsetX = 0;
-    let panStartOffsetY = 0;
-    let panMoved = false;
+    let panX = 0, panY = 0, isPanning = false, panStartX = 0, panStartY = 0, panStartOffsetX = 0, panStartOffsetY = 0, panMoved = false;
 
     function applyPan() {
         if (!elements.previewLarge) return;
         const px = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panX));
         const py = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panY));
-        panX = px;
-        panY = py;
+        panX = px; panY = py;
         elements.previewLarge.style.transform = 'translate(' + px + 'px, ' + py + 'px)';
-        refreshPointMarkers();
     }
-
     function resetPan() {
-        panX = 0;
-        panY = 0;
-        if (elements.previewLarge) {
-            elements.previewLarge.style.transform = '';
-        }
-        refreshPointMarkers();
+        panX = 0; panY = 0;
+        if (elements.previewLarge) elements.previewLarge.style.transform = '';
     }
-
-    function startPan(clientX, clientY) {
-        isPanning = true;
-        panMoved = false;
-        panStartX = clientX;
-        panStartY = clientY;
-        panStartOffsetX = panX;
-        panStartOffsetY = panY;
+    function startPan(cx, cy) {
+        isPanning = true; panMoved = false;
+        panStartX = cx; panStartY = cy;
+        panStartOffsetX = panX; panStartOffsetY = panY;
     }
-
-    function movePan(clientX, clientY) {
+    function movePan(cx, cy) {
         if (!isPanning) return;
-        const dx = clientX - panStartX;
-        const dy = clientY - panStartY;
-        if (!panMoved && Math.abs(dx) + Math.abs(dy) < PAN_TAP_THRESHOLD) {
-            return;
-        }
+        const dx = cx - panStartX, dy = cy - panStartY;
+        if (!panMoved && Math.abs(dx) + Math.abs(dy) < PAN_TAP_THRESHOLD) return;
         if (!panMoved) {
             panMoved = true;
-            if (elements.previewModalBody) {
-                elements.previewModalBody.classList.add('panning');
-            }
+            if (elements.previewModalBody) elements.previewModalBody.classList.add('panning');
         }
         panX = panStartOffsetX + dx;
         panY = panStartOffsetY + dy;
         applyPan();
     }
-
     function endPan() {
-        isPanning = false;
-        panMoved = false;
-        if (elements.previewModalBody) {
-            elements.previewModalBody.classList.remove('panning');
-        }
+        isPanning = false; panMoved = false;
+        if (elements.previewModalBody) elements.previewModalBody.classList.remove('panning');
     }
 
-    let lastTapTime = 0;
-    let lastTapX = 0;
-    let lastTapY = 0;
-
-    function maybeResetPanFromTap(clientX, clientY) {
+    let lastTapTime = 0, lastTapX = 0, lastTapY = 0;
+    function maybeResetPanFromTap(cx, cy) {
         const now = Date.now();
         const timeDiff = now - lastTapTime;
-        const dist = Math.abs(clientX - lastTapX) + Math.abs(clientY - lastTapY);
-        if (timeDiff < 300 && dist < 30) {
-            resetPan();
-            lastTapTime = 0;
-            return;
-        }
-        lastTapTime = now;
-        lastTapX = clientX;
-        lastTapY = clientY;
+        const dist = Math.abs(cx - lastTapX) + Math.abs(cy - lastTapY);
+        if (timeDiff < 300 && dist < 30) { resetPan(); lastTapTime = 0; return; }
+        lastTapTime = now; lastTapX = cx; lastTapY = cy;
     }
 
     if (elements.previewModalBody) {
-        elements.previewModalBody.addEventListener('mousedown', (e) => {
+        elements.previewModalBody.addEventListener('mousedown', e => {
             if (e.button !== 0) return;
-            if (e.target.closest('.char')) return;
+            if (e.target.tagName === 'CANVAS') return;
             startPan(e.clientX, e.clientY);
             e.preventDefault();
         });
-
-        elements.previewModalBody.addEventListener('contextmenu', (e) => {
-            if (e.target.closest('.char')) return;
+        elements.previewModalBody.addEventListener('contextmenu', e => {
+            if (e.target.tagName === 'CANVAS') return;
             e.preventDefault();
         });
-
-        elements.previewModalBody.addEventListener('touchstart', (e) => {
-            if (e.target.closest('.char')) return;
-            const touch = e.touches[0];
-            if (!touch) return;
-            startPan(touch.clientX, touch.clientY);
-        }, { passive: true });
-
-        elements.previewModalBody.addEventListener('dblclick', (e) => {
-            if (e.target.closest('.char')) return;
+        elements.previewModalBody.addEventListener('dblclick', e => {
+            if (e.target.tagName === 'CANVAS') return;
             resetPan();
         });
     }
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isPanning) return;
-        movePan(e.clientX, e.clientY);
-    });
-
-    document.addEventListener('mouseup', () => {
-        if (isPanning) endPan();
-    });
-
-    document.addEventListener('touchmove', (e) => {
+    document.addEventListener('mousemove', e => { if (isPanning) movePan(e.clientX, e.clientY); });
+    document.addEventListener('mouseup', () => { if (isPanning) endPan(); });
+    document.addEventListener('touchmove', e => {
         if (!isPanning) return;
         const touch = e.touches[0];
-        if (!touch) return;
-        movePan(touch.clientX, touch.clientY);
+        if (touch) movePan(touch.clientX, touch.clientY);
     }, { passive: true });
-
-    document.addEventListener('touchend', (e) => {
+    document.addEventListener('touchend', e => {
         if (!isPanning) return;
         if (!panMoved) {
             const touch = e.changedTouches && e.changedTouches[0];
@@ -2583,26 +3046,14 @@ document.addEventListener('DOMContentLoaded', function () {
         endPan();
     });
 
-    document.addEventListener('touchcancel', () => {
-        if (isPanning) endPan();
-    });
-
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            if (elements.helpOverlay && !elements.helpOverlay.classList.contains('hidden')) {
-                closeHelp();
-                return;
-            }
-            if (elements.previewOverlay && !elements.previewOverlay.classList.contains('hidden')) {
-                closePreview();
-                return;
-            }
+            if (elements.helpOverlay && !elements.helpOverlay.classList.contains('hidden')) { closeHelp(); return; }
+            if (elements.previewOverlay && !elements.previewOverlay.classList.contains('hidden')) { closePreview(); return; }
         }
     });
 
-    window.addEventListener('resize', () => {
-        generate();
-    });
+    window.addEventListener('resize', () => { generate(); });
 
     const STATE_KEY = 'richTextGenState';
     const PRESETS_KEY = 'richTextGenPresets';
@@ -2630,17 +3081,9 @@ document.addEventListener('DOMContentLoaded', function () {
             strokeColor: elements.strokeColor.value,
             strokeThickness: elements.strokeThickness.value,
             fontFamily: elements.fontFamily.value,
-            charColors: charColors,
-            charTransparency: charTransparency,
-            charBold: charBold,
-            charItalic: charItalic,
-            charUnderline: charUnderline,
-            charStrike: charStrike,
-            charFont: charFont,
-            charStrokeColor: charStrokeColor,
-            charStrokeThickness: charStrokeThickness,
-            gradientPoints: gradientPoints,
-            gradientPointTransparency: gradientPointTransparency,
+            charColors, charTransparency, charBold, charItalic, charUnderline, charStrike,
+            charFont, charStrokeColor, charStrokeThickness,
+            gradientPoints, gradientPointTransparency,
             animateStyle: elements.animateStyle.value,
             animateGrouping: elements.animateGrouping.value,
             animateStepTime: elements.animateStepTime.value,
@@ -2655,35 +3098,14 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             if (typeof s.text === 'string') elements.textInput.value = s.text;
             if (typeof s.userId === 'string') elements.userId.value = s.userId;
-
-            if (s.colorMode) {
-                elements.colorMode.value = s.colorMode;
-                syncGradientTypeFromMode();
-            }
+            if (s.colorMode) { elements.colorMode.value = s.colorMode; syncGradientTypeFromMode(); }
             if (s.colorSource) elements.colorSource.value = s.colorSource;
             if (s.outputFormat) elements.outputFormat.value = s.outputFormat;
-
-            if (s.textColor) {
-                elements.textColor.value = s.textColor;
-                elements.textColorHex.value = s.textColor;
-            }
-            if (s.gradientColor1) {
-                elements.gradientColor1.value = s.gradientColor1;
-                elements.gradientColor1Hex.value = s.gradientColor1;
-            }
-            if (s.gradientColor2) {
-                elements.gradientColor2.value = s.gradientColor2;
-                elements.gradientColor2Hex.value = s.gradientColor2;
-            }
-            if (s.gradientSteps !== undefined) {
-                elements.gradientSteps.value = s.gradientSteps;
-                elements.gradientStepsValue.textContent = s.gradientSteps;
-            }
-            if (s.transparency !== undefined) {
-                elements.transparency.value = s.transparency;
-                elements.transparencyValue.textContent = s.transparency;
-            }
-
+            if (s.textColor) { elements.textColor.value = s.textColor; elements.textColorHex.value = s.textColor; }
+            if (s.gradientColor1) { elements.gradientColor1.value = s.gradientColor1; elements.gradientColor1Hex.value = s.gradientColor1; }
+            if (s.gradientColor2) { elements.gradientColor2.value = s.gradientColor2; elements.gradientColor2Hex.value = s.gradientColor2; }
+            if (s.gradientSteps !== undefined) { elements.gradientSteps.value = s.gradientSteps; elements.gradientStepsValue.textContent = s.gradientSteps; }
+            if (s.transparency !== undefined) { elements.transparency.value = s.transparency; elements.transparencyValue.textContent = s.transparency; }
             elements.bold.checked = !!s.bold;
             elements.italic.checked = !!s.italic;
             elements.underline.checked = !!s.underline;
@@ -2691,15 +3113,8 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.lineBreaks.checked = !!s.lineBreaks;
             elements.fixColors.checked = !!s.fixColors;
             elements.rgbColors.checked = !!s.rgbColors;
-
-            if (s.strokeColor) {
-                elements.strokeColor.value = s.strokeColor;
-                elements.strokeColorHex.value = s.strokeColor;
-            }
-            if (s.strokeThickness !== undefined) {
-                elements.strokeThickness.value = s.strokeThickness;
-                elements.strokeThicknessValue.textContent = s.strokeThickness;
-            }
+            if (s.strokeColor) { elements.strokeColor.value = s.strokeColor; elements.strokeColorHex.value = s.strokeColor; }
+            if (s.strokeThickness !== undefined) { elements.strokeThickness.value = s.strokeThickness; elements.strokeThicknessValue.textContent = s.strokeThickness; }
             if (s.fontFamily) elements.fontFamily.value = s.fontFamily;
 
             charColors = (s.charColors && typeof s.charColors === 'object') ? { ...s.charColors } : {};
@@ -2716,45 +3131,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (s.animateStyle !== undefined) elements.animateStyle.value = s.animateStyle;
             if (s.animateGrouping !== undefined) elements.animateGrouping.value = s.animateGrouping;
-            if (s.animateStepTime !== undefined) {
-                elements.animateStepTime.value = s.animateStepTime;
-                elements.animateStepTimeValue.textContent = s.animateStepTime;
-            }
+            if (s.animateStepTime !== undefined) { elements.animateStepTime.value = s.animateStepTime; elements.animateStepTimeValue.textContent = s.animateStepTime; }
             if (s.animateStepFrequency !== undefined) elements.animateStepFrequency.value = s.animateStepFrequency;
-            if (s.animateStyleTime !== undefined) {
-                elements.animateStyleTime.value = s.animateStyleTime;
-                elements.animateStyleTimeValue.textContent = s.animateStyleTime;
-            }
+            if (s.animateStyleTime !== undefined) { elements.animateStyleTime.value = s.animateStyleTime; elements.animateStyleTimeValue.textContent = s.animateStyleTime; }
             if (s.previewZoom !== undefined && elements.previewZoom) {
                 elements.previewZoom.value = s.previewZoom;
                 const z = parseFloat(s.previewZoom);
                 if (elements.previewZoomValue) elements.previewZoomValue.textContent = z.toFixed(1) + 'x';
-                if (elements.previewLarge) elements.previewLarge.style.fontSize = (24 * z) + 'px';
             }
-        } catch (e) {
-            console.warn('Failed to apply state', e);
-        }
+        } catch (e) { console.warn('Failed to apply state', e); }
     }
 
     function saveState() {
-        try {
-            localStorage.setItem(STATE_KEY, JSON.stringify(collectState()));
-        } catch (e) {
-            console.warn('Failed to save state', e);
-        }
+        try { localStorage.setItem(STATE_KEY, JSON.stringify(collectState())); }
+        catch (e) { }
     }
 
     function loadState() {
         try {
             const raw = localStorage.getItem(STATE_KEY);
             if (!raw) return false;
-            const s = JSON.parse(raw);
-            applyState(s);
+            applyState(JSON.parse(raw));
             return true;
-        } catch (e) {
-            console.warn('Failed to load state', e);
-            return false;
-        }
+        } catch (e) { return false; }
     }
 
     function loadPresets() {
@@ -2763,20 +3162,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!raw) return {};
             const obj = JSON.parse(raw);
             return (obj && typeof obj === 'object') ? obj : {};
-        } catch (e) {
-            console.warn('Failed to load presets', e);
-            return {};
-        }
+        } catch (e) { return {}; }
     }
-
     function savePresets(presets) {
-        try {
-            localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
-        } catch (e) {
-            console.warn('Failed to save presets', e);
-        }
+        try { localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); }
+        catch (e) { }
     }
-
     function refreshPresetSelect() {
         const presets = loadPresets();
         const current = elements.presetSelect.value;
@@ -2785,69 +3176,47 @@ document.addEventListener('DOMContentLoaded', function () {
         Object.keys(presets).sort((a, b) => a.localeCompare(b)).forEach(name => {
             elements.presetSelect.appendChild(new Option(name, name));
         });
-        if (current && presets[current]) {
-            elements.presetSelect.value = current;
-        }
+        if (current && presets[current]) elements.presetSelect.value = current;
     }
-
     function downloadJson(filename, data) {
         const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
-
     function sanitizeFilename(name) {
         return String(name).replace(/[^a-zA-Z0-9_\-]+/g, '_').slice(0, 60) || 'preset';
     }
-
     function parseImportedPresets(data, fallbackName) {
         const result = {};
         if (!data || typeof data !== 'object') return result;
-
         if (data.name && data.state && typeof data.state === 'object') {
-            result[String(data.name)] = data.state;
-            return result;
+            result[String(data.name)] = data.state; return result;
         }
-
         const knownKeys = ['text', 'colorMode', 'colorSource', 'outputFormat', 'fontFamily', 'charColors', 'gradientPoints'];
-        const hasAnyKnownKey = knownKeys.some(k => data[k] !== undefined);
-        if (hasAnyKnownKey) {
-            result[fallbackName || 'Imported'] = data;
-            return result;
+        if (knownKeys.some(k => data[k] !== undefined)) {
+            result[fallbackName || 'Imported'] = data; return result;
         }
-
         Object.keys(data).forEach(key => {
             const value = data[key];
             if (value && typeof value === 'object') {
-                if (value.state && typeof value.state === 'object') {
-                    result[key] = value.state;
-                } else {
-                    result[key] = value;
-                }
+                result[key] = (value.state && typeof value.state === 'object') ? value.state : value;
             }
         });
-
         return result;
     }
 
     if (elements.presetImport) {
         elements.presetImport.addEventListener('click', () => {
-            if (elements.presetFileInput) {
-                elements.presetFileInput.value = '';
-                elements.presetFileInput.click();
-            }
+            if (elements.presetFileInput) { elements.presetFileInput.value = ''; elements.presetFileInput.click(); }
         });
     }
-
     if (elements.presetFileInput) {
-        elements.presetFileInput.addEventListener('change', (e) => {
+        elements.presetFileInput.addEventListener('change', e => {
             const file = e.target.files && e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -2857,67 +3226,38 @@ document.addEventListener('DOMContentLoaded', function () {
                     const fallbackName = file.name.replace(/\.json$/i, '') || 'Imported';
                     const parsed = parseImportedPresets(data, fallbackName);
                     const keys = Object.keys(parsed);
-                    if (keys.length === 0) {
-                        alert(t('importNoPresets'));
-                        return;
-                    }
+                    if (keys.length === 0) { alert(t('importNoPresets')); return; }
                     const presets = loadPresets();
                     let overwritten = 0;
-                    keys.forEach(name => {
-                        if (presets[name]) overwritten++;
-                    });
-                    if (overwritten > 0) {
-                        if (!confirm(t('presetExists') + ' (' + overwritten + ')')) {
-                            return;
-                        }
-                    }
-                    keys.forEach(name => {
-                        presets[name] = parsed[name];
-                    });
+                    keys.forEach(name => { if (presets[name]) overwritten++; });
+                    if (overwritten > 0 && !confirm(t('presetExists') + ' (' + overwritten + ')')) return;
+                    keys.forEach(name => { presets[name] = parsed[name]; });
                     savePresets(presets);
                     refreshPresetSelect();
-                    if (keys.length === 1) {
-                        elements.presetSelect.value = keys[0];
-                    }
+                    if (keys.length === 1) elements.presetSelect.value = keys[0];
                     alert(t('importOk').replace('{count}', keys.length));
-                } catch (err) {
-                    console.warn('Failed to parse preset JSON', err);
-                    alert(t('importFailed'));
-                }
+                } catch (err) { alert(t('importFailed')); }
             };
             reader.readAsText(file);
         });
     }
-
     if (elements.presetExport) {
         elements.presetExport.addEventListener('click', () => {
             const name = elements.presetSelect.value;
-            if (!name) {
-                alert(t('exportSelectFirst'));
-                return;
-            }
+            if (!name) { alert(t('exportSelectFirst')); return; }
             const presets = loadPresets();
             if (!presets[name]) return;
-            const payload = {
-                name: name,
-                state: presets[name]
-            };
-            downloadJson(sanitizeFilename(name) + '.json', payload);
+            downloadJson(sanitizeFilename(name) + '.json', { name, state: presets[name] });
         });
     }
-
     if (elements.presetExportAll) {
         elements.presetExportAll.addEventListener('click', () => {
             const presets = loadPresets();
             const keys = Object.keys(presets);
-            if (keys.length === 0) {
-                alert(t('exportNoPresets'));
-                return;
-            }
+            if (keys.length === 0) { alert(t('exportNoPresets')); return; }
             downloadJson('richTextGenPresets.json', presets);
         });
     }
-
     elements.presetSave.addEventListener('click', () => {
         const rawName = prompt(t('presetName'), '');
         if (rawName === null) return;
@@ -2929,7 +3269,6 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshPresetSelect();
         elements.presetSelect.value = name;
     });
-
     elements.presetLoad.addEventListener('click', () => {
         const name = elements.presetSelect.value;
         if (!name) return;
@@ -2941,7 +3280,6 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleColorSourceControls();
         generate();
     });
-
     elements.presetRename.addEventListener('click', () => {
         const name = elements.presetSelect.value;
         if (!name) return;
@@ -2958,7 +3296,6 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshPresetSelect();
         elements.presetSelect.value = newName;
     });
-
     elements.presetDelete.addEventListener('click', () => {
         const name = elements.presetSelect.value;
         if (!name) return;
@@ -2998,18 +3335,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     loadState();
     refreshPresetSelect();
-
-    if (elements.previewLarge) {
-        const initialZoom = elements.previewZoom ? parseFloat(elements.previewZoom.value) : 1.5;
-        elements.previewLarge.style.fontSize = (24 * initialZoom) + 'px';
-        if (elements.previewZoomValue) elements.previewZoomValue.textContent = initialZoom.toFixed(1) + 'x';
-    }
-
     refreshEditorHost();
 
     toggleGradientColorControls();
     toggleDefaultioControls();
     toggleColorSourceControls();
 
+    prevText = elements.textInput.value;
+
     generate();
+
+    window.__rtg = { generate, redrawCanvasesOnly, getCanvasState, setSelection };
 });
