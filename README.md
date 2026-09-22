@@ -1,6 +1,5 @@
-# Roblox Rich Text Editor / Generator
+<img width="1640" height="363" alt="richtextgen" src="https://github.com/user-attachments/assets/8e8456fe-a09a-4d1c-be49-393a83806656" />
 
-<img width="555" height="222" alt="image" src="https://github.com/user-attachments/assets/968fe27f-11f0-4509-abd9-5e6db6cf4d2b" />
 
 A rich text editor (generator) for Roblox. Create styled text with gradients, strokes, per-character colors, and formatting.
 
