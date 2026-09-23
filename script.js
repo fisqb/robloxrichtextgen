@@ -97,7 +97,6 @@ document.addEventListener('DOMContentLoaded', function () {
         underline: $('underline'),
         strikethrough: $('strikethrough'),
         lineBreaks: $('lineBreaks'),
-        fixColors: $('fixColors'),
         rgbColors: $('rgbColors'),
         strokeColor: $('strokeColor'),
         strokeColorHex: $('strokeColorHex'),
@@ -173,9 +172,18 @@ document.addEventListener('DOMContentLoaded', function () {
         presetFileInput: $('presetFileInput'),
         languageSelect: $('languageSelect'),
         themeSelect: $('themeSelect'),
-        uiModeSelect: $('uiModeSelect')
+        uiModeSelect: $('uiModeSelect'),
+        importRichTextBtn: $('importRichTextBtn'),
+        importOverlay: $('importOverlay'),
+        importClose: $('importClose'),
+        importTextarea: $('importTextarea'),
+        importClearExisting: $('importClearExisting'),
+        importWarnings: $('importWarnings'),
+        importCancel: $('importCancel'),
+        importConfirm: $('importConfirm')
     };
 
+    elements.fontFamily.innerHTML = '';
     ALL_FONTS.forEach(font => {
         elements.fontFamily.add(new Option(font, font));
     });
@@ -195,6 +203,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let charStrokeColor = {};
     let charStrokeThickness = {};
     let selectedChars = new Set();
+    let charStrokeColorDirty = false;
+    let charStrokeThicknessDirty = false;
+    let charStrokeColorLastShown = null;
+    let charStrokeThicknessLastShown = null;
 
     let gradientPoints = {};
     let gradientPointTransparency = {};
@@ -219,6 +231,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return Math.abs(a - b) <= TRANSPARENCY_MERGE_THRESHOLD;
     };
 
+    const isUnsafeKey = k => k === '__proto__' || k === 'constructor' || k === 'prototype';
+
     const hexToRgb = hex => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? {
@@ -230,6 +244,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const rgbToHex = (r, g, b) => '#' + [r, g, b]
         .map(x => Math.round(x).toString(16).padStart(2, '0')).join('');
+
+    const rgbToHsv = (r, g, b) => {
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+        let h = 0;
+        if (d !== 0) {
+            if (max === r) h = ((g - b) / d) % 6;
+            else if (max === g) h = (b - r) / d + 2;
+            else h = (r - g) / d + 4;
+            h *= 60;
+            if (h < 0) h += 360;
+        }
+        return { h, s: max === 0 ? 0 : d / max, v: max };
+    };
 
     const lerp = (a, b, t) => a + (b - a) * t;
     const lerpColor = (c1, c2, t) => ({
@@ -274,10 +302,37 @@ document.addEventListener('DOMContentLoaded', function () {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&apos;');
 
+    const decodeHtmlEntities = str => String(str)
+        .replace(/&apos;/g, "'")
+        .replace(/&quot;/g, '"')
+        .replace(/&gt;/g, '>')
+        .replace(/&lt;/g, '<')
+        .replace(/&amp;/g, '&');
+
     const hexToDefaultioColor = (hex) => {
         const c = hexToRgb(hex);
         if (!c) return '255,255,255';
         return Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b);
+    };
+
+    const defaultioColorToHex = (str) => {
+        const parts = String(str).split(',').map(s => parseInt(s.trim(), 10));
+        if (parts.length !== 3 || parts.some(isNaN)) return null;
+        return rgbToHex(parts[0], parts[1], parts[2]);
+    };
+
+    const parseCssColorToHex = (str) => {
+        if (!str) return null;
+        str = String(str).trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(str)) return str.toLowerCase();
+        if (/^#[0-9A-Fa-f]{3}$/.test(str)) {
+            return '#' + str[1] + str[1] + str[2] + str[2] + str[3] + str[3];
+        }
+        const rgbMatch = /^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i.exec(str);
+        if (rgbMatch) {
+            return rgbToHex(parseInt(rgbMatch[1], 10), parseInt(rgbMatch[2], 10), parseInt(rgbMatch[3], 10));
+        }
+        return null;
     };
 
     const formatColor = (hex) => {
@@ -296,11 +351,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'Import JSON', export: 'Export', exportAll: 'Export All',
             text: 'Text', userId: 'User ID',
             solid: 'Solid', gradient: 'Gradient', rainbow: 'Rainbow',
+            mode: 'Mode',
             colorSource: 'Color Source', modeOption: 'Mode (Solid / Gradient / Rainbow)', gradientPoints: 'Gradient Points',
             outputFormat: 'Output Format', robloxRichText: 'Roblox RichText (native)', defaultioRichText: 'Defaultio RichText Module',
             color: 'Color', color1: 'Color 1', color2: 'Color 2', steps: 'Steps',
             transparency: 'Transparency', formatting: 'Formatting',
-            lineBreaks: 'Line Breaks', fixColors: 'Fix Colors', rgbColors: 'RGB Colors',
+            lineBreaks: 'Line Breaks', rgbColors: 'RGB Colors',
             stroke: 'Stroke', strokeWidth: 'Stroke Width', font: 'Font',
             animation: 'Animation', none: 'None',
             animateGrouping: 'Animate Grouping',
@@ -314,6 +370,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: 'Apply', resetColor: 'Reset color', resetAllChars: 'Reset all characters',
             deletePoint: 'Delete point', resetAllPoints: 'Reset all points',
             character: 'Character', transparencyPlaceholder: 'Transparency (optional, 0-1)',
+            mixedOrDefault: '— Default —',
             previewHint: 'Click/tap characters to select them. Hold and drag to select multiple. Drag empty space to pan.',
             presetName: 'Preset name:', renamePreset: 'Rename preset to:',
             deletePreset: 'Delete preset "{name}"?',
@@ -330,6 +387,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'Warning: "<" and ">" characters were skipped in the Defaultio output.',
             confirmSwitchPointsToGradient: 'Switching to Gradient/Solid will delete all Gradient Points. Continue?',
             confirmSwitchGradientToPoints: 'Switching to Gradient Points will reset per-character colors. Continue?',
+            importRichText: 'Import Rich Text',
+            importPasteLabel: 'Paste your Rich Text code',
+            importReplaceExisting: 'Replace existing character formatting',
+            importWarningsEmpty: '',
+            importWarningsCount: 'Imported with {count} warning(s). Check the console for details.',
+            importNothingToImport: 'Nothing to import — the code was empty or contained no readable text.',
+            importBadTag: 'Unrecognized or malformed tag: {tag}',
+            cancel: 'Cancel',
+            importBtn: 'Import',
             helpTitle: 'Tips & Help', helpGettingStarted: 'Getting started',
             helpStart1: 'Type your text in the Text field on the left.',
             helpStart2: 'The Preview on the right updates live.',
@@ -353,7 +419,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: 'Click the ⛶ button to expand the preview; you can edit characters right there and pan around by dragging empty space.',
             helpKeyboard: 'Keyboard',
             helpKeyboard1: 'Esc — close the expanded preview or this window.',
-            helpKeyboard2: 'Click outside a modal to close it.'
+            helpKeyboard2: 'Click outside a modal to close it.',
+            helpRtl: 'Right-to-left languages',
+            helpRtl1: 'Right-to-left languages (e.g. Arabic) may not render correctly in the canvas preview due to manual character-by-character rendering.',
+            helpRtl2: 'The generated Rich Text / Defaultio output is unaffected.',
+            helpImportRichText: 'Importing Rich Text',
+            helpImportRichText1: 'Click Import Rich Text next to the output to paste an existing Rich Text code.',
+            helpImportRichText2: 'Both Roblox native tags (font, b, i, u, s, stroke) and Defaultio tags are supported.',
+            helpImportRichText3: 'The imported code replaces the current character formatting and can be edited normally afterwards.'
         },
         es: {
             language: 'Idioma', theme: 'Tema', uiMode: 'Modo',
@@ -362,11 +435,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'Importar JSON', export: 'Exportar', exportAll: 'Exportar todo',
             text: 'Texto', userId: 'ID de usuario',
             solid: 'Sólido', gradient: 'Degradado', rainbow: 'Arcoíris',
+            mode: 'Modo',
             colorSource: 'Fuente de color', modeOption: 'Modo (Sólido / Degradado / Arcoíris)', gradientPoints: 'Puntos de degradado',
             outputFormat: 'Formato de salida', robloxRichText: 'Roblox RichText (nativo)', defaultioRichText: 'Módulo Defaultio RichText',
             color: 'Color', color1: 'Color 1', color2: 'Color 2', steps: 'Pasos',
             transparency: 'Transparencia', formatting: 'Formato',
-            lineBreaks: 'Saltos de línea', fixColors: 'Corregir colores', rgbColors: 'Colores RGB',
+            lineBreaks: 'Saltos de línea', rgbColors: 'Colores RGB',
             stroke: 'Contorno', strokeWidth: 'Grosor del contorno', font: 'Fuente',
             animation: 'Animación', none: 'Ninguna',
             animateGrouping: 'Agrupación de animación',
@@ -380,6 +454,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: 'Aplicar', resetColor: 'Restablecer color', resetAllChars: 'Restablecer todos',
             deletePoint: 'Eliminar punto', resetAllPoints: 'Restablecer todos los puntos',
             character: 'Carácter', transparencyPlaceholder: 'Transparencia (opcional, 0-1)',
+            mixedOrDefault: '— Predeterminada —',
             previewHint: 'Haz clic o toca los caracteres para seleccionarlos. Mantén y arrastra para seleccionar varios. Arrastra el fondo para mover.',
             presetName: 'Nombre del ajuste:', renamePreset: 'Renombrar ajuste a:',
             deletePreset: '¿Eliminar el ajuste "{name}"?',
@@ -396,6 +471,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'Aviso: los caracteres "<" y ">" se omitieron en la salida de Defaultio.',
             confirmSwitchPointsToGradient: 'Cambiar a Degradado/Sólido eliminará todos los Puntos de degradado. ¿Continuar?',
             confirmSwitchGradientToPoints: 'Cambiar a Puntos de degradado restablecerá los colores por carácter. ¿Continuar?',
+            importRichText: 'Importar Rich Text',
+            importPasteLabel: 'Pega tu código Rich Text',
+            importReplaceExisting: 'Reemplazar el formato de caracteres existente',
+            importWarningsEmpty: '',
+            importWarningsCount: 'Importado con {count} advertencia(s). Revisa la consola para más detalles.',
+            importNothingToImport: 'Nada que importar: el código estaba vacío o no contenía texto legible.',
+            importBadTag: 'Etiqueta no reconocida o mal formada: {tag}',
+            cancel: 'Cancelar',
+            importBtn: 'Importar',
             helpTitle: 'Ayuda y consejos', helpGettingStarted: 'Primeros pasos',
             helpStart1: 'Escribe tu texto en el campo Texto de la izquierda.',
             helpStart2: 'La vista previa se actualiza en vivo.',
@@ -419,7 +503,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: 'Pulsa el botón ⛶ para ampliar la vista previa.',
             helpKeyboard: 'Teclado',
             helpKeyboard1: 'Esc — cerrar la vista ampliada o esta ventana.',
-            helpKeyboard2: 'Haz clic fuera de un modal para cerrarlo.'
+            helpKeyboard2: 'Haz clic fuera de un modal para cerrarlo.',
+            helpRtl: 'Idiomas de derecha a izquierda',
+            helpRtl1: 'Los idiomas de derecha a izquierda (p. ej., árabe) pueden no mostrarse correctamente en la vista previa del lienzo debido a la representación manual carácter por carácter.',
+            helpRtl2: 'La salida generada de Rich Text / Defaultio no se ve afectada.',
+            helpImportRichText: 'Importar Rich Text',
+            helpImportRichText1: 'Haz clic en Importar Rich Text junto a la salida para pegar un código Rich Text existente.',
+            helpImportRichText2: 'Se admiten tanto las etiquetas nativas de Roblox (font, b, i, u, s, stroke) como las etiquetas Defaultio.',
+            helpImportRichText3: 'El código importado reemplaza el formato de caracteres actual y se puede editar normalmente después.'
         },
         fr: {
             language: 'Langue', theme: 'Thème', uiMode: 'Mode',
@@ -428,11 +519,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'Importer JSON', export: 'Exporter', exportAll: 'Tout exporter',
             text: 'Texte', userId: 'ID utilisateur',
             solid: 'Uni', gradient: 'Dégradé', rainbow: 'Arc-en-ciel',
+            mode: 'Mode',
             colorSource: 'Source de couleur', modeOption: 'Mode (Uni / Dégradé / Arc-en-ciel)', gradientPoints: 'Points de dégradé',
             outputFormat: 'Format de sortie', robloxRichText: 'Roblox RichText (natif)', defaultioRichText: 'Module Defaultio RichText',
             color: 'Couleur', color1: 'Couleur 1', color2: 'Couleur 2', steps: 'Étapes',
             transparency: 'Transparence', formatting: 'Mise en forme',
-            lineBreaks: 'Sauts de ligne', fixColors: 'Corriger les couleurs', rgbColors: 'Couleurs RGB',
+            lineBreaks: 'Sauts de ligne', rgbColors: 'Couleurs RGB',
             stroke: 'Contour', strokeWidth: 'Épaisseur du contour', font: 'Police',
             animation: 'Animation', none: 'Aucune',
             animateGrouping: "Groupement d'animation",
@@ -446,6 +538,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: 'Appliquer', resetColor: 'Réinitialiser la couleur', resetAllChars: 'Réinitialiser tous',
             deletePoint: 'Supprimer le point', resetAllPoints: 'Réinitialiser tous les points',
             character: 'Caractère', transparencyPlaceholder: 'Transparence (facultatif, 0-1)',
+            mixedOrDefault: '— Par défaut —',
             previewHint: 'Cliquez ou touchez les caractères pour les sélectionner. Maintenez et faites glisser pour en sélectionner plusieurs. Faites glisser le fond pour déplacer.',
             presetName: 'Nom du préréglage :', renamePreset: 'Renommer le préréglage en :',
             deletePreset: 'Supprimer le préréglage « {name} » ?',
@@ -462,6 +555,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'Attention : les caractères "<" et ">" ont été ignorés dans la sortie Defaultio.',
             confirmSwitchPointsToGradient: 'Passer à Dégradé/Uni supprimera tous les Points de dégradé. Continuer ?',
             confirmSwitchGradientToPoints: 'Passer à Points de dégradé réinitialisera les couleurs par caractère. Continuer ?',
+            importRichText: 'Importer Rich Text',
+            importPasteLabel: 'Collez votre code Rich Text',
+            importReplaceExisting: 'Remplacer la mise en forme des caractères existante',
+            importWarningsEmpty: '',
+            importWarningsCount: 'Importé avec {count} avertissement(s). Consultez la console pour plus de détails.',
+            importNothingToImport: 'Rien à importer — le code était vide ou ne contenait aucun texte lisible.',
+            importBadTag: 'Balise non reconnue ou mal formée : {tag}',
+            cancel: 'Annuler',
+            importBtn: 'Importer',
             helpTitle: 'Aide et astuces', helpGettingStarted: 'Pour commencer',
             helpStart1: 'Saisissez votre texte à gauche.',
             helpStart2: "L'aperçu se met à jour en direct.",
@@ -485,7 +587,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: "Cliquez sur ⛶ pour agrandir l'aperçu.",
             helpKeyboard: 'Clavier',
             helpKeyboard1: "Échap — fermer l'aperçu ou cette fenêtre.",
-            helpKeyboard2: "Cliquez en dehors d'un modal pour le fermer."
+            helpKeyboard2: "Cliquez en dehors d'un modal pour le fermer.",
+            helpRtl: 'Langues de droite à gauche',
+            helpRtl1: 'Les langues de droite à gauche (par ex. l\'arabe) peuvent ne pas s\'afficher correctement dans l\'aperçu du canevas en raison du rendu manuel caractère par caractère.',
+            helpRtl2: 'La sortie Rich Text / Defaultio générée n\'est pas affectée.',
+            helpImportRichText: 'Importer du Rich Text',
+            helpImportRichText1: 'Cliquez sur Importer Rich Text à côté de la sortie pour coller un code Rich Text existant.',
+            helpImportRichText2: 'Les balises natives Roblox (font, b, i, u, s, stroke) et les balises Defaultio sont prises en charge.',
+            helpImportRichText3: 'Le code importé remplace la mise en forme actuelle des caractères et peut ensuite être modifié normalement.'
         },
         de: {
             language: 'Sprache', theme: 'Design', uiMode: 'Modus',
@@ -494,11 +603,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'JSON importieren', export: 'Exportieren', exportAll: 'Alle exportieren',
             text: 'Text', userId: 'Benutzer-ID',
             solid: 'Einfarbig', gradient: 'Verlauf', rainbow: 'Regenbogen',
+            mode: 'Modus',
             colorSource: 'Farbquelle', modeOption: 'Modus (Einfarbig / Verlauf / Regenbogen)', gradientPoints: 'Verlaufspunkte',
             outputFormat: 'Ausgabeformat', robloxRichText: 'Roblox RichText (nativ)', defaultioRichText: 'Defaultio RichText-Modul',
             color: 'Farbe', color1: 'Farbe 1', color2: 'Farbe 2', steps: 'Schritte',
             transparency: 'Transparenz', formatting: 'Formatierung',
-            lineBreaks: 'Zeilenumbrüche', fixColors: 'Farben korrigieren', rgbColors: 'RGB-Farben',
+            lineBreaks: 'Zeilenumbrüche', rgbColors: 'RGB-Farben',
             stroke: 'Kontur', strokeWidth: 'Konturstärke', font: 'Schriftart',
             animation: 'Animation', none: 'Keine',
             animateGrouping: 'Animationsgruppierung',
@@ -512,6 +622,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: 'Anwenden', resetColor: 'Farbe zurücksetzen', resetAllChars: 'Alle zurücksetzen',
             deletePoint: 'Punkt löschen', resetAllPoints: 'Alle Punkte zurücksetzen',
             character: 'Zeichen', transparencyPlaceholder: 'Transparenz (optional, 0-1)',
+            mixedOrDefault: '— Standard —',
             previewHint: 'Klicke oder tippe auf Zeichen zum Auswählen. Halte und ziehe für mehrere. Ziehe den Hintergrund zum Verschieben.',
             presetName: 'Name der Voreinstellung:', renamePreset: 'Voreinstellung umbenennen in:',
             deletePreset: 'Voreinstellung „{name}" löschen?',
@@ -528,6 +639,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'Warnung: Die Zeichen "<" und ">" wurden in der Defaultio-Ausgabe übersprungen.',
             confirmSwitchPointsToGradient: 'Beim Wechsel zu Verlauf/Einfarbig werden alle Verlaufspunkte gelöscht. Fortfahren?',
             confirmSwitchGradientToPoints: 'Beim Wechsel zu Verlaufspunkten werden Zeichenfarben zurückgesetzt. Fortfahren?',
+            importRichText: 'Rich Text importieren',
+            importPasteLabel: 'Füge deinen Rich-Text-Code ein',
+            importReplaceExisting: 'Bestehende Zeichenformatierung ersetzen',
+            importWarningsEmpty: '',
+            importWarningsCount: 'Mit {count} Warnung(en) importiert. Details in der Konsole.',
+            importNothingToImport: 'Nichts zu importieren — der Code war leer oder enthielt keinen lesbaren Text.',
+            importBadTag: 'Unbekanntes oder fehlerhaftes Tag: {tag}',
+            cancel: 'Abbrechen',
+            importBtn: 'Importieren',
             helpTitle: 'Tipps & Hilfe', helpGettingStarted: 'Erste Schritte',
             helpStart1: 'Gib deinen Text links ein.',
             helpStart2: 'Die Vorschau aktualisiert sich live.',
@@ -551,7 +671,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: 'Klicke ⛶, um die Vorschau zu vergrößern.',
             helpKeyboard: 'Tastatur',
             helpKeyboard1: 'Esc — vergrößerte Vorschau oder dieses Fenster schließen.',
-            helpKeyboard2: 'Klicke außerhalb eines Modals, um es zu schließen.'
+            helpKeyboard2: 'Klicke außerhalb eines Modals, um es zu schließen.',
+            helpRtl: 'Rechts-nach-links-Sprachen',
+            helpRtl1: 'Rechts-nach-links-Sprachen (z. B. Arabisch) werden in der Canvas-Vorschau aufgrund der manuellen Zeichen-für-Zeichen-Darstellung möglicherweise nicht korrekt angezeigt.',
+            helpRtl2: 'Die generierte Rich Text / Defaultio-Ausgabe ist davon nicht betroffen.',
+            helpImportRichText: 'Rich Text importieren',
+            helpImportRichText1: 'Klicke auf Rich Text importieren neben der Ausgabe, um einen vorhandenen Rich-Text-Code einzufügen.',
+            helpImportRichText2: 'Sowohl Roblox-native Tags (font, b, i, u, s, stroke) als auch Defaultio-Tags werden unterstützt.',
+            helpImportRichText3: 'Der importierte Code ersetzt die aktuelle Zeichenformatierung und kann anschließend normal bearbeitet werden.'
         },
         it: {
             language: 'Lingua', theme: 'Tema', uiMode: 'Modalità',
@@ -560,11 +687,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'Importa JSON', export: 'Esporta', exportAll: 'Esporta tutto',
             text: 'Testo', userId: 'ID utente',
             solid: 'Tinta unita', gradient: 'Sfumatura', rainbow: 'Arcobaleno',
+            mode: 'Modalità',
             colorSource: 'Sorgente colore', modeOption: 'Modalità (Tinta unita / Sfumatura / Arcobaleno)', gradientPoints: 'Punti sfumatura',
             outputFormat: 'Formato output', robloxRichText: 'Roblox RichText (nativo)', defaultioRichText: 'Modulo Defaultio RichText',
             color: 'Colore', color1: 'Colore 1', color2: 'Colore 2', steps: 'Passi',
             transparency: 'Trasparenza', formatting: 'Formattazione',
-            lineBreaks: 'Interruzioni di riga', fixColors: 'Correggi colori', rgbColors: 'Colori RGB',
+            lineBreaks: 'Interruzioni di riga', rgbColors: 'Colori RGB',
             stroke: 'Contorno', strokeWidth: 'Spessore contorno', font: 'Carattere',
             animation: 'Animazione', none: 'Nessuna',
             animateGrouping: 'Raggruppamento animazione',
@@ -578,6 +706,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: 'Applica', resetColor: 'Reimposta colore', resetAllChars: 'Reimposta tutti',
             deletePoint: 'Elimina punto', resetAllPoints: 'Reimposta tutti i punti',
             character: 'Carattere', transparencyPlaceholder: 'Trasparenza (opzionale, 0-1)',
+            mixedOrDefault: '— Predefinito —',
             previewHint: 'Clicca o tocca i caratteri per selezionarli. Tieni premuto e trascina per selezionarne più di uno. Trascina lo sfondo per spostare.',
             presetName: 'Nome preset:', renamePreset: 'Rinomina preset in:',
             deletePreset: 'Eliminare il preset "{name}"?',
@@ -594,6 +723,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'Attenzione: i caratteri "<" e ">" sono stati saltati nell\'output Defaultio.',
             confirmSwitchPointsToGradient: 'Passando a Sfumatura/Tinta unita verranno eliminati tutti i Punti sfumatura. Continuare?',
             confirmSwitchGradientToPoints: 'Passando a Punti sfumatura verranno reimpostati i colori per carattere. Continuare?',
+            importRichText: 'Importa Rich Text',
+            importPasteLabel: 'Incolla il tuo codice Rich Text',
+            importReplaceExisting: 'Sostituisci la formattazione dei caratteri esistente',
+            importWarningsEmpty: '',
+            importWarningsCount: 'Importato con {count} avviso/i. Controlla la console per i dettagli.',
+            importNothingToImport: 'Niente da importare — il codice era vuoto o non conteneva testo leggibile.',
+            importBadTag: 'Tag non riconosciuto o malformato: {tag}',
+            cancel: 'Annulla',
+            importBtn: 'Importa',
             helpTitle: 'Suggerimenti e aiuto', helpGettingStarted: 'Per iniziare',
             helpStart1: 'Scrivi il testo a sinistra.',
             helpStart2: "L'anteprima si aggiorna in tempo reale.",
@@ -617,7 +755,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: "Premi ⛶ per ingrandire l'anteprima.",
             helpKeyboard: 'Tastiera',
             helpKeyboard1: "Esc — chiude l'anteprima o questa finestra.",
-            helpKeyboard2: 'Clicca fuori da un modale per chiuderlo.'
+            helpKeyboard2: 'Clicca fuori da un modale per chiuderlo.',
+            helpRtl: 'Lingue da destra a sinistra',
+            helpRtl1: 'Le lingue da destra a sinistra (es. arabo) potrebbero non essere visualizzate correttamente nell\'anteprima canvas a causa del rendering manuale carattere per carattere.',
+            helpRtl2: 'L\'output generato di Rich Text / Defaultio non è interessato.',
+            helpImportRichText: 'Importa Rich Text',
+            helpImportRichText1: 'Clicca su Importa Rich Text accanto all\'output per incollare un codice Rich Text esistente.',
+            helpImportRichText2: 'Sono supportati sia i tag nativi Roblox (font, b, i, u, s, stroke) sia i tag Defaultio.',
+            helpImportRichText3: 'Il codice importato sostituisce la formattazione attuale dei caratteri e può essere modificato normalmente in seguito.'
         },
         pt: {
             language: 'Idioma', theme: 'Tema', uiMode: 'Modo',
@@ -626,11 +771,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'Importar JSON', export: 'Exportar', exportAll: 'Exportar tudo',
             text: 'Texto', userId: 'ID do usuário',
             solid: 'Sólido', gradient: 'Gradiente', rainbow: 'Arco-íris',
+            mode: 'Modo',
             colorSource: 'Fonte de cor', modeOption: 'Modo (Sólido / Gradiente / Arco-íris)', gradientPoints: 'Pontos de gradiente',
             outputFormat: 'Formato de saída', robloxRichText: 'Roblox RichText (nativo)', defaultioRichText: 'Módulo Defaultio RichText',
             color: 'Cor', color1: 'Cor 1', color2: 'Cor 2', steps: 'Passos',
             transparency: 'Transparência', formatting: 'Formatação',
-            lineBreaks: 'Quebras de linha', fixColors: 'Corrigir cores', rgbColors: 'Cores RGB',
+            lineBreaks: 'Quebras de linha', rgbColors: 'Cores RGB',
             stroke: 'Contorno', strokeWidth: 'Largura do contorno', font: 'Fonte',
             animation: 'Animação', none: 'Nenhuma',
             animateGrouping: 'Agrupamento de animação',
@@ -644,6 +790,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: 'Aplicar', resetColor: 'Redefinir cor', resetAllChars: 'Redefinir tudo',
             deletePoint: 'Excluir ponto', resetAllPoints: 'Redefinir todos os pontos',
             character: 'Caractere', transparencyPlaceholder: 'Transparência (opcional, 0-1)',
+            mixedOrDefault: '— Padrão —',
             previewHint: 'Clique ou toque nos caracteres para selecioná-los. Segure e arraste para selecionar vários. Arraste o fundo para mover.',
             presetName: 'Nome do preset:', renamePreset: 'Renomear preset para:',
             deletePreset: 'Excluir o preset "{name}"?',
@@ -660,6 +807,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'Aviso: os caracteres "<" e ">" foram ignorados na saída do Defaultio.',
             confirmSwitchPointsToGradient: 'Mudar para Gradiente/Sólido excluirá todos os Pontos de gradiente. Continuar?',
             confirmSwitchGradientToPoints: 'Mudar para Pontos de gradiente redefinirá as cores por caractere. Continuar?',
+            importRichText: 'Importar Rich Text',
+            importPasteLabel: 'Cole seu código Rich Text',
+            importReplaceExisting: 'Substituir a formatação de caracteres existente',
+            importWarningsEmpty: '',
+            importWarningsCount: 'Importado com {count} aviso(s). Verifique o console para detalhes.',
+            importNothingToImport: 'Nada para importar — o código estava vazio ou não continha texto legível.',
+            importBadTag: 'Tag não reconhecida ou malformada: {tag}',
+            cancel: 'Cancelar',
+            importBtn: 'Importar',
             helpTitle: 'Dicas e ajuda', helpGettingStarted: 'Primeiros passos',
             helpStart1: 'Digite seu texto à esquerda.',
             helpStart2: 'A pré-visualização é atualizada ao vivo.',
@@ -683,7 +839,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: 'Clique em ⛶ para expandir a pré-visualização.',
             helpKeyboard: 'Teclado',
             helpKeyboard1: 'Esc — fecha a pré-visualização expandida ou esta janela.',
-            helpKeyboard2: 'Clique fora de um modal para fechá-lo.'
+            helpKeyboard2: 'Clique fora de um modal para fechá-lo.',
+            helpRtl: 'Idiomas da direita para a esquerda',
+            helpRtl1: 'Idiomas da direita para a esquerda (ex.: árabe) podem não ser renderizados corretamente na pré-visualização do canvas devido à renderização manual caractere por caractere.',
+            helpRtl2: 'A saída gerada de Rich Text / Defaultio não é afetada.',
+            helpImportRichText: 'Importar Rich Text',
+            helpImportRichText1: 'Clique em Importar Rich Text ao lado da saída para colar um código Rich Text existente.',
+            helpImportRichText2: 'Tanto as tags nativas do Roblox (font, b, i, u, s, stroke) quanto as tags Defaultio são suportadas.',
+            helpImportRichText3: 'O código importado substitui a formatação atual dos caracteres e pode ser editado normalmente depois.'
         },
         ru: {
             language: 'Язык', theme: 'Тема', uiMode: 'Режим',
@@ -692,11 +855,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'Импорт JSON', export: 'Экспорт', exportAll: 'Экспорт всех',
             text: 'Текст', userId: 'User ID',
             solid: 'Сплошной', gradient: 'Градиент', rainbow: 'Радуга',
+            mode: 'Режим',
             colorSource: 'Источник цвета', modeOption: 'Режим (Solid / Gradient / Rainbow)', gradientPoints: 'Точки градиента',
             outputFormat: 'Формат вывода', robloxRichText: 'Roblox RichText (нативный)', defaultioRichText: 'Модуль Defaultio RichText',
             color: 'Цвет', color1: 'Цвет 1', color2: 'Цвет 2', steps: 'Шаги',
             transparency: 'Прозрачность', formatting: 'Форматирование',
-            lineBreaks: 'Переносы строк', fixColors: 'Fix Colors', rgbColors: 'Цвета RGB',
+            lineBreaks: 'Переносы строк', rgbColors: 'Цвета RGB',
             stroke: 'Обводка', strokeWidth: 'Толщина обводки', font: 'Шрифт',
             animation: 'Анимация', none: 'Нет',
             animateGrouping: 'Группировка анимации',
@@ -710,6 +874,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: 'Применить', resetColor: 'Сбросить цвет', resetAllChars: 'Сбросить все буквы',
             deletePoint: 'Удалить точку', resetAllPoints: 'Сбросить все точки',
             character: 'Символ', transparencyPlaceholder: 'Прозрачность (необязательно, 0-1)',
+            mixedOrDefault: '— По умолчанию —',
             previewHint: 'Кликните или тапните буквы для выделения. Зажмите и ведите для выделения нескольких. Тяните пустое место, чтобы сдвинуть.',
             presetName: 'Имя пресета:', renamePreset: 'Переименовать пресет в:',
             deletePreset: 'Удалить пресет "{name}"?',
@@ -726,6 +891,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'Внимание: символы "<" и ">" были пропущены в выводе Defaultio.',
             confirmSwitchPointsToGradient: 'Переключение на Gradient/Solid удалит все точки градиента. Продолжить?',
             confirmSwitchGradientToPoints: 'Переключение на Gradient Points сбросит посимвольные цвета. Продолжить?',
+            importRichText: 'Импорт Rich Text',
+            importPasteLabel: 'Вставьте ваш код Rich Text',
+            importReplaceExisting: 'Заменить текущее форматирование символов',
+            importWarningsEmpty: '',
+            importWarningsCount: 'Импортировано с {count} предупреждением(ями). Подробности в консоли.',
+            importNothingToImport: 'Нечего импортировать — код пуст или не содержит читаемого текста.',
+            importBadTag: 'Неизвестный или повреждённый тег: {tag}',
+            cancel: 'Отмена',
+            importBtn: 'Импортировать',
             helpTitle: 'Справка и советы', helpGettingStarted: 'С чего начать',
             helpStart1: 'Введите текст в поле слева.',
             helpStart2: 'Превью справа обновляется в реальном времени.',
@@ -749,7 +923,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: 'Нажмите ⛶, чтобы развернуть превью, редактировать прямо там и двигать полотно перетаскиванием пустого места.',
             helpKeyboard: 'Клавиатура',
             helpKeyboard1: 'Esc — закрыть развёрнутое превью или это окно.',
-            helpKeyboard2: 'Клик вне окна тоже закрывает его.'
+            helpKeyboard2: 'Клик вне окна тоже закрывает его.',
+            helpRtl: 'Языки с письмом справа налево',
+            helpRtl1: 'Языки с письмом справа налево (например, арабский) могут отображаться в превью неправильно из-за посимвольного рендера на canvas.',
+            helpRtl2: 'На сгенерированный вывод Rich Text / Defaultio это не влияет.',
+            helpImportRichText: 'Импорт Rich Text',
+            helpImportRichText1: 'Нажмите Импорт Rich Text рядом с выводом, чтобы вставить существующий код Rich Text.',
+            helpImportRichText2: 'Поддерживаются как нативные теги Roblox (font, b, i, u, s, stroke), так и теги Defaultio.',
+            helpImportRichText3: 'Импортированный код заменяет текущее форматирование символов, после чего его можно редактировать как обычно.'
         },
         ja: {
             language: '言語', theme: 'テーマ', uiMode: 'モード',
@@ -758,11 +939,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'JSON をインポート', export: 'エクスポート', exportAll: 'すべてエクスポート',
             text: 'テキスト', userId: 'ユーザーID',
             solid: '単色', gradient: 'グラデーション', rainbow: '虹色',
+            mode: 'モード',
             colorSource: '色のソース', modeOption: 'モード (単色 / グラデーション / 虹色)', gradientPoints: 'グラデーションポイント',
             outputFormat: '出力形式', robloxRichText: 'Roblox RichText (ネイティブ)', defaultioRichText: 'Defaultio RichText モジュール',
             color: '色', color1: '色 1', color2: '色 2', steps: 'ステップ',
             transparency: '透明度', formatting: '書式',
-            lineBreaks: '改行', fixColors: '色を修正', rgbColors: 'RGB カラー',
+            lineBreaks: '改行', rgbColors: 'RGB カラー',
             stroke: '縁取り', strokeWidth: '縁取りの太さ', font: 'フォント',
             animation: 'アニメーション', none: 'なし',
             animateGrouping: 'アニメーションのまとめ',
@@ -776,6 +958,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: '適用', resetColor: '色をリセット', resetAllChars: 'すべてリセット',
             deletePoint: 'ポイントを削除', resetAllPoints: 'すべてのポイントをリセット',
             character: '文字', transparencyPlaceholder: '透明度 (任意, 0-1)',
+            mixedOrDefault: '— デフォルト —',
             previewHint: '文字をクリックまたはタップして選択します。長押ししてドラッグで複数選択。空白をドラッグして移動。',
             presetName: 'プリセット名:', renamePreset: 'プリセットの新しい名前:',
             deletePreset: 'プリセット「{name}」を削除しますか?',
@@ -792,6 +975,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: '警告: Defaultio 出力では "<" と ">" はスキップされました。',
             confirmSwitchPointsToGradient: 'グラデーション/単色に切り替えると、すべてのグラデーションポイントが削除されます。続行しますか?',
             confirmSwitchGradientToPoints: 'グラデーションポイントに切り替えると、文字ごとの色がリセットされます。続行しますか?',
+            importRichText: 'Rich Text をインポート',
+            importPasteLabel: 'Rich Text コードを貼り付けてください',
+            importReplaceExisting: '既存の文字書式を置き換える',
+            importWarningsEmpty: '',
+            importWarningsCount: '{count} 件の警告付きでインポートしました。詳細はコンソールを確認してください。',
+            importNothingToImport: 'インポートするものがありません — コードが空か、読み取れるテキストが含まれていません。',
+            importBadTag: '認識できない、または不正なタグ: {tag}',
+            cancel: 'キャンセル',
+            importBtn: 'インポート',
             helpTitle: 'ヒントとヘルプ', helpGettingStarted: 'はじめに',
             helpStart1: '左側のテキスト欄に入力します。',
             helpStart2: '右側のプレビューがリアルタイムで更新されます。',
@@ -815,7 +1007,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: '⛶ を押すとプレビューを拡大し、その場で編集・ドラッグ移動できます。',
             helpKeyboard: 'キーボード',
             helpKeyboard1: 'Esc — 拡大プレビューまたはこのウィンドウを閉じます。',
-            helpKeyboard2: 'モーダルの外をクリックしても閉じます。'
+            helpKeyboard2: 'モーダルの外をクリックしても閉じます。',
+            helpRtl: '右から左へ書く言語',
+            helpRtl1: 'アラビア語など右から左へ書く言語は、canvas での1文字ずつの描画のため、プレビューで正しく表示されない場合があります。',
+            helpRtl2: '生成される Rich Text / Defaultio 出力には影響しません。',
+            helpImportRichText: 'Rich Text のインポート',
+            helpImportRichText1: '出力の横の「Rich Text をインポート」をクリックして、既存の Rich Text コードを貼り付けます。',
+            helpImportRichText2: 'Roblox ネイティブのタグ (font, b, i, u, s, stroke) と Defaultio タグの両方に対応しています。',
+            helpImportRichText3: 'インポートしたコードは現在の文字書式を置き換え、その後は通常通り編集できます。'
         },
         ko: {
             language: '언어', theme: '테마', uiMode: '모드',
@@ -824,11 +1023,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'JSON 가져오기', export: '내보내기', exportAll: '모두 내보내기',
             text: '텍스트', userId: '사용자 ID',
             solid: '단색', gradient: '그라데이션', rainbow: '무지개',
+            mode: '모드',
             colorSource: '색상 소스', modeOption: '모드 (단색 / 그라데이션 / 무지개)', gradientPoints: '그라데이션 포인트',
             outputFormat: '출력 형식', robloxRichText: 'Roblox RichText (기본)', defaultioRichText: 'Defaultio RichText 모듈',
             color: '색상', color1: '색상 1', color2: '색상 2', steps: '단계',
             transparency: '투명도', formatting: '서식',
-            lineBreaks: '줄 바꿈', fixColors: '색상 수정', rgbColors: 'RGB 색상',
+            lineBreaks: '줄 바꿈', rgbColors: 'RGB 색상',
             stroke: '외곽선', strokeWidth: '외곽선 두께', font: '글꼴',
             animation: '애니메이션', none: '없음',
             animateGrouping: '애니메이션 그룹',
@@ -842,6 +1042,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: '적용', resetColor: '색상 초기화', resetAllChars: '모두 초기화',
             deletePoint: '포인트 삭제', resetAllPoints: '모든 포인트 초기화',
             character: '문자', transparencyPlaceholder: '투명도 (선택, 0-1)',
+            mixedOrDefault: '— 기본값 —',
             previewHint: '문자를 클릭하거나 탭하여 선택하세요. 길게 눌러 드래그하면 여러 개를 선택할 수 있습니다. 빈 공간을 드래그하면 이동합니다.',
             presetName: '프리셋 이름:', renamePreset: '프리셋 새 이름:',
             deletePreset: '프리셋 "{name}"을(를) 삭제할까요?',
@@ -858,6 +1059,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: '경고: Defaultio 출력에서 "<" 및 ">" 문자가 건너뛰어졌습니다.',
             confirmSwitchPointsToGradient: '그라데이션/단색으로 전환하면 모든 그라데이션 포인트가 삭제됩니다. 계속할까요?',
             confirmSwitchGradientToPoints: '그라데이션 포인트로 전환하면 문자별 색상이 초기화됩니다. 계속할까요?',
+            importRichText: 'Rich Text 가져오기',
+            importPasteLabel: 'Rich Text 코드를 붙여넣으세요',
+            importReplaceExisting: '기존 문자 서식 바꾸기',
+            importWarningsEmpty: '',
+            importWarningsCount: '{count}개의 경고와 함께 가져왔습니다. 자세한 내용은 콘솔을 확인하세요.',
+            importNothingToImport: '가져올 내용이 없습니다 — 코드가 비어 있거나 읽을 수 있는 텍스트가 없습니다.',
+            importBadTag: '알 수 없거나 잘못된 태그: {tag}',
+            cancel: '취소',
+            importBtn: '가져오기',
             helpTitle: '도움말 및 팁', helpGettingStarted: '시작하기',
             helpStart1: '왼쪽 텍스트 필드에 입력하세요.',
             helpStart2: '오른쪽 미리보기가 실시간으로 업데이트됩니다.',
@@ -881,7 +1091,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: '⛶를 눌러 미리보기를 확장하고 그 자리에서 편집 및 드래그로 이동할 수 있습니다.',
             helpKeyboard: '키보드',
             helpKeyboard1: 'Esc — 확장된 미리보기 또는 이 창을 닫습니다.',
-            helpKeyboard2: '모달 바깥을 클릭해도 닫힙니다.'
+            helpKeyboard2: '모달 바깥을 클릭해도 닫힙니다.',
+            helpRtl: '오른쪽에서 왼쪽으로 쓰는 언어',
+            helpRtl1: '아랍어 등 오른쪽에서 왼쪽으로 쓰는 언어는 canvas에서 문자 단위로 직접 그리기 때문에 미리보기에서 올바르게 표시되지 않을 수 있습니다.',
+            helpRtl2: '생성되는 Rich Text / Defaultio 출력에는 영향을 주지 않습니다.',
+            helpImportRichText: 'Rich Text 가져오기',
+            helpImportRichText1: '출력 옆의 Rich Text 가져오기를 클릭하여 기존 Rich Text 코드를 붙여넣으세요.',
+            helpImportRichText2: 'Roblox 네이티브 태그(font, b, i, u, s, stroke)와 Defaultio 태그를 모두 지원합니다.',
+            helpImportRichText3: '가져온 코드는 현재 문자 서식을 대체하며, 이후 정상적으로 편집할 수 있습니다.'
         },
         zh: {
             language: '语言', theme: '主题', uiMode: '模式',
@@ -890,11 +1107,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: '导入 JSON', export: '导出', exportAll: '全部导出',
             text: '文本', userId: '用户 ID',
             solid: '纯色', gradient: '渐变', rainbow: '彩虹',
+            mode: '模式',
             colorSource: '颜色来源', modeOption: '模式 (纯色 / 渐变 / 彩虹)', gradientPoints: '渐变点',
             outputFormat: '输出格式', robloxRichText: 'Roblox RichText (原生)', defaultioRichText: 'Defaultio RichText 模块',
             color: '颜色', color1: '颜色 1', color2: '颜色 2', steps: '步数',
             transparency: '透明度', formatting: '格式',
-            lineBreaks: '换行', fixColors: '修正颜色', rgbColors: 'RGB 颜色',
+            lineBreaks: '换行', rgbColors: 'RGB 颜色',
             stroke: '描边', strokeWidth: '描边宽度', font: '字体',
             animation: '动画', none: '无',
             animateGrouping: '动画分组',
@@ -908,6 +1126,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: '应用', resetColor: '重置颜色', resetAllChars: '重置所有',
             deletePoint: '删除点', resetAllPoints: '重置所有点',
             character: '字符', transparencyPlaceholder: '透明度 (可选, 0-1)',
+            mixedOrDefault: '— 默认 —',
             previewHint: '点击字符以选择。按住并拖动可选择多个。拖动空白处可平移。',
             presetName: '预设名称:', renamePreset: '将预设重命名为:',
             deletePreset: '删除预设 "{name}"?',
@@ -924,6 +1143,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: '警告: Defaultio 输出中的 "<" 和 ">" 字符已被跳过。',
             confirmSwitchPointsToGradient: '切换到渐变/纯色将删除所有渐变点。是否继续?',
             confirmSwitchGradientToPoints: '切换到渐变点将重置逐字颜色。是否继续?',
+            importRichText: '导入 Rich Text',
+            importPasteLabel: '粘贴你的 Rich Text 代码',
+            importReplaceExisting: '替换现有的字符格式',
+            importWarningsEmpty: '',
+            importWarningsCount: '已导入，包含 {count} 条警告。请在控制台查看详细信息。',
+            importNothingToImport: '没有可导入的内容 — 代码为空或不包含可读文本。',
+            importBadTag: '无法识别或格式错误的标签: {tag}',
+            cancel: '取消',
+            importBtn: '导入',
             helpTitle: '帮助与提示', helpGettingStarted: '开始使用',
             helpStart1: '在左侧文本框中输入文本。',
             helpStart2: '右侧预览会实时更新。',
@@ -947,7 +1175,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: '点击 ⛶ 可放大预览，就地编辑并拖动空白处平移。',
             helpKeyboard: '键盘',
             helpKeyboard1: 'Esc — 关闭放大预览或此窗口。',
-            helpKeyboard2: '点击模态框外部也可关闭。'
+            helpKeyboard2: '点击模态框外部也可关闭。',
+            helpRtl: '从右到左的语言',
+            helpRtl1: '从右到左的语言（例如阿拉伯语）由于画布逐字渲染，可能在预览中无法正确显示。',
+            helpRtl2: '生成的 Rich Text / Defaultio 输出不受影响。',
+            helpImportRichText: '导入 Rich Text',
+            helpImportRichText1: '点击输出旁边的“导入 Rich Text”以粘贴现有的 Rich Text 代码。',
+            helpImportRichText2: '同时支持 Roblox 原生标签（font、b、i、u、s、stroke）和 Defaultio 标签。',
+            helpImportRichText3: '导入的代码会替换当前的字符格式，之后可正常编辑。'
         },
         ar: {
             language: 'اللغة', theme: 'السمة', uiMode: 'الوضع',
@@ -956,11 +1191,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'استيراد JSON', export: 'تصدير', exportAll: 'تصدير الكل',
             text: 'النص', userId: 'معرف المستخدم',
             solid: 'لون واحد', gradient: 'تدرج', rainbow: 'قوس قزح',
+            mode: 'الوضع',
             colorSource: 'مصدر اللون', modeOption: 'الوضع (لون واحد / تدرج / قوس قزح)', gradientPoints: 'نقاط التدرج',
             outputFormat: 'صيغة الإخراج', robloxRichText: 'Roblox RichText (أصلي)', defaultioRichText: 'وحدة Defaultio RichText',
             color: 'اللون', color1: 'اللون 1', color2: 'اللون 2', steps: 'الخطوات',
             transparency: 'الشفافية', formatting: 'التنسيق',
-            lineBreaks: 'فواصل الأسطر', fixColors: 'إصلاح الألوان', rgbColors: 'ألوان RGB',
+            lineBreaks: 'فواصل الأسطر', rgbColors: 'ألوان RGB',
             stroke: 'الحدود', strokeWidth: 'سماكة الحدود', font: 'الخط',
             animation: 'الحركة', none: 'بلا',
             animateGrouping: 'تجميع الحركة',
@@ -974,6 +1210,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: 'تطبيق', resetColor: 'إعادة تعيين اللون', resetAllChars: 'إعادة تعيين الكل',
             deletePoint: 'حذف النقطة', resetAllPoints: 'إعادة تعيين كل النقاط',
             character: 'حرف', transparencyPlaceholder: 'الشفافية (اختياري، 0-1)',
+            mixedOrDefault: '— افتراضي —',
             previewHint: 'انقر أو المس الحروف لتحديدها. اضغط مع السحب لتحديد عدة حروف. اسحب المساحة الفارغة للتحريك.',
             presetName: 'اسم الإعداد المسبق:', renamePreset: 'إعادة تسمية الإعداد إلى:',
             deletePreset: 'حذف الإعداد "{name}"?',
@@ -990,6 +1227,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'تحذير: تم تخطي الحرفين "<" و ">" في إخراج Defaultio.',
             confirmSwitchPointsToGradient: 'التبديل إلى التدرج/اللون الواحد سيحذف جميع نقاط التدرج. متابعة؟',
             confirmSwitchGradientToPoints: 'التبديل إلى نقاط التدرج سيعيد تعيين ألوان الحروف. متابعة؟',
+            importRichText: 'استيراد Rich Text',
+            importPasteLabel: 'الصق كود Rich Text هنا',
+            importReplaceExisting: 'استبدال تنسيق الأحرف الحالي',
+            importWarningsEmpty: '',
+            importWarningsCount: 'تم الاستيراد مع {count} تحذير(ات). تحقق من وحدة التحكم للحصول على التفاصيل.',
+            importNothingToImport: 'لا يوجد شيء للاستيراد — الكود فارغ أو لا يحتوي على نص قابل للقراءة.',
+            importBadTag: 'علامة غير معروفة أو مشوهة: {tag}',
+            cancel: 'إلغاء',
+            importBtn: 'استيراد',
             helpTitle: 'نصائح ومساعدة', helpGettingStarted: 'البدء',
             helpStart1: 'اكتب نصك في الحقل على اليسار.',
             helpStart2: 'تتحدث المعاينة على اليمين مباشرة.',
@@ -1013,7 +1259,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: 'اضغط ⛶ لتوسيع المعاينة، والتحرير مباشرة مع سحب المساحة الفارغة للتحريك.',
             helpKeyboard: 'لوحة المفاتيح',
             helpKeyboard1: 'Esc — إغلاق المعاينة الموسعة أو هذه النافذة.',
-            helpKeyboard2: 'النقر خارج النافذة يغلقها أيضاً.'
+            helpKeyboard2: 'النقر خارج النافذة يغلقها أيضاً.',
+            helpRtl: 'اللغات من اليمين إلى اليسار',
+            helpRtl1: 'قد لا تظهر اللغات من اليمين إلى اليسار (مثل العربية) بشكل صحيح في معاينة الرسم بسبب العرض اليدوي حرفاً بحرف.',
+            helpRtl2: 'لا يتأثر الإخراج المُنشأ لـ Rich Text / Defaultio.',
+            helpImportRichText: 'استيراد Rich Text',
+            helpImportRichText1: 'اضغط على استيراد Rich Text بجانب الإخراج للصق كود Rich Text موجود.',
+            helpImportRichText2: 'يتم دعم كلاً من علامات Roblox الأصلية (font, b, i, u, s, stroke) وعلامات Defaultio.',
+            helpImportRichText3: 'يحل الكود المستورد محل تنسيق الأحرف الحالي ويمكن تعديله بشكل طبيعي بعد ذلك.'
         },
         hi: {
             language: 'भाषा', theme: 'थीम', uiMode: 'मोड',
@@ -1022,11 +1275,12 @@ document.addEventListener('DOMContentLoaded', function () {
             import: 'JSON आयात करें', export: 'निर्यात करें', exportAll: 'सभी निर्यात करें',
             text: 'टेक्स्ट', userId: 'यूज़र आईडी',
             solid: 'ठोस', gradient: 'ग्रेडिएंट', rainbow: 'इंद्रधनुष',
+            mode: 'मोड',
             colorSource: 'रंग स्रोत', modeOption: 'मोड (ठोस / ग्रेडिएंट / इंद्रधनुष)', gradientPoints: 'ग्रेडिएंट पॉइंट',
             outputFormat: 'आउटपुट प्रारूप', robloxRichText: 'Roblox RichText (नेटिव)', defaultioRichText: 'Defaultio RichText मॉड्यूल',
             color: 'रंग', color1: 'रंग 1', color2: 'रंग 2', steps: 'चरण',
             transparency: 'पारदर्शिता', formatting: 'फॉर्मेटिंग',
-            lineBreaks: 'लाइन ब्रेक', fixColors: 'रंग ठीक करें', rgbColors: 'RGB रंग',
+            lineBreaks: 'लाइन ब्रेक', rgbColors: 'RGB रंग',
             stroke: 'स्ट्रोक', strokeWidth: 'स्ट्रोक चौड़ाई', font: 'फ़ॉन्ट',
             animation: 'एनिमेशन', none: 'कोई नहीं',
             animateGrouping: 'एनिमेशन समूह',
@@ -1040,6 +1294,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apply: 'लागू करें', resetColor: 'रंग रीसेट', resetAllChars: 'सभी रीसेट करें',
             deletePoint: 'पॉइंट हटाएं', resetAllPoints: 'सभी पॉइंट रीसेट करें',
             character: 'अक्षर', transparencyPlaceholder: 'पारदर्शिता (वैकल्पिक, 0-1)',
+            mixedOrDefault: '— डिफ़ॉल्ट —',
             previewHint: 'चुनने के लिए अक्षरों पर क्लिक या टैप करें। कई चुनने के लिए दबाकर खींचें। खाली जगह खींचकर हिलाएं।',
             presetName: 'प्रीसेट नाम:', renamePreset: 'प्रीसेट का नया नाम:',
             deletePreset: 'प्रीसेट "{name}" हटाएं?',
@@ -1056,6 +1311,15 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'चेतावनी: Defaultio आउटपुट में "<" और ">" अक्षर छोड़ दिए गए।',
             confirmSwitchPointsToGradient: 'ग्रेडिएंट/ठोस पर स्विच करने से सभी ग्रेडिएंट पॉइंट हट जाएंगे। जारी रखें?',
             confirmSwitchGradientToPoints: 'ग्रेडिएंट पॉइंट पर स्विच करने से प्रति-अक्षर रंग रीसेट हो जाएंगे। जारी रखें?',
+            importRichText: 'Rich Text आयात करें',
+            importPasteLabel: 'अपना Rich Text कोड पेस्ट करें',
+            importReplaceExisting: 'मौजूदा अक्षर फ़ॉर्मेटिंग बदलें',
+            importWarningsEmpty: '',
+            importWarningsCount: '{count} चेतावनी(यों) के साथ आयात किया गया। विवरण के लिए कंसोल देखें।',
+            importNothingToImport: 'आयात करने के लिए कुछ नहीं — कोड खाली था या इसमें कोई पठनीय टेक्स्ट नहीं था।',
+            importBadTag: 'अपरिचित या विकृत टैग: {tag}',
+            cancel: 'रद्द करें',
+            importBtn: 'आयात करें',
             helpTitle: 'सुझाव और सहायता', helpGettingStarted: 'शुरू करें',
             helpStart1: 'बाईं ओर टेक्स्ट फ़ील्ड में अपना टेक्स्ट लिखें।',
             helpStart2: 'दाईं ओर पूर्वावलोकन लाइव अपडेट होता है।',
@@ -1079,7 +1343,14 @@ document.addEventListener('DOMContentLoaded', function () {
             helpAdvanced2: 'पूर्वावलोकन बड़ा करने के लिए ⛶ दबाएं, वहीं संपादित करें और खाली जगह खींचकर घुमाएँ।',
             helpKeyboard: 'कीबोर्ड',
             helpKeyboard1: 'Esc — विस्तारित पूर्वावलोकन या यह विंडो बंद करें।',
-            helpKeyboard2: 'मोडल के बाहर क्लिक करने से भी बंद हो जाता है।'
+            helpKeyboard2: 'मोडल के बाहर क्लिक करने से भी बंद हो जाता है।',
+            helpRtl: 'दाएं-से-बाएं भाषाएँ',
+            helpRtl1: 'दाएं-से-बाएं भाषाएँ (जैसे अरबी) कैनवास में प्रति-अक्षर मैनुअल रेंडरिंग के कारण पूर्वावलोकन में सही ढंग से प्रदर्शित नहीं हो सकती हैं।',
+            helpRtl2: 'उत्पन्न Rich Text / Defaultio आउटपुट प्रभावित नहीं होता।',
+            helpImportRichText: 'Rich Text आयात करें',
+            helpImportRichText1: 'आउटपुट के पास Rich Text आयात करें पर क्लिक करें और मौजूदा Rich Text कोड पेस्ट करें।',
+            helpImportRichText2: 'Roblox नेटिव टैग (font, b, i, u, s, stroke) और Defaultio टैग दोनों समर्थित हैं।',
+            helpImportRichText3: 'आयातित कोड वर्तमान अक्षर फ़ॉर्मेटिंग को बदल देता है और इसके बाद सामान्य रूप से संपादित किया जा सकता है।'
         }
     };
 
@@ -1100,12 +1371,24 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
             el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
         });
+        if (elements.charFont && elements.charFont.options.length > 0) {
+            const first = elements.charFont.options[0];
+            if (first && first.value === '') {
+                first.textContent = t('mixedOrDefault');
+            }
+        }
     }
 
     function applyTheme(theme) {
         currentTheme = (theme === 'light') ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', currentTheme);
         if (elements.themeSelect) elements.themeSelect.value = currentTheme;
+    }
+
+    function clearGradientPointsState() {
+        gradientPoints = {};
+        gradientPointTransparency = {};
+        selectedPoint = null;
     }
 
     function applyUiMode(mode) {
@@ -1119,6 +1402,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentUiMode === 'simple') {
             if (elements.colorSource && elements.colorSource.value === 'points') {
                 elements.colorSource.value = 'mode';
+                clearGradientPointsState();
             }
             selectedPoint = null;
             setSelection([]);
@@ -1159,6 +1443,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function isPreviewOpen() {
         return elements.previewOverlay && !elements.previewOverlay.classList.contains('hidden');
+    }
+
+    function isImportOpen() {
+        return elements.importOverlay && !elements.importOverlay.classList.contains('hidden');
     }
 
     function placeEditorsIn(host) {
@@ -1324,6 +1612,9 @@ document.addEventListener('DOMContentLoaded', function () {
             fontCss,
             fontSize,
             globalTrans,
+            globalFontName,
+            globalBold,
+            globalItalic,
             animate
         } = options;
 
@@ -1351,11 +1642,23 @@ document.addEventListener('DOMContentLoaded', function () {
         let gLastSpacePos = -1;
 
         const metricsCache = new Map();
-        const measure = ch => {
-            if (metricsCache.has(ch)) return metricsCache.get(ch);
+        const measure = (ch, glyphIndex) => {
+            const perFont = charFont[glyphIndex];
+            const fontName = perFont || globalFontName || 'SpecialElite';
+            const isBold = charBold[glyphIndex] !== undefined ? !!charBold[glyphIndex] : !!globalBold;
+            const isItalic = charItalic[glyphIndex] !== undefined ? !!charItalic[glyphIndex] : !!globalItalic;
+            const key = (isItalic ? 'i' : '') + (isBold ? 'b' : '') + '|' + fontName + '|' + ch;
+            if (metricsCache.has(key)) return metricsCache.get(key);
+            const prevFont = ctx.font;
+            let spec = '';
+            if (isItalic) spec += 'italic ';
+            if (isBold) spec += 'bold ';
+            spec += fontSize + 'px ' + fontFamilyFor(fontName);
+            ctx.font = spec;
             const m = ctx.measureText(ch === ' ' ? ' ' : ch);
             const w = m.width;
-            metricsCache.set(ch, w);
+            ctx.font = prevFont;
+            metricsCache.set(key, w);
             return w;
         };
 
@@ -1393,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 flushGlyphLine();
                 return;
             }
-            const w = measure(cell.char);
+            const w = measure(cell.char, cell.index);
             if (gLine.length > 0 && gLineWidth + w > maxWidth) {
                 if (gLastSpacePos > 0 && gLastSpacePos < gLine.length) {
                     const carry = gLine.splice(gLastSpacePos + 1);
@@ -1432,6 +1735,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return { glyphs, lines, lineHeight, padding, maxWidth };
     }
 
+    function rainbowGroupIndexFor(index, grouping, state) {
+        if (grouping === 'All') return 0;
+        if (grouping === 'Word') return wordGroupIndex(index, state);
+        return index;
+    }
+
     function drawCanvas(state, options) {
         const { canvas, ctx, glyphs } = state;
         const dpr = state.dpr;
@@ -1462,8 +1771,23 @@ document.addEventListener('DOMContentLoaded', function () {
         drawSelectionRects(state, ctx);
         drawPointMarkers(state, ctx);
 
+        const rainbowActive = animate && animate.style === 'Rainbow';
+        const rainbowTime = rainbowActive ? (performance.now() - animationStart) / 1000 : 0;
+
         glyphs.forEach(g => {
-            const color = colorFn(g.index) || '#ffffff';
+            let color = colorFn(g.index) || '#ffffff';
+
+            if (rainbowActive) {
+                const rgb = hexToRgb(color);
+                if (rgb) {
+                    const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
+                    const groupIndex = rainbowGroupIndexFor(g.index, animate.grouping || 'Letter', state);
+                    const hue = ((hsv.h + rainbowTime * 60 - groupIndex * (animate.stepTime * 60)) % 360 + 360) % 360;
+                    const shifted = hsvToRgb(hue, hsv.s, hsv.v);
+                    color = rgbToHex(shifted.r, shifted.g, shifted.b);
+                }
+            }
+
             const trans = transparencyForIndex(g.index, globalTrans, usePoints);
             const alpha = Math.max(0, Math.min(1, 1 - (trans || 0)));
 
@@ -1481,7 +1805,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fontSpec += fontSize + 'px ' + fontFamily;
 
             let dx = 0, dy = 0, rot = 0, scale = 1, animAlpha = 1;
-            if (animate && animate.style) {
+            if (animate && animate.style && !rainbowActive) {
                 const res = computeAnimation(animate, g, state);
                 dx = res.dx; dy = res.dy; rot = res.rot; scale = res.scale; animAlpha = res.alpha;
             }
@@ -1578,6 +1902,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function computeAnimation(anim, glyph, state) {
         const t = (performance.now() - animationStart) / 1000;
         const style = anim.style;
+        if (!style) {
+            return { dx: 0, dy: 0, rot: 0, scale: 1, alpha: 1 };
+        }
         const grouping = anim.grouping || 'Letter';
         const stepTime = anim.stepTime || 0;
         const stepFreq = anim.stepFreq || 4;
@@ -1597,8 +1924,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         switch (style) {
             case 'Appear': {
-                const cycle = (t / Math.max(0.01, styleTime * 2 + stepTime * 10)) % 1;
-                const local = (cycle * 20 - groupIndex * (stepTime * 5));
+                const totalDuration = Math.max(0.01, styleTime * 2 + stepTime * 10);
+                const local = (t / totalDuration) * 20 - groupIndex * (stepTime * 5);
                 alpha = Math.max(0, Math.min(1, local));
                 break;
             }
@@ -1631,19 +1958,21 @@ document.addEventListener('DOMContentLoaded', function () {
     function wordGroupIndex(index, state) {
         const glyphs = state.glyphs;
         if (!glyphs.length) return 0;
-        let start = index;
-        while (start > 0 && glyphs[start - 1] && glyphs[start - 1].char !== ' ') start--;
+        let pos = -1;
+        for (let i = 0; i < glyphs.length; i++) {
+            if (glyphs[i].index === index) { pos = i; break; }
+        }
+        if (pos < 0) return 0;
+
+        let startPos = pos;
+        while (startPos > 0 && glyphs[startPos - 1].char !== ' ') startPos--;
+
         let count = 0;
         let inWord = false;
-        for (let i = 0; i < glyphs.length; i++) {
+        for (let i = 0; i < startPos; i++) {
             const isSpace = glyphs[i].char === ' ';
-            if (!isSpace && !inWord) {
-                if (i >= start) break;
-                inWord = true;
-                count++;
-            } else if (isSpace) {
-                inWord = false;
-            }
+            if (!isSpace && !inWord) { inWord = true; count++; }
+            else if (isSpace) { inWord = false; }
         }
         return count;
     }
@@ -1674,50 +2003,64 @@ document.addEventListener('DOMContentLoaded', function () {
         state.dpr = dpr;
 
         const rect = canvas.getBoundingClientRect();
-        const cssW = Math.max(rect.width || 600, 100);
-        const logicalW = cssW;
-
-        canvas.width = Math.floor(logicalW * dpr);
-        canvas.height = Math.floor(2000 * dpr);
-        canvas.style.width = logicalW + 'px';
-        canvas.style.height = '2000px';
-
+        const logicalW = Math.max(rect.width || 600, 100);
         const fontSize = opts.fontSize || 24;
-        const layout = layoutText(state, rawText, enableLineBreaks, {
+        const fontCss = fontFamilyFor(opts.globalFontName || elements.fontFamily.value);
+
+        const measureCanvas = document.createElement('canvas');
+        measureCanvas.width = Math.floor(logicalW);
+        measureCanvas.height = 2000;
+        const measureState = {
+            canvas: measureCanvas,
+            ctx: measureCanvas.getContext('2d'),
+            glyphs: [],
+            byIndex: new Map(),
+            lines: [],
+            dpr: 1,
+            font: '',
+            fontSize,
+            lineHeight: Math.round(fontSize * 1.3),
+            padding: 20
+        };
+        layoutText(measureState, rawText, enableLineBreaks, {
             colorFn: opts.colorFn,
             usePoints: opts.usePoints,
-            fontCss: fontFamilyFor(opts.globalFontName || elements.fontFamily.value),
+            fontCss,
             fontSize,
             globalTrans: opts.trans,
+            globalFontName: opts.globalFontName || elements.fontFamily.value,
+            globalBold: elements.bold.checked,
+            globalItalic: elements.italic.checked,
             animate: opts.animate
         });
-
-        const neededH = layout.lines.length > 0
-            ? layout.lines[layout.lines.length - 1].startY + layout.lineHeight + layout.padding
-            : layout.padding * 2 + layout.lineHeight;
+        const linesCount = measureState.lines.length;
+        const neededH = linesCount > 0
+            ? measureState.lines[linesCount - 1].startY + measureState.lineHeight + measureState.padding
+            : measureState.padding * 2 + measureState.lineHeight;
         const finalH = Math.max(neededH, opts.minHeight || 80);
+
         canvas.width = Math.floor(logicalW * dpr);
         canvas.height = Math.floor(finalH * dpr);
         canvas.style.width = logicalW + 'px';
         canvas.style.height = finalH + 'px';
-
-        state.canvas.width = Math.floor(logicalW * dpr);
-        state.canvas.height = Math.floor(finalH * dpr);
-        canvas.width = state.canvas.width;
-        canvas.height = state.canvas.height;
+        state.canvas.width = canvas.width;
+        state.canvas.height = canvas.height;
 
         layoutText(state, rawText, enableLineBreaks, {
             colorFn: opts.colorFn,
             usePoints: opts.usePoints,
-            fontCss: fontFamilyFor(opts.globalFontName || elements.fontFamily.value),
+            fontCss,
             fontSize,
             globalTrans: opts.trans,
+            globalFontName: opts.globalFontName || elements.fontFamily.value,
+            globalBold: elements.bold.checked,
+            globalItalic: elements.italic.checked,
             animate: opts.animate
         });
 
         drawCanvas(state, {
             ...opts,
-            fontCss: fontFamilyFor(opts.globalFontName || elements.fontFamily.value),
+            fontCss,
             fontSize,
             globalFontName: opts.globalFontName || elements.fontFamily.value,
             globalStrokeColor: elements.strokeColor.value,
@@ -1751,20 +2094,48 @@ document.addEventListener('DOMContentLoaded', function () {
         const rect = state.canvas.getBoundingClientRect();
         const x = clientX - rect.left;
         const y = clientY - rect.top;
+
+        const glyphs = state.glyphs;
+        if (!glyphs.length) return null;
+
+        const lines = state.lines;
+        if (!lines.length) return null;
+
+        let targetLine = null;
+        for (const line of lines) {
+            if (y >= line.startY && y <= line.startY + line.height) {
+                targetLine = line;
+                break;
+            }
+        }
+        if (!targetLine) {
+            if (y < lines[0].startY) {
+                targetLine = lines[0];
+            } else {
+                targetLine = lines[lines.length - 1];
+            }
+        }
+
         let best = null;
         let bestDist = Infinity;
-        for (const g of state.glyphs) {
+        for (const idx of targetLine.glyphIndices) {
+            const g = state.byIndex.get(idx);
+            if (!g) continue;
+            if (x >= g.x && x <= g.x + g.w) return g;
             const cx = Math.max(g.x, Math.min(x, g.x + g.w));
-            const cy = Math.max(g.y, Math.min(y, g.y + g.h));
-            const dx = x - cx;
-            const dy = y - cy;
-            const d = dx * dx + dy * dy;
+            const d = (x - cx) * (x - cx);
             if (d < bestDist) {
                 bestDist = d;
                 best = g;
             }
         }
-        return best;
+
+        if (best) return best;
+
+        const firstIdx = targetLine.glyphIndices[0];
+        const lastIdx = targetLine.glyphIndices[targetLine.glyphIndices.length - 1];
+        if (x < (state.byIndex.get(firstIdx)?.x || 0)) return state.byIndex.get(firstIdx) || null;
+        return state.byIndex.get(lastIdx) || null;
     }
 
     function setSelectionFromRange(a, b) {
@@ -1897,94 +2268,36 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.addEventListener('mousemove', e => {
-        if (!pointerDown || pointerMode !== 'select') return;
-        const canvases = [elements.preview, elements.previewLarge].filter(Boolean);
-        for (const canvas of canvases) {
-            const rect = canvas.getBoundingClientRect();
-            if (e.clientX >= rect.left && e.clientX <= rect.right &&
-                e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                const state = getCanvasState(canvas);
-                const glyph = findGlyphAt(state, e.clientX, e.clientY);
-                if (glyph) {
-                    selectionFocus = glyph.index;
-                    if (pointerMode === 'select-remove') {
-                        const lo = Math.min(selectionAnchor, selectionFocus);
-                        const hi = Math.max(selectionAnchor, selectionFocus);
-                        const next = new Set(selectedChars);
-                        for (let i = lo; i <= hi; i++) next.delete(i);
-                        setSelection([...next]);
-                    } else {
-                        setSelectionFromRange(selectionAnchor, selectionFocus);
-                    }
-                }
-                break;
-            }
-        }
-    });
+        if (!pointerDown || (pointerMode !== 'select' && pointerMode !== 'select-remove')) return;
 
-    document.addEventListener('mouseup', () => {
-        pointerDown = false;
-        pointerMode = null;
-    });
+        const activeCanvas = isPreviewOpen() ? elements.previewLarge : elements.preview;
+        if (!activeCanvas) return;
+        const state = getCanvasState(activeCanvas);
+        if (!state.glyphs.length) return;
 
-    document.addEventListener('keydown', e => {
-        const isTyping = document.activeElement &&
-            (document.activeElement.tagName === 'INPUT' ||
-                document.activeElement.tagName === 'TEXTAREA' ||
-                document.activeElement.tagName === 'SELECT');
-        if (isTyping) return;
+        const rect = activeCanvas.getBoundingClientRect();
+        const cx = Math.max(rect.left, Math.min(e.clientX, rect.right - 1));
+        const cy = Math.max(rect.top, Math.min(e.clientY, rect.bottom - 1));
 
-        if (e.key === 'Escape') {
-            setSelection([]);
-            selectionAnchor = null;
-            selectionFocus = null;
-            return;
-        }
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
-            e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            if (selectedChars.size === 0) return;
-            const arr = [...selectedChars].sort((a, b) => a - b);
-            const cur = e.shiftKey ? arr[arr.length - 1] : arr[0];
-            let next = cur;
-            if (e.key === 'ArrowLeft') next = Math.max(0, cur - 1);
-            if (e.key === 'ArrowRight') next = Math.min(currentRawText.length - 1, cur + 1);
-            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                const canvases = [elements.preview, elements.previewLarge].filter(Boolean);
-                for (const canvas of canvases) {
-                    const state = getCanvasState(canvas);
-                    const g = state.byIndex.get(cur);
-                    if (!g) continue;
-                    const targetLine = g.line + (e.key === 'ArrowUp' ? -1 : 1);
-                    const line = state.lines.find(l => l.lineIndex === targetLine);
-                    if (!line) break;
-                    const targetGlyphs = line.glyphIndices
-                        .map(i => state.byIndex.get(i))
-                        .filter(Boolean);
-                    if (targetGlyphs.length === 0) break;
-                    let closest = targetGlyphs[0];
-                    let bestDx = Math.abs(closest.x - g.x);
-                    targetGlyphs.forEach(tg => {
-                        const dx = Math.abs(tg.x - g.x);
-                        if (dx < bestDx) { bestDx = dx; closest = tg; }
-                    });
-                    next = closest.index;
-                    break;
-                }
-            }
-            if (e.shiftKey && selectionAnchor !== null) {
-                selectionFocus = next;
-                setSelectionFromRange(selectionAnchor, selectionFocus);
-            } else {
-                selectionAnchor = next;
-                selectionFocus = next;
-                setSelection([next]);
-            }
-            e.preventDefault();
+        const glyph = findGlyphAt(state, cx, cy);
+        if (!glyph) return;
+
+        selectionFocus = glyph.index;
+        if (pointerMode === 'select-remove') {
+            const lo = Math.min(selectionAnchor, selectionFocus);
+            const hi = Math.max(selectionAnchor, selectionFocus);
+            const next = new Set(selectedChars);
+            for (let i = lo; i <= hi; i++) next.delete(i);
+            setSelection([...next]);
+        } else {
+            setSelectionFromRange(selectionAnchor, selectionFocus);
         }
     });
 
     function setSelection(indexes) {
         selectedChars = new Set(indexes);
+        charStrokeColorDirty = false;
+        charStrokeThicknessDirty = false;
         updateCharEditor();
         redrawCanvasesOnly();
     }
@@ -2126,8 +2439,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const strokes = new Set(arr.map(i => charStrokeColor[i] || ''));
         if (strokes.size === 1) {
             const s = [...strokes][0];
-            if (s) { elements.charStrokeColor.value = s; elements.charStrokeColorHex.value = s; }
+            if (s) {
+                elements.charStrokeColor.value = s;
+                elements.charStrokeColorHex.value = s;
+                charStrokeColorLastShown = s;
+            } else {
+                charStrokeColorLastShown = null;
+            }
+        } else {
+            charStrokeColorLastShown = null;
         }
+        charStrokeColorDirty = false;
 
         const thicknesses = new Set(arr.map(i =>
             charStrokeThickness[i] !== undefined ? String(roundTransparency(charStrokeThickness[i])) : ''
@@ -2137,8 +2459,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (v) {
                 elements.charStrokeThickness.value = v;
                 elements.charStrokeThicknessValue.textContent = v;
+                charStrokeThicknessLastShown = v;
+            } else {
+                charStrokeThicknessLastShown = null;
             }
+        } else {
+            charStrokeThicknessLastShown = null;
         }
+        charStrokeThicknessDirty = false;
     }
 
     function updatePointsEditor() {
@@ -2178,9 +2506,10 @@ document.addEventListener('DOMContentLoaded', function () {
             setSelectedPoint(index);
             setSelection([]);
         } else {
-            const color = isValidHex(elements.pointColorHex.value)
+            const hasAnyPoint = Object.keys(gradientPoints).length > 0;
+            const color = hasAnyPoint && isValidHex(elements.pointColorHex.value)
                 ? elements.pointColorHex.value
-                : elements.pointColor.value;
+                : elements.gradientColor1.value;
             gradientPoints[index] = color;
             setSelectedPoint(index);
             setSelection([]);
@@ -2191,9 +2520,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function makePointsFromSelectedChars() {
         if (selectedChars.size === 0) return;
         const raw = elements.textInput.value;
-        const color = isValidHex(elements.pointColorHex.value)
+        const hasAnyPoint = Object.keys(gradientPoints).length > 0;
+        const color = hasAnyPoint && isValidHex(elements.pointColorHex.value)
             ? elements.pointColorHex.value
-            : elements.pointColor.value;
+            : elements.gradientColor1.value;
 
         selectedChars.forEach(i => {
             if (raw[i] === '\n') return;
@@ -2228,6 +2558,21 @@ document.addEventListener('DOMContentLoaded', function () {
     syncCharColorInputs(elements.charColor, elements.charColorHex);
     syncCharColorInputs(elements.charStrokeColor, elements.charStrokeColorHex);
     syncCharColorInputs(elements.pointColor, elements.pointColorHex);
+
+    const markStrokeColorDirty = () => {
+        if (charStrokeColorLastShown === null) { charStrokeColorDirty = true; return; }
+        const current = elements.charStrokeColorHex.value;
+        if (current !== charStrokeColorLastShown) charStrokeColorDirty = true;
+    };
+    elements.charStrokeColor.addEventListener('input', markStrokeColorDirty);
+    elements.charStrokeColorHex.addEventListener('input', markStrokeColorDirty);
+
+    const markStrokeThicknessDirty = () => {
+        if (charStrokeThicknessLastShown === null) { charStrokeThicknessDirty = true; return; }
+        const current = elements.charStrokeThickness.value;
+        if (String(current) !== String(charStrokeThicknessLastShown)) charStrokeThicknessDirty = true;
+    };
+    elements.charStrokeThickness.addEventListener('input', markStrokeThicknessDirty);
 
     elements.charStrokeThickness.addEventListener('input', () => {
         elements.charStrokeThicknessValue.textContent = elements.charStrokeThickness.value;
@@ -2271,13 +2616,17 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedChars.forEach(i => { charFont[i] = chosenFont; });
         }
 
-        const chosenStroke = isValidHex(elements.charStrokeColorHex.value)
-            ? elements.charStrokeColorHex.value
-            : elements.charStrokeColor.value;
-        selectedChars.forEach(i => { charStrokeColor[i] = chosenStroke; });
+        if (charStrokeColorDirty) {
+            const chosenStroke = isValidHex(elements.charStrokeColorHex.value)
+                ? elements.charStrokeColorHex.value
+                : elements.charStrokeColor.value;
+            selectedChars.forEach(i => { charStrokeColor[i] = chosenStroke; });
+        }
 
-        const chosenThickness = parseFloat(elements.charStrokeThickness.value);
-        selectedChars.forEach(i => { charStrokeThickness[i] = chosenThickness; });
+        if (charStrokeThicknessDirty) {
+            const chosenThickness = parseFloat(elements.charStrokeThickness.value);
+            selectedChars.forEach(i => { charStrokeThickness[i] = chosenThickness; });
+        }
 
         if (!hasTrans) {
             selectedChars.forEach(i => { charColors[i] = color; });
@@ -2482,12 +2831,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        let i = 0;
-        for (const ch of rawText) {
+        for (let i = 0; i < rawText.length; i++) {
+            const ch = rawText[i];
             if (ch === '\n') {
                 if (enableLineBreaks) { closeAnimation(); out += '\n'; }
                 else { out += ' '; }
-                i++;
                 continue;
             }
             const hex = colorFn(i);
@@ -2499,9 +2847,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 lastColor = color;
             }
             openAnimation();
-            if (ch === '<' || ch === '>') { skippedChars = true; i++; continue; }
+            if (ch === '<' || ch === '>') { skippedChars = true; continue; }
             out += ch;
-            i++;
         }
         closeAnimation();
         if (lastColor !== null) out += '<Color=/>';
@@ -2692,17 +3039,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 animateStyleTime: parseFloat(elements.animateStyleTime.value)
             });
             elements.outputDefaultio.value = defaultioResult.text;
-            if (defaultioResult.skippedChars) console.warn(t('defaultioSkipChars'));
+
+            if (defaultioResult.skippedChars) {
+                if (!window.__defaultioWarned) {
+                    window.__defaultioWarned = true;
+                    alert(t('defaultioSkipChars'));
+                }
+                elements.outputDefaultio.classList.add('has-warning');
+                elements.outputDefaultio.title = t('defaultioSkipChars');
+            } else {
+                window.__defaultioWarned = false;
+                elements.outputDefaultio.classList.remove('has-warning');
+                elements.outputDefaultio.title = '';
+            }
 
             const luaSnippet =
                 'local richText = require(script.Parent:FindFirstChild("RichText") or script.Parent.Parent)\n' +
-                'local text = "' + defaultioResult.text.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n' +
+                'local text = "' + defaultioResult.text
+                    .replace(/\\/g, '\\\\')
+                    .replace(/"/g, '\\"')
+                    .replace(/\r/g, '')
+                    .replace(/\n/g, '\\n') + '"\n' +
                 'local textObject = richText:New(frame, text, {Font = "' + globalFont + '"})\n' +
                 'textObject:Animate(true)';
             elements.outputJson.value = luaSnippet;
         } else {
             elements.outputDefaultio.value = '';
-            elements.outputJson.value = '"' + userId + '": "' + richText + '"\n\n,';
+            elements.outputDefaultio.classList.remove('has-warning');
+            elements.outputDefaultio.title = '';
+            const jsonSafeRichText = JSON.stringify(richText).slice(1, -1);
+            elements.outputJson.value = '"' + userId + '": "' + jsonSafeRichText + '"\n\n,';
         }
 
         const animateState = getAnimateState();
@@ -2721,6 +3087,409 @@ document.addEventListener('DOMContentLoaded', function () {
         updatePointsEditor();
         updateCharEditor();
         saveState();
+    }
+
+    function parseRichText(input) {
+        const warnings = [];
+        const state = {
+            text: '',
+            perChar: [],
+            globalFont: null,
+            globalStrokeColor: null,
+            globalStrokeThickness: null,
+            globalTransparency: null,
+            animateStyle: null,
+            animateGrouping: null,
+            animateStepTime: null,
+            animateStepFrequency: null,
+            animateStyleTime: null,
+            hasLineBreak: false
+        };
+
+        const openStack = [];
+
+        const defaultChar = () => ({
+            bold: false,
+            italic: false,
+            underline: false,
+            strike: false,
+            color: null,
+            transparency: null,
+            font: null,
+            strokeColor: null,
+            strokeThickness: null
+        });
+
+        const recomputeCurrent = () => {
+            const c = defaultChar();
+            for (const frame of openStack) {
+                if (frame.bold) c.bold = true;
+                if (frame.italic) c.italic = true;
+                if (frame.underline) c.underline = true;
+                if (frame.strike) c.strike = true;
+                if (frame.color) c.color = frame.color;
+                if (frame.transparency !== null && frame.transparency !== undefined) c.transparency = frame.transparency;
+                if (frame.font) c.font = frame.font;
+                if (frame.strokeColor) c.strokeColor = frame.strokeColor;
+                if (frame.strokeThickness !== null && frame.strokeThickness !== undefined) c.strokeThickness = frame.strokeThickness;
+            }
+            return c;
+        };
+
+        const pushChar = (ch) => {
+            const c = recomputeCurrent();
+            state.text += ch;
+            state.perChar.push(c);
+        };
+
+        const tagRegex = /<\/?[A-Za-z][^>]*\/?>/g;
+        let lastIndex = 0;
+        let match;
+
+        const attrRegex = /([A-Za-z][A-Za-z0-9]*)\s*=\s*(?:'([^']*)'|"([^"]*)"|([^\s/>]+))/g;
+
+        const parseAttrs = (s) => {
+            const out = {};
+            let m;
+            attrRegex.lastIndex = 0;
+            while ((m = attrRegex.exec(s)) !== null) {
+                out[m[1].toLowerCase()] = m[2] !== undefined ? m[2] : (m[3] !== undefined ? m[3] : m[4]);
+            }
+            return out;
+        };
+
+        const handleDefaultioTag = (tagContent, isSelfClose) => {
+            const eqIdx = tagContent.indexOf('=');
+            if (eqIdx < 0) return false;
+            const key = tagContent.slice(0, eqIdx).trim();
+            const val = tagContent.slice(eqIdx + 1).trim();
+
+            switch (key) {
+                case 'Font':
+                    if (val) {
+                        openStack.push({ font: val });
+                        if (openStack.length === 1) state.globalFont = val;
+                    }
+                    return true;
+                case 'Color': {
+                    const hex = defaultioColorToHex(val);
+                    if (hex) openStack.push({ color: hex });
+                    return true;
+                }
+                case 'StrokeColor': {
+                    const hex = defaultioColorToHex(val);
+                    if (hex) {
+                        openStack.push({ strokeColor: hex });
+                        if (openStack.length === 1) state.globalStrokeColor = hex;
+                    }
+                    return true;
+                }
+                case 'TextStrokeTransparency': {
+                    if (parseFloat(val) === 0) {
+                        openStack.push({ strokeThickness: 2 });
+                        if (openStack.length === 1) state.globalStrokeThickness = 2;
+                    }
+                    return true;
+                }
+                case 'TextTransparency': {
+                    const n = parseFloat(val);
+                    if (!isNaN(n)) {
+                        openStack.push({ transparency: n });
+                        if (openStack.length === 1) state.globalTransparency = n;
+                    }
+                    return true;
+                }
+                case 'AnimateStyle':
+                    if (isSelfClose) return true;
+                    state.animateStyle = val || null;
+                    return true;
+                case 'AnimateStepGrouping':
+                    state.animateGrouping = val || null;
+                    return true;
+                case 'AnimateStepTime': {
+                    const n = parseFloat(val);
+                    if (!isNaN(n)) state.animateStepTime = n;
+                    return true;
+                }
+                case 'AnimateStepFrequency': {
+                    const n = parseFloat(val);
+                    if (!isNaN(n)) state.animateStepFrequency = n;
+                    return true;
+                }
+                case 'AnimateStyleTime': {
+                    const n = parseFloat(val);
+                    if (!isNaN(n)) state.animateStyleTime = n;
+                    return true;
+                }
+                default:
+                    return false;
+            }
+        };
+
+        while ((match = tagRegex.exec(input)) !== null) {
+            const between = input.slice(lastIndex, match.index);
+            if (between) {
+                const decoded = decodeHtmlEntities(between);
+                for (const ch of decoded) pushChar(ch);
+            }
+
+            const rawTag = match[0];
+            const inner = rawTag.slice(1, -1);
+            const isSelfClosing = inner.endsWith('/') || /^<br\s*\/?>$/i.test(rawTag);
+            const trimmed = inner.replace(/\/$/, '').trim();
+
+            if (/^br$/i.test(trimmed)) {
+                state.hasLineBreak = true;
+                pushChar('\n');
+            } else if (/^b$/i.test(trimmed)) {
+                openStack.push({ bold: true });
+            } else if (/^\/b$/i.test(trimmed)) {
+                for (let i = openStack.length - 1; i >= 0; i--) {
+                    if (openStack[i].bold) { openStack.splice(i, 1); break; }
+                }
+            } else if (/^i$/i.test(trimmed)) {
+                openStack.push({ italic: true });
+            } else if (/^\/i$/i.test(trimmed)) {
+                for (let i = openStack.length - 1; i >= 0; i--) {
+                    if (openStack[i].italic) { openStack.splice(i, 1); break; }
+                }
+            } else if (/^u$/i.test(trimmed)) {
+                openStack.push({ underline: true });
+            } else if (/^\/u$/i.test(trimmed)) {
+                for (let i = openStack.length - 1; i >= 0; i--) {
+                    if (openStack[i].underline) { openStack.splice(i, 1); break; }
+                }
+            } else if (/^s$/i.test(trimmed)) {
+                openStack.push({ strike: true });
+            } else if (/^\/s$/i.test(trimmed)) {
+                for (let i = openStack.length - 1; i >= 0; i--) {
+                    if (openStack[i].strike) { openStack.splice(i, 1); break; }
+                }
+            } else if (/^font(\s|$)/i.test(trimmed) || /^\/font$/i.test(trimmed)) {
+                if (/^\/font$/i.test(trimmed)) {
+                    for (let i = openStack.length - 1; i >= 0; i--) {
+                        if (openStack[i].font !== undefined || openStack[i].color !== undefined || openStack[i].transparency !== undefined) {
+                            openStack.splice(i, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    const attrs = parseAttrs(trimmed);
+                    const frame = {};
+                    if (attrs.face) frame.font = attrs.face;
+                    if (attrs.color) {
+                        const hex = parseCssColorToHex(attrs.color);
+                        if (hex) frame.color = hex;
+                    }
+                    if (attrs.transparency !== undefined) {
+                        const n = parseFloat(attrs.transparency);
+                        if (!isNaN(n)) frame.transparency = n;
+                    }
+                    openStack.push(frame);
+                }
+            } else if (/^stroke(\s|$)/i.test(trimmed) || /^\/stroke$/i.test(trimmed)) {
+                if (/^\/stroke$/i.test(trimmed)) {
+                    for (let i = openStack.length - 1; i >= 0; i--) {
+                        if (openStack[i].strokeColor !== undefined || openStack[i].strokeThickness !== undefined) {
+                            openStack.splice(i, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    const attrs = parseAttrs(trimmed);
+                    const frame = {};
+                    if (attrs.color) {
+                        const hex = parseCssColorToHex(attrs.color);
+                        if (hex) frame.strokeColor = hex;
+                    }
+                    if (attrs.thickness !== undefined) {
+                        const n = parseFloat(attrs.thickness);
+                        if (!isNaN(n)) frame.strokeThickness = n;
+                    }
+                    openStack.push(frame);
+                }
+            } else if (/^[A-Z][A-Za-z]*=/.test(trimmed) || /^[A-Z][A-Za-z]*=\//.test(trimmed)) {
+                if (trimmed.endsWith('=/') || trimmed.endsWith('=/>')) {
+                    const key = trimmed.replace(/=\/?>?$/, '');
+                    if (/^AnimateStyle$/i.test(key)) {
+                        state.animateStyle = null;
+                    }
+                    continue;
+                }
+                if (!handleDefaultioTag(trimmed, isSelfClosing)) {
+                    warnings.push(t('importBadTag').replace('{tag}', rawTag));
+                }
+            } else if (isSelfClosing && !/^br$/i.test(trimmed)) {
+                warnings.push(t('importBadTag').replace('{tag}', rawTag));
+            } else {
+                warnings.push(t('importBadTag').replace('{tag}', rawTag));
+            }
+
+            lastIndex = match.index + rawTag.length;
+        }
+
+        const tail = input.slice(lastIndex);
+        if (tail) {
+            const decoded = decodeHtmlEntities(tail);
+            for (const ch of decoded) pushChar(ch);
+        }
+
+        return { state, warnings };
+    }
+
+    function applyImportedRichText(parsed, replaceExisting) {
+        if (!parsed || !parsed.state) return { ok: false, warnings: [] };
+        const { state, warnings } = parsed;
+
+        if (!state.text) {
+            return { ok: false, warnings };
+        }
+
+        if (replaceExisting) {
+            charColors = {};
+            charTransparency = {};
+            charBold = {};
+            charItalic = {};
+            charUnderline = {};
+            charStrike = {};
+            charFont = {};
+            charStrokeColor = {};
+            charStrokeThickness = {};
+            gradientPoints = {};
+            gradientPointTransparency = {};
+            selectedPoint = null;
+        }
+
+        elements.textInput.value = state.text;
+
+        for (let i = 0; i < state.perChar.length; i++) {
+            const c = state.perChar[i];
+            const idx = i;
+
+            if (c.bold) charBold[idx] = true;
+            if (c.italic) charItalic[idx] = true;
+            if (c.underline) charUnderline[idx] = true;
+            if (c.strike) charStrike[idx] = true;
+
+            if (c.color) charColors[idx] = c.color;
+            if (c.transparency !== null && c.transparency !== undefined) {
+                charTransparency[idx] = c.transparency;
+            }
+            if (c.font) charFont[idx] = c.font;
+            if (c.strokeColor) charStrokeColor[idx] = c.strokeColor;
+            if (c.strokeThickness !== null && c.strokeThickness !== undefined) {
+                charStrokeThickness[idx] = c.strokeThickness;
+            }
+        }
+
+        if (state.globalFont) elements.fontFamily.value = state.globalFont;
+        if (state.globalStrokeColor) {
+            elements.strokeColor.value = state.globalStrokeColor;
+            elements.strokeColorHex.value = state.globalStrokeColor;
+        }
+        if (state.globalStrokeThickness !== null && state.globalStrokeThickness !== undefined) {
+            elements.strokeThickness.value = state.globalStrokeThickness;
+            elements.strokeThicknessValue.textContent = state.globalStrokeThickness;
+        }
+        if (state.globalTransparency !== null && state.globalTransparency !== undefined) {
+            elements.transparency.value = state.globalTransparency;
+            elements.transparencyValue.textContent = state.globalTransparency;
+        }
+        if (state.animateStyle !== null && state.animateStyle !== undefined) {
+            elements.animateStyle.value = state.animateStyle;
+        }
+        if (state.animateGrouping) elements.animateGrouping.value = state.animateGrouping;
+        if (state.animateStepTime !== null && state.animateStepTime !== undefined) {
+            elements.animateStepTime.value = state.animateStepTime;
+            elements.animateStepTimeValue.textContent = state.animateStepTime;
+        }
+        if (state.animateStepFrequency !== null && state.animateStepFrequency !== undefined) {
+            elements.animateStepFrequency.value = state.animateStepFrequency;
+        }
+        if (state.animateStyleTime !== null && state.animateStyleTime !== undefined) {
+            elements.animateStyleTime.value = state.animateStyleTime;
+            elements.animateStyleTimeValue.textContent = state.animateStyleTime;
+        }
+
+        if (state.hasLineBreak) {
+            elements.lineBreaks.checked = true;
+        }
+
+        selectedChars = new Set();
+        selectionAnchor = null;
+        selectionFocus = null;
+
+        prevText = elements.textInput.value;
+
+        return { ok: true, warnings };
+    }
+
+    function openImport() {
+        if (!elements.importOverlay) return;
+        elements.importOverlay.classList.remove('hidden');
+        if (elements.importTextarea) {
+            elements.importTextarea.value = '';
+            elements.importTextarea.focus();
+        }
+        if (elements.importWarnings) {
+            elements.importWarnings.textContent = '';
+        }
+    }
+
+    function closeImport() {
+        if (!elements.importOverlay) return;
+        elements.importOverlay.classList.add('hidden');
+    }
+
+    if (elements.importRichTextBtn) {
+        elements.importRichTextBtn.addEventListener('click', openImport);
+    }
+    if (elements.importClose) {
+        elements.importClose.addEventListener('click', closeImport);
+    }
+    if (elements.importCancel) {
+        elements.importCancel.addEventListener('click', closeImport);
+    }
+    if (elements.importOverlay) {
+        elements.importOverlay.addEventListener('click', e => {
+            if (e.target === elements.importOverlay) closeImport();
+        });
+    }
+    if (elements.importConfirm) {
+        elements.importConfirm.addEventListener('click', () => {
+            const raw = elements.importTextarea ? elements.importTextarea.value : '';
+            if (!raw.trim()) {
+                alert(t('importNothingToImport'));
+                return;
+            }
+
+            const replaceExisting = elements.importClearExisting
+                ? elements.importClearExisting.checked
+                : true;
+
+            const parsed = parseRichText(raw);
+            const result = applyImportedRichText(parsed, replaceExisting);
+
+            if (!result.ok) {
+                alert(t('importNothingToImport'));
+                return;
+            }
+
+            if (result.warnings && result.warnings.length > 0) {
+                if (elements.importWarnings) {
+                    elements.importWarnings.textContent = t('importWarningsCount').replace('{count}', result.warnings.length);
+                }
+                result.warnings.forEach(w => console.warn(w));
+                setTimeout(() => {
+                    closeImport();
+                    generate();
+                    refreshPresetSelect && refreshPresetSelect();
+                }, 700);
+            } else {
+                closeImport();
+                generate();
+            }
+        });
     }
 
     const MAX_USER_ID_LENGTH = 20;
@@ -2837,8 +3606,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (firstChar && firstChar !== '\n') gradientPoints[0] = elements.gradientColor1.value;
             }
         } else {
-            gradientPoints = {};
-            gradientPointTransparency = {};
+            clearGradientPointsState();
         }
         toggleColorSourceControls();
         generate();
@@ -2846,7 +3614,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     elements.outputFormat.addEventListener('change', () => { toggleDefaultioControls(); generate(); });
 
-    ['bold', 'italic', 'underline', 'strikethrough', 'lineBreaks', 'fixColors', 'rgbColors'].forEach(id => {
+    ['bold', 'italic', 'underline', 'strikethrough', 'lineBreaks', 'rgbColors'].forEach(id => {
         elements[id].addEventListener('change', generate);
     });
 
@@ -2911,7 +3679,6 @@ document.addEventListener('DOMContentLoaded', function () {
     syncGradientTypeFromMode();
     elements.solidControls.classList.add('hidden');
     elements.gradientControls.style.display = 'block';
-    elements.fixColors.checked = false;
 
     function openHelp() { elements.helpOverlay.classList.remove('hidden'); }
     function closeHelp() { elements.helpOverlay.classList.add('hidden'); }
@@ -3030,8 +3797,21 @@ document.addEventListener('DOMContentLoaded', function () {
             resetPan();
         });
     }
-    document.addEventListener('mousemove', e => { if (isPanning) movePan(e.clientX, e.clientY); });
-    document.addEventListener('mouseup', () => { if (isPanning) endPan(); });
+
+    window.addEventListener('blur', () => {
+        if (isPanning) endPan();
+        pointerDown = false;
+        pointerMode = null;
+    });
+    document.addEventListener('mousemove', e => {
+        if (isPanning && e.buttons === 0) { endPan(); return; }
+        if (isPanning) movePan(e.clientX, e.clientY);
+    });
+    document.addEventListener('mouseup', () => {
+        pointerDown = false;
+        pointerMode = null;
+        if (isPanning) endPan();
+    });
     document.addEventListener('touchmove', e => {
         if (!isPanning) return;
         const touch = e.touches[0];
@@ -3045,11 +3825,74 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         endPan();
     });
+    document.addEventListener('touchcancel', () => {
+        if (isPanning) endPan();
+        pointerDown = false;
+        pointerMode = null;
+    });
 
     document.addEventListener('keydown', e => {
+        const isTyping = document.activeElement &&
+            (document.activeElement.tagName === 'INPUT' ||
+                document.activeElement.tagName === 'TEXTAREA' ||
+                document.activeElement.tagName === 'SELECT');
+
         if (e.key === 'Escape') {
             if (elements.helpOverlay && !elements.helpOverlay.classList.contains('hidden')) { closeHelp(); return; }
+            if (elements.importOverlay && !elements.importOverlay.classList.contains('hidden')) { closeImport(); return; }
             if (elements.previewOverlay && !elements.previewOverlay.classList.contains('hidden')) { closePreview(); return; }
+            if (isTyping) return;
+            setSelection([]);
+            selectionAnchor = null;
+            selectionFocus = null;
+            return;
+        }
+
+        if (isTyping) return;
+
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+            e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            if (selectedChars.size === 0) return;
+            const arr = [...selectedChars].sort((a, b) => a - b);
+            const cur = e.shiftKey ? arr[arr.length - 1] : arr[0];
+            let next = cur;
+            if (e.key === 'ArrowLeft') next = Math.max(0, cur - 1);
+            if (e.key === 'ArrowRight') next = Math.min(currentRawText.length - 1, cur + 1);
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                const activeCanvas = isPreviewOpen() ? elements.previewLarge : elements.preview;
+                const fallbackCanvas = isPreviewOpen() ? elements.preview : elements.previewLarge;
+                const tryCanvas = canvas => {
+                    if (!canvas) return false;
+                    const state = getCanvasState(canvas);
+                    const g = state.byIndex.get(cur);
+                    if (!g) return false;
+                    const targetLine = g.line + (e.key === 'ArrowUp' ? -1 : 1);
+                    const line = state.lines.find(l => l.lineIndex === targetLine);
+                    if (!line) return false;
+                    const targetGlyphs = line.glyphIndices
+                        .map(i => state.byIndex.get(i))
+                        .filter(Boolean);
+                    if (targetGlyphs.length === 0) return false;
+                    let closest = targetGlyphs[0];
+                    let bestDx = Math.abs(closest.x - g.x);
+                    targetGlyphs.forEach(tg => {
+                        const dx = Math.abs(tg.x - g.x);
+                        if (dx < bestDx) { bestDx = dx; closest = tg; }
+                    });
+                    next = closest.index;
+                    return true;
+                };
+                if (!tryCanvas(activeCanvas)) tryCanvas(fallbackCanvas);
+            }
+            if (e.shiftKey && selectionAnchor !== null) {
+                selectionFocus = next;
+                setSelectionFromRange(selectionAnchor, selectionFocus);
+            } else {
+                selectionAnchor = next;
+                selectionFocus = next;
+                setSelection([next]);
+            }
+            e.preventDefault();
         }
     });
 
@@ -3076,7 +3919,6 @@ document.addEventListener('DOMContentLoaded', function () {
             underline: elements.underline.checked,
             strikethrough: elements.strikethrough.checked,
             lineBreaks: elements.lineBreaks.checked,
-            fixColors: elements.fixColors.checked,
             rgbColors: elements.rgbColors.checked,
             strokeColor: elements.strokeColor.value,
             strokeThickness: elements.strokeThickness.value,
@@ -3111,7 +3953,6 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.underline.checked = !!s.underline;
             elements.strikethrough.checked = !!s.strikethrough;
             elements.lineBreaks.checked = !!s.lineBreaks;
-            elements.fixColors.checked = !!s.fixColors;
             elements.rgbColors.checked = !!s.rgbColors;
             if (s.strokeColor) { elements.strokeColor.value = s.strokeColor; elements.strokeColorHex.value = s.strokeColor; }
             if (s.strokeThickness !== undefined) { elements.strokeThickness.value = s.strokeThickness; elements.strokeThicknessValue.textContent = s.strokeThickness; }
@@ -3195,13 +4036,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const result = {};
         if (!data || typeof data !== 'object') return result;
         if (data.name && data.state && typeof data.state === 'object') {
-            result[String(data.name)] = data.state; return result;
+            if (!isUnsafeKey(String(data.name))) {
+                result[String(data.name)] = data.state;
+            }
+            return result;
         }
         const knownKeys = ['text', 'colorMode', 'colorSource', 'outputFormat', 'fontFamily', 'charColors', 'gradientPoints'];
         if (knownKeys.some(k => data[k] !== undefined)) {
-            result[fallbackName || 'Imported'] = data; return result;
+            if (!isUnsafeKey(fallbackName || 'Imported')) {
+                result[fallbackName || 'Imported'] = data;
+            }
+            return result;
         }
         Object.keys(data).forEach(key => {
+            if (isUnsafeKey(key)) return;
             const value = data[key];
             if (value && typeof value === 'object') {
                 result[key] = (value.state && typeof value.state === 'object') ? value.state : value;
@@ -3231,7 +4079,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     let overwritten = 0;
                     keys.forEach(name => { if (presets[name]) overwritten++; });
                     if (overwritten > 0 && !confirm(t('presetExists') + ' (' + overwritten + ')')) return;
-                    keys.forEach(name => { presets[name] = parsed[name]; });
+                    keys.forEach(name => {
+                        if (isUnsafeKey(name)) return;
+                        presets[name] = parsed[name];
+                    });
                     savePresets(presets);
                     refreshPresetSelect();
                     if (keys.length === 1) elements.presetSelect.value = keys[0];
@@ -3263,6 +4114,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (rawName === null) return;
         const name = rawName.trim();
         if (!name) return;
+        if (isUnsafeKey(name)) return;
         const presets = loadPresets();
         presets[name] = collectState();
         savePresets(presets);
@@ -3275,6 +4127,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const presets = loadPresets();
         if (!presets[name]) return;
         applyState(presets[name]);
+        prevText = elements.textInput.value;
         toggleGradientColorControls();
         toggleDefaultioControls();
         toggleColorSourceControls();
@@ -3287,6 +4140,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (rawNew === null) return;
         const newName = rawNew.trim();
         if (!newName || newName === name) return;
+        if (isUnsafeKey(newName)) return;
         const presets = loadPresets();
         if (!presets[name]) return;
         if (presets[newName] && !confirm(t('presetExists'))) return;
@@ -3345,5 +4199,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
     generate();
 
-    window.__rtg = { generate, redrawCanvasesOnly, getCanvasState, setSelection };
+    window.__rtg = { generate, redrawCanvasesOnly, getCanvasState, setSelection, parseRichText, applyImportedRichText };
 });
