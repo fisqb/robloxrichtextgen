@@ -281,7 +281,10 @@
 
                 <div class="output-section">
                     <label data-i18n="richText">Rich Text</label>
-                    <button class="copy-btn" data-target="outputCode" data-i18n="copy">Copy</button>
+                    <div class="output-actions">
+                        <button class="action-btn" id="importRichTextBtn" data-i18n="importRichText">Import Rich Text</button>
+                        <button class="copy-btn" data-target="outputCode" data-i18n="copy">Copy</button>
+                    </div>
                     <textarea id="outputCode" readonly></textarea>
                 </div>
 
@@ -406,6 +409,38 @@
                             <li data-i18n="helpRtl2">The generated Rich Text / Defaultio output is unaffected.</li>
                         </ul>
                     </section>
+
+                    <section class="help-section">
+                        <h3 data-i18n="helpImportRichText">Importing Rich Text</h3>
+                        <ul>
+                            <li data-i18n="helpImportRichText1">Click Import Rich Text next to the output to paste an existing Rich Text code.</li>
+                            <li data-i18n="helpImportRichText2">Both Roblox native tags (font, b, i, u, s, stroke) and Defaultio tags are supported.</li>
+                            <li data-i18n="helpImportRichText3">The imported code replaces the current character formatting and can be edited normally afterwards.</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <div class="import-overlay hidden" id="importOverlay">
+            <div class="import-modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+                <div class="import-header">
+                    <h2 id="importTitle" data-i18n="importRichText">Import Rich Text</h2>
+                    <button type="button" class="icon-btn" id="importClose" title="Close">✕</button>
+                </div>
+                <div class="import-body">
+                    <label class="import-label" data-i18n="importPasteLabel" for="importTextarea">Paste your Rich Text code</label>
+                    <textarea id="importTextarea" rows="14" spellcheck="false"
+                        placeholder="<font color='#ff6b9d'>Hello</font> <b>World</b>"></textarea>
+                    <label class="import-checkbox-label">
+                        <input type="checkbox" id="importClearExisting" checked />
+                        <span data-i18n="importReplaceExisting">Replace existing character formatting</span>
+                    </label>
+                    <div class="import-warnings" id="importWarnings" data-i18n="importWarningsEmpty"></div>
+                </div>
+                <div class="import-footer">
+                    <button type="button" class="mini-btn ghost" id="importCancel" data-i18n="cancel">Cancel</button>
+                    <button type="button" class="mini-btn" id="importConfirm" data-i18n="importBtn">Import</button>
                 </div>
             </div>
         </div>
