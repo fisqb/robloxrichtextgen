@@ -2094,22 +2094,48 @@ document.addEventListener('DOMContentLoaded', function () {
         const rect = state.canvas.getBoundingClientRect();
         const x = clientX - rect.left;
         const y = clientY - rect.top;
+
+        const glyphs = state.glyphs;
+        if (!glyphs.length) return null;
+
+        const lines = state.lines;
+        if (!lines.length) return null;
+
+        let targetLine = null;
+        for (const line of lines) {
+            if (y >= line.startY && y <= line.startY + line.height) {
+                targetLine = line;
+                break;
+            }
+        }
+        if (!targetLine) {
+            if (y < lines[0].startY) {
+                targetLine = lines[0];
+            } else {
+                targetLine = lines[lines.length - 1];
+            }
+        }
+
         let best = null;
         let bestDist = Infinity;
-        const maxDist = Math.pow(state.lineHeight * 0.5, 2);
-        for (const g of state.glyphs) {
+        for (const idx of targetLine.glyphIndices) {
+            const g = state.byIndex.get(idx);
+            if (!g) continue;
+            if (x >= g.x && x <= g.x + g.w) return g;
             const cx = Math.max(g.x, Math.min(x, g.x + g.w));
-            const cy = Math.max(g.y, Math.min(y, g.y + g.h));
-            const dx = x - cx;
-            const dy = y - cy;
-            const d = dx * dx + dy * dy;
+            const d = (x - cx) * (x - cx);
             if (d < bestDist) {
                 bestDist = d;
                 best = g;
             }
         }
-        if (bestDist > maxDist) return null;
-        return best;
+
+        if (best) return best;
+
+        const firstIdx = targetLine.glyphIndices[0];
+        const lastIdx = targetLine.glyphIndices[targetLine.glyphIndices.length - 1];
+        if (x < (state.byIndex.get(firstIdx)?.x || 0)) return state.byIndex.get(firstIdx) || null;
+        return state.byIndex.get(lastIdx) || null;
     }
 
     function setSelectionFromRange(a, b) {
@@ -2242,28 +2268,29 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.addEventListener('mousemove', e => {
-        if (!pointerDown || pointerMode !== 'select') return;
-        const canvases = [elements.preview, elements.previewLarge].filter(Boolean);
-        for (const canvas of canvases) {
-            const rect = canvas.getBoundingClientRect();
-            if (e.clientX >= rect.left && e.clientX <= rect.right &&
-                e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                const state = getCanvasState(canvas);
-                const glyph = findGlyphAt(state, e.clientX, e.clientY);
-                if (glyph) {
-                    selectionFocus = glyph.index;
-                    if (pointerMode === 'select-remove') {
-                        const lo = Math.min(selectionAnchor, selectionFocus);
-                        const hi = Math.max(selectionAnchor, selectionFocus);
-                        const next = new Set(selectedChars);
-                        for (let i = lo; i <= hi; i++) next.delete(i);
-                        setSelection([...next]);
-                    } else {
-                        setSelectionFromRange(selectionAnchor, selectionFocus);
-                    }
-                }
-                break;
-            }
+        if (!pointerDown || (pointerMode !== 'select' && pointerMode !== 'select-remove')) return;
+
+        const activeCanvas = isPreviewOpen() ? elements.previewLarge : elements.preview;
+        if (!activeCanvas) return;
+        const state = getCanvasState(activeCanvas);
+        if (!state.glyphs.length) return;
+
+        const rect = activeCanvas.getBoundingClientRect();
+        const cx = Math.max(rect.left, Math.min(e.clientX, rect.right - 1));
+        const cy = Math.max(rect.top, Math.min(e.clientY, rect.bottom - 1));
+
+        const glyph = findGlyphAt(state, cx, cy);
+        if (!glyph) return;
+
+        selectionFocus = glyph.index;
+        if (pointerMode === 'select-remove') {
+            const lo = Math.min(selectionAnchor, selectionFocus);
+            const hi = Math.max(selectionAnchor, selectionFocus);
+            const next = new Set(selectedChars);
+            for (let i = lo; i <= hi; i++) next.delete(i);
+            setSelection([...next]);
+        } else {
+            setSelectionFromRange(selectionAnchor, selectionFocus);
         }
     });
 
@@ -3611,7 +3638,19 @@ document.addEventListener('DOMContentLoaded', function () {
         prevText = newText;
         generate();
     });
-    elements.fontFamily.addEventListener('change', generate);
+    elements.fontFamily.addEventListener('change', () => {
+        generate();
+        const name = elements.fontFamily.value;
+        const cssFamily = fontFamilyFor(name);
+        if (document.fonts && document.fonts.load) {
+            const probe = document.fonts.load('24px ' + cssFamily);
+            if (probe && probe.then) {
+                probe.then(() => {
+                    redrawCanvasesOnly();
+                }).catch(() => { });
+            }
+        }
+    });
 
     async function copyTextFromTextarea(textarea) {
         if (!textarea) return false;
@@ -3771,7 +3810,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    window.addEventListener('blur', () => {
+        if (isPanning) endPan();
+        pointerDown = false;
+        pointerMode = null;
+    });
     document.addEventListener('mousemove', e => {
+        if (isPanning && e.buttons === 0) { endPan(); return; }
         if (isPanning) movePan(e.clientX, e.clientY);
     });
     document.addEventListener('mouseup', () => {
@@ -3791,6 +3836,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (touch) maybeResetPanFromTap(touch.clientX, touch.clientY);
         }
         endPan();
+    });
+    document.addEventListener('touchcancel', () => {
+        if (isPanning) endPan();
+        pointerDown = false;
+        pointerMode = null;
     });
 
     document.addEventListener('keydown', e => {
@@ -3918,7 +3968,10 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.rgbColors.checked = !!s.rgbColors;
             if (s.strokeColor) { elements.strokeColor.value = s.strokeColor; elements.strokeColorHex.value = s.strokeColor; }
             if (s.strokeThickness !== undefined) { elements.strokeThickness.value = s.strokeThickness; elements.strokeThicknessValue.textContent = s.strokeThickness; }
-            if (s.fontFamily) elements.fontFamily.value = s.fontFamily;
+            if (s.fontFamily) {
+                const opt = Array.from(elements.fontFamily.options).find(o => o.value === s.fontFamily);
+                if (opt) elements.fontFamily.value = s.fontFamily;
+            }
 
             charColors = (s.charColors && typeof s.charColors === 'object') ? { ...s.charColors } : {};
             charTransparency = (s.charTransparency && typeof s.charTransparency === 'object') ? { ...s.charTransparency } : {};
@@ -3926,7 +3979,15 @@ document.addEventListener('DOMContentLoaded', function () {
             charItalic = (s.charItalic && typeof s.charItalic === 'object') ? { ...s.charItalic } : {};
             charUnderline = (s.charUnderline && typeof s.charUnderline === 'object') ? { ...s.charUnderline } : {};
             charStrike = (s.charStrike && typeof s.charStrike === 'object') ? { ...s.charStrike } : {};
-            charFont = (s.charFont && typeof s.charFont === 'object') ? { ...s.charFont } : {};
+            const validFontNames = new Set(ALL_FONTS);
+            const rawCharFont = (s.charFont && typeof s.charFont === 'object') ? s.charFont : {};
+            charFont = {};
+            Object.keys(rawCharFont).forEach(k => {
+                const v = rawCharFont[k];
+                if (typeof v === 'string' && validFontNames.has(v)) {
+                    charFont[k] = v;
+                }
+            });
             charStrokeColor = (s.charStrokeColor && typeof s.charStrokeColor === 'object') ? { ...s.charStrokeColor } : {};
             charStrokeThickness = (s.charStrokeThickness && typeof s.charStrokeThickness === 'object') ? { ...s.charStrokeThickness } : {};
             gradientPoints = (s.gradientPoints && typeof s.gradientPoints === 'object') ? { ...s.gradientPoints } : {};
@@ -4094,6 +4155,12 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleDefaultioControls();
         toggleColorSourceControls();
         generate();
+
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => {
+                redrawCanvasesOnly();
+            }).catch(() => { });
+        }
     });
     elements.presetRename.addEventListener('click', () => {
         const name = elements.presetSelect.value;
@@ -4160,6 +4227,12 @@ document.addEventListener('DOMContentLoaded', function () {
     prevText = elements.textInput.value;
 
     generate();
+
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+            redrawCanvasesOnly();
+        }).catch(() => { });
+    }
 
     window.__rtg = { generate, redrawCanvasesOnly, getCanvasState, setSelection, parseRichText, applyImportedRichText };
 });
