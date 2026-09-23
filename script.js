@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultioSkipChars: 'Warning: "<" and ">" characters were skipped in the Defaultio output.',
             confirmSwitchPointsToGradient: 'Switching to Gradient/Solid will delete all Gradient Points. Continue?',
             confirmSwitchGradientToPoints: 'Switching to Gradient Points will reset per-character colors. Continue?',
-            importRichText: 'Import Rich Text',
+            importRichText: 'Import',
             importPasteLabel: 'Paste your Rich Text code',
             importReplaceExisting: 'Replace existing character formatting',
             importWarningsEmpty: '',
@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl1: 'Right-to-left languages (e.g. Arabic) may not render correctly in the canvas preview due to manual character-by-character rendering.',
             helpRtl2: 'The generated Rich Text / Defaultio output is unaffected.',
             helpImportRichText: 'Importing Rich Text',
-            helpImportRichText1: 'Click Import Rich Text next to the output to paste an existing Rich Text code.',
+            helpImportRichText1: 'Click Import next to the output to paste an existing Rich Text code.',
             helpImportRichText2: 'Both Roblox native tags (font, b, i, u, s, stroke) and Defaultio tags are supported.',
             helpImportRichText3: 'The imported code replaces the current character formatting and can be edited normally afterwards.'
         },
