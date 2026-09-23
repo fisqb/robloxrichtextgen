@@ -2094,48 +2094,22 @@ document.addEventListener('DOMContentLoaded', function () {
         const rect = state.canvas.getBoundingClientRect();
         const x = clientX - rect.left;
         const y = clientY - rect.top;
-
-        const glyphs = state.glyphs;
-        if (!glyphs.length) return null;
-
-        const lines = state.lines;
-        if (!lines.length) return null;
-
-        let targetLine = null;
-        for (const line of lines) {
-            if (y >= line.startY && y <= line.startY + line.height) {
-                targetLine = line;
-                break;
-            }
-        }
-        if (!targetLine) {
-            if (y < lines[0].startY) {
-                targetLine = lines[0];
-            } else {
-                targetLine = lines[lines.length - 1];
-            }
-        }
-
         let best = null;
         let bestDist = Infinity;
-        for (const idx of targetLine.glyphIndices) {
-            const g = state.byIndex.get(idx);
-            if (!g) continue;
-            if (x >= g.x && x <= g.x + g.w) return g;
+        const maxDist = Math.pow(state.lineHeight * 0.5, 2);
+        for (const g of state.glyphs) {
             const cx = Math.max(g.x, Math.min(x, g.x + g.w));
-            const d = (x - cx) * (x - cx);
+            const cy = Math.max(g.y, Math.min(y, g.y + g.h));
+            const dx = x - cx;
+            const dy = y - cy;
+            const d = dx * dx + dy * dy;
             if (d < bestDist) {
                 bestDist = d;
                 best = g;
             }
         }
-
-        if (best) return best;
-
-        const firstIdx = targetLine.glyphIndices[0];
-        const lastIdx = targetLine.glyphIndices[targetLine.glyphIndices.length - 1];
-        if (x < (state.byIndex.get(firstIdx)?.x || 0)) return state.byIndex.get(firstIdx) || null;
-        return state.byIndex.get(lastIdx) || null;
+        if (bestDist > maxDist) return null;
+        return best;
     }
 
     function setSelectionFromRange(a, b) {
@@ -2268,29 +2242,28 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.addEventListener('mousemove', e => {
-        if (!pointerDown || (pointerMode !== 'select' && pointerMode !== 'select-remove')) return;
-
-        const activeCanvas = isPreviewOpen() ? elements.previewLarge : elements.preview;
-        if (!activeCanvas) return;
-        const state = getCanvasState(activeCanvas);
-        if (!state.glyphs.length) return;
-
-        const rect = activeCanvas.getBoundingClientRect();
-        const cx = Math.max(rect.left, Math.min(e.clientX, rect.right - 1));
-        const cy = Math.max(rect.top, Math.min(e.clientY, rect.bottom - 1));
-
-        const glyph = findGlyphAt(state, cx, cy);
-        if (!glyph) return;
-
-        selectionFocus = glyph.index;
-        if (pointerMode === 'select-remove') {
-            const lo = Math.min(selectionAnchor, selectionFocus);
-            const hi = Math.max(selectionAnchor, selectionFocus);
-            const next = new Set(selectedChars);
-            for (let i = lo; i <= hi; i++) next.delete(i);
-            setSelection([...next]);
-        } else {
-            setSelectionFromRange(selectionAnchor, selectionFocus);
+        if (!pointerDown || pointerMode !== 'select') return;
+        const canvases = [elements.preview, elements.previewLarge].filter(Boolean);
+        for (const canvas of canvases) {
+            const rect = canvas.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                const state = getCanvasState(canvas);
+                const glyph = findGlyphAt(state, e.clientX, e.clientY);
+                if (glyph) {
+                    selectionFocus = glyph.index;
+                    if (pointerMode === 'select-remove') {
+                        const lo = Math.min(selectionAnchor, selectionFocus);
+                        const hi = Math.max(selectionAnchor, selectionFocus);
+                        const next = new Set(selectedChars);
+                        for (let i = lo; i <= hi; i++) next.delete(i);
+                        setSelection([...next]);
+                    } else {
+                        setSelectionFromRange(selectionAnchor, selectionFocus);
+                    }
+                }
+                break;
+            }
         }
     });
 
@@ -3798,13 +3771,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    window.addEventListener('blur', () => {
-        if (isPanning) endPan();
-        pointerDown = false;
-        pointerMode = null;
-    });
     document.addEventListener('mousemove', e => {
-        if (isPanning && e.buttons === 0) { endPan(); return; }
         if (isPanning) movePan(e.clientX, e.clientY);
     });
     document.addEventListener('mouseup', () => {
@@ -3824,11 +3791,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (touch) maybeResetPanFromTap(touch.clientX, touch.clientY);
         }
         endPan();
-    });
-    document.addEventListener('touchcancel', () => {
-        if (isPanning) endPan();
-        pointerDown = false;
-        pointerMode = null;
     });
 
     document.addEventListener('keydown', e => {
