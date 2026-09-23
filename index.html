@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Bangers&family=Creepster&family=Denk+One&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Fondamento&family=Fredoka+One&family=Grenze+Gotisch:wght@400;700&family=Indie+Flower&family=Josefin+Sans:ital,wght@0,400;0,700;1,400&family=Jura:wght@400;700&family=Kalam:wght@400;700&family=Libre+Bodoni:ital,wght@0,400;0,700;1,400&family=Luckiest+Guy&family=MedievalSharp&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Michroma&family=Montserrat:ital,wght@0,400;0,500;0,700;0,900;1,400&family=Nunito:ital,wght@0,400;0,700;1,400&family=Orbitron:wght@400;700&family=Oswald:wght@400;700&family=Overpass:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&family=Permanent+Marker&family=Press+Start+2P&family=Roboto:ital,wght@0,400;0,700;1,400&family=Roboto+Condensed:ital,wght@0,400;0,700;1,400&family=Roboto+Mono:ital,wght@0,400;0,700;1,400&family=Sarpanch:wght@400;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Special+Elite&family=Titillium+Web:ital,wght@0,400;0,700;1,400&family=Ubuntu:ital,wght@0,400;0,700;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Arimo:ital,wght@0,400;0,700;1,400&family=Bangers&family=Creepster&family=Denk+One&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Fondamento&family=Fredoka+One&family=Grenze+Gotisch:wght@400;700&family=IM+Fell+English:ital@0;1&family=Indie+Flower&family=Josefin+Sans:ital,wght@0,400;0,700;1,400&family=Jura:wght@400;700&family=Kalam:wght@400;700&family=Libre+Bodoni:ital,wght@0,400;0,700;1,400&family=Luckiest+Guy&family=MedievalSharp&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Michroma&family=Montserrat:ital,wght@0,400;0,500;0,700;0,900;1,400&family=Nunito:ital,wght@0,400;0,700;1,400&family=Orbitron:wght@400;700&family=Oswald:wght@400;700&family=Overpass:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&family=Permanent+Marker&family=Press+Start+2P&family=Roboto:ital,wght@0,400;0,700;1,400&family=Roboto+Condensed:ital,wght@0,400;0,700;1,400&family=Roboto+Mono:ital,wght@0,400;0,700;1,400&family=Sarpanch:wght@400;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Special+Elite&family=Titillium+Web:ital,wght@0,400;0,700;1,400&family=Ubuntu:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet" />
 
     <link rel="stylesheet" href="style.css" />
@@ -205,11 +205,6 @@
                     <input type="checkbox" id="lineBreaks" />
                 </div>
 
-                <div class="control-group advanced-only">
-                    <label data-i18n="fixColors">Fix Colors</label>
-                    <input type="checkbox" id="fixColors" />
-                </div>
-
                 <div class="control-group">
                     <label data-i18n="stroke">Stroke</label>
                     <div class="color-picker-group">
@@ -286,7 +281,10 @@
 
                 <div class="output-section">
                     <label data-i18n="richText">Rich Text</label>
-                    <button class="copy-btn" data-target="outputCode" data-i18n="copy">Copy</button>
+                    <div class="output-actions">
+                        <button class="action-btn" id="importRichTextBtn" data-i18n="importRichText">Import Rich Text</button>
+                        <button class="copy-btn" data-target="outputCode" data-i18n="copy">Copy</button>
+                    </div>
                     <textarea id="outputCode" readonly></textarea>
                 </div>
 
@@ -402,6 +400,47 @@
                             <li data-i18n="helpKeyboard2">Click outside a modal to close it.</li>
                         </ul>
                     </section>
+
+                    <section class="help-section">
+                        <h3 data-i18n="helpRtl">Right-to-left languages</h3>
+                        <ul>
+                            <li data-i18n="helpRtl1">Right-to-left languages (e.g. Arabic) may not render correctly in
+                                the canvas preview due to manual character-by-character rendering.</li>
+                            <li data-i18n="helpRtl2">The generated Rich Text / Defaultio output is unaffected.</li>
+                        </ul>
+                    </section>
+
+                    <section class="help-section">
+                        <h3 data-i18n="helpImportRichText">Importing Rich Text</h3>
+                        <ul>
+                            <li data-i18n="helpImportRichText1">Click Import Rich Text next to the output to paste an existing Rich Text code.</li>
+                            <li data-i18n="helpImportRichText2">Both Roblox native tags (font, b, i, u, s, stroke) and Defaultio tags are supported.</li>
+                            <li data-i18n="helpImportRichText3">The imported code replaces the current character formatting and can be edited normally afterwards.</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <div class="import-overlay hidden" id="importOverlay">
+            <div class="import-modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+                <div class="import-header">
+                    <h2 id="importTitle" data-i18n="importRichText">Import Rich Text</h2>
+                    <button type="button" class="icon-btn" id="importClose" title="Close">✕</button>
+                </div>
+                <div class="import-body">
+                    <label class="import-label" data-i18n="importPasteLabel" for="importTextarea">Paste your Rich Text code</label>
+                    <textarea id="importTextarea" rows="14" spellcheck="false"
+                        placeholder="<font face='PermanentMarker'><stroke color='#121212' thickness='2'><font color='#ff353a'>Rich Te</font><font color='#00d4ff'>xt Gen</font></stroke></font></textarea>
+                    <label class="import-checkbox-label">
+                        <input type="checkbox" id="importClearExisting" checked />
+                        <span data-i18n="importReplaceExisting">Replace existing character formatting</span>
+                    </label>
+                    <div class="import-warnings" id="importWarnings" data-i18n="importWarningsEmpty"></div>
+                </div>
+                <div class="import-footer">
+                    <button type="button" class="mini-btn ghost" id="importCancel" data-i18n="cancel">Cancel</button>
+                    <button type="button" class="mini-btn" id="importConfirm" data-i18n="importBtn">Import</button>
                 </div>
             </div>
         </div>
@@ -440,7 +479,9 @@
             </div>
             <div class="char-editor-row advanced-only">
                 <label class="char-editor-mini-label" data-i18n="font">Font</label>
-                <select id="charFont"></select>
+                <select id="charFont">
+                    <option value="" data-i18n="mixedOrDefault">—</option>
+                </select>
             </div>
             <div class="char-editor-row advanced-only">
                 <label class="char-editor-mini-label" data-i18n="stroke">Stroke</label>
