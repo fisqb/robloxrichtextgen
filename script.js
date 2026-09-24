@@ -69,6 +69,15 @@ document.addEventListener('DOMContentLoaded', function () {
         'ArimoBold': 'Arimo, sans-serif'
     };
 
+    const NAMED_COLORS = {
+        'black': '#000000', 'white': '#ffffff', 'red': '#ff0000',
+        'green': '#008000', 'lime': '#00ff00', 'blue': '#0000ff',
+        'yellow': '#ffff00', 'orange': '#ffa500', 'purple': '#800080',
+        'pink': '#ffc0cb', 'brown': '#a52a2a', 'gray': '#808080',
+        'grey': '#808080', 'cyan': '#00ffff', 'aqua': '#00ffff',
+        'magenta': '#ff00ff', 'fuchsia': '#ff00ff', 'navy': '#000080'
+    };
+
     const fontFamilyFor = (robloxFont) => FONT_FALLBACK_MAP[robloxFont] || robloxFont || 'Arial, sans-serif';
 
     const $ = id => document.getElementById(id);
@@ -203,6 +212,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let charStrokeColor = {};
     let charStrokeThickness = {};
     let selectedChars = new Set();
+
+    let charColorDirty = false;
+    let charColorLastShown = null;
+    let charFontDirty = false;
     let charStrokeColorDirty = false;
     let charStrokeThicknessDirty = false;
     let charStrokeColorLastShown = null;
@@ -217,6 +230,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let selectionAnchor = null;
     let selectionFocus = null;
+
+    let _measureCanvas = null;
+    let _measureCtx = null;
 
     const isValidHex = hex => /^#[0-9A-F]{6}$/i.test(hex);
     const isValidTransparency = v => v !== '' && !isNaN(v) && Number(v) >= 0 && Number(v) <= 1;
@@ -332,6 +348,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (rgbMatch) {
             return rgbToHex(parseInt(rgbMatch[1], 10), parseInt(rgbMatch[2], 10), parseInt(rgbMatch[3], 10));
         }
+        const named = NAMED_COLORS[str.toLowerCase()];
+        if (named) return named;
         return null;
     };
 
@@ -340,6 +358,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const c = hexToRgb(hex);
         if (!c) return hex;
         return 'rgb(' + Math.round(c.r) + ', ' + Math.round(c.g) + ', ' + Math.round(c.b) + ')';
+    };
+
+    const getMeasureCanvas = () => {
+        if (!_measureCanvas) {
+            _measureCanvas = document.createElement('canvas');
+            _measureCtx = _measureCanvas.getContext('2d');
+        }
+        return { canvas: _measureCanvas, ctx: _measureCtx };
     };
 
     const SETTINGS_KEY = 'richTextGenSettings';
@@ -394,6 +420,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: 'Imported with {count} warning(s). Check the console for details.',
             importNothingToImport: 'Nothing to import — the code was empty or contained no readable text.',
             importBadTag: 'Unrecognized or malformed tag: {tag}',
+            importUnknownColor: 'Unknown color value: {value}',
             cancel: 'Cancel',
             importBtn: 'Import',
             helpTitle: 'Tips & Help', helpGettingStarted: 'Getting started',
@@ -478,6 +505,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: 'Importado con {count} advertencia(s). Revisa la consola para más detalles.',
             importNothingToImport: 'Nada que importar: el código estaba vacío o no contenía texto legible.',
             importBadTag: 'Etiqueta no reconocida o mal formada: {tag}',
+            importUnknownColor: 'Valor de color desconocido: {value}',
             cancel: 'Cancelar',
             importBtn: 'Importar',
             helpTitle: 'Ayuda y consejos', helpGettingStarted: 'Primeros pasos',
@@ -562,6 +590,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: 'Importé avec {count} avertissement(s). Consultez la console pour plus de détails.',
             importNothingToImport: 'Rien à importer — le code était vide ou ne contenait aucun texte lisible.',
             importBadTag: 'Balise non reconnue ou mal formée : {tag}',
+            importUnknownColor: 'Valeur de couleur inconnue : {value}',
             cancel: 'Annuler',
             importBtn: 'Importer',
             helpTitle: 'Aide et astuces', helpGettingStarted: 'Pour commencer',
@@ -646,6 +675,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: 'Mit {count} Warnung(en) importiert. Details in der Konsole.',
             importNothingToImport: 'Nichts zu importieren — der Code war leer oder enthielt keinen lesbaren Text.',
             importBadTag: 'Unbekanntes oder fehlerhaftes Tag: {tag}',
+            importUnknownColor: 'Unbekannter Farbwert: {value}',
             cancel: 'Abbrechen',
             importBtn: 'Importieren',
             helpTitle: 'Tipps & Hilfe', helpGettingStarted: 'Erste Schritte',
@@ -730,6 +760,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: 'Importato con {count} avviso/i. Controlla la console per i dettagli.',
             importNothingToImport: 'Niente da importare — il codice era vuoto o non conteneva testo leggibile.',
             importBadTag: 'Tag non riconosciuto o malformato: {tag}',
+            importUnknownColor: 'Valore di colore sconosciuto: {value}',
             cancel: 'Annulla',
             importBtn: 'Importa',
             helpTitle: 'Suggerimenti e aiuto', helpGettingStarted: 'Per iniziare',
@@ -814,6 +845,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: 'Importado com {count} aviso(s). Verifique o console para detalhes.',
             importNothingToImport: 'Nada para importar — o código estava vazio ou não continha texto legível.',
             importBadTag: 'Tag não reconhecida ou malformada: {tag}',
+            importUnknownColor: 'Valor de cor desconhecido: {value}',
             cancel: 'Cancelar',
             importBtn: 'Importar',
             helpTitle: 'Dicas e ajuda', helpGettingStarted: 'Primeiros passos',
@@ -898,6 +930,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: 'Импортировано с {count} предупреждением(ями). Подробности в консоли.',
             importNothingToImport: 'Нечего импортировать — код пуст или не содержит читаемого текста.',
             importBadTag: 'Неизвестный или повреждённый тег: {tag}',
+            importUnknownColor: 'Неизвестное значение цвета: {value}',
             cancel: 'Отмена',
             importBtn: 'Импортировать',
             helpTitle: 'Справка и советы', helpGettingStarted: 'С чего начать',
@@ -982,6 +1015,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: '{count} 件の警告付きでインポートしました。詳細はコンソールを確認してください。',
             importNothingToImport: 'インポートするものがありません — コードが空か、読み取れるテキストが含まれていません。',
             importBadTag: '認識できない、または不正なタグ: {tag}',
+            importUnknownColor: '不明な色の値: {value}',
             cancel: 'キャンセル',
             importBtn: 'インポート',
             helpTitle: 'ヒントとヘルプ', helpGettingStarted: 'はじめに',
@@ -1066,6 +1100,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: '{count}개의 경고와 함께 가져왔습니다. 자세한 내용은 콘솔을 확인하세요.',
             importNothingToImport: '가져올 내용이 없습니다 — 코드가 비어 있거나 읽을 수 있는 텍스트가 없습니다.',
             importBadTag: '알 수 없거나 잘못된 태그: {tag}',
+            importUnknownColor: '알 수 없는 색상 값: {value}',
             cancel: '취소',
             importBtn: '가져오기',
             helpTitle: '도움말 및 팁', helpGettingStarted: '시작하기',
@@ -1150,6 +1185,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: '已导入，包含 {count} 条警告。请在控制台查看详细信息。',
             importNothingToImport: '没有可导入的内容 — 代码为空或不包含可读文本。',
             importBadTag: '无法识别或格式错误的标签: {tag}',
+            importUnknownColor: '未知颜色值: {value}',
             cancel: '取消',
             importBtn: '导入',
             helpTitle: '帮助与提示', helpGettingStarted: '开始使用',
@@ -1234,6 +1270,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: 'تم الاستيراد مع {count} تحذير(ات). تحقق من وحدة التحكم للحصول على التفاصيل.',
             importNothingToImport: 'لا يوجد شيء للاستيراد — الكود فارغ أو لا يحتوي على نص قابل للقراءة.',
             importBadTag: 'علامة غير معروفة أو مشوهة: {tag}',
+            importUnknownColor: 'قيمة لون غير معروفة: {value}',
             cancel: 'إلغاء',
             importBtn: 'استيراد',
             helpTitle: 'نصائح ومساعدة', helpGettingStarted: 'البدء',
@@ -1318,6 +1355,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importWarningsCount: '{count} चेतावनी(यों) के साथ आयात किया गया। विवरण के लिए कंसोल देखें।',
             importNothingToImport: 'आयात करने के लिए कुछ नहीं — कोड खाली था या इसमें कोई पठनीय टेक्स्ट नहीं था।',
             importBadTag: 'अपरिचित या विकृत टैग: {tag}',
+            importUnknownColor: 'अज्ञात रंग मान: {value}',
             cancel: 'रद्द करें',
             importBtn: 'आयात करें',
             helpTitle: 'सुझाव और सहायता', helpGettingStarted: 'शुरू करें',
@@ -1443,10 +1481,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function isPreviewOpen() {
         return elements.previewOverlay && !elements.previewOverlay.classList.contains('hidden');
-    }
-
-    function isImportOpen() {
-        return elements.importOverlay && !elements.importOverlay.classList.contains('hidden');
     }
 
     function placeEditorsIn(host) {
@@ -2007,12 +2041,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const fontSize = opts.fontSize || 24;
         const fontCss = fontFamilyFor(opts.globalFontName || elements.fontFamily.value);
 
-        const measureCanvas = document.createElement('canvas');
+        const { canvas: measureCanvas, ctx: measureCtx } = getMeasureCanvas();
         measureCanvas.width = Math.floor(logicalW);
         measureCanvas.height = 2000;
+        measureCtx.setTransform(1, 0, 0, 1, 0, 0);
         const measureState = {
             canvas: measureCanvas,
-            ctx: measureCanvas.getContext('2d'),
+            ctx: measureCtx,
             glyphs: [],
             byIndex: new Map(),
             lines: [],
@@ -2101,20 +2136,43 @@ document.addEventListener('DOMContentLoaded', function () {
         const lines = state.lines;
         if (!lines.length) return null;
 
+        const lineHeight = state.lineHeight || 24;
+        const verticalPad = lineHeight;
+        const horizontalPad = Math.max(lineHeight, 40);
+
         let targetLine = null;
+        let bestLineDist = Infinity;
         for (const line of lines) {
             if (y >= line.startY && y <= line.startY + line.height) {
                 targetLine = line;
+                bestLineDist = 0;
                 break;
             }
-        }
-        if (!targetLine) {
-            if (y < lines[0].startY) {
-                targetLine = lines[0];
-            } else {
-                targetLine = lines[lines.length - 1];
+            const dist = y < line.startY
+                ? (line.startY - y)
+                : (y - (line.startY + line.height));
+            if (dist < bestLineDist) {
+                bestLineDist = dist;
+                targetLine = line;
             }
         }
+        if (!targetLine) return null;
+
+        if (bestLineDist > verticalPad) return null;
+
+        let firstGlyph = null;
+        let lastGlyph = null;
+        for (const idx of targetLine.glyphIndices) {
+            const g = state.byIndex.get(idx);
+            if (!g) continue;
+            if (!firstGlyph) firstGlyph = g;
+            lastGlyph = g;
+        }
+        if (!firstGlyph || !lastGlyph) return null;
+
+        const minX = firstGlyph.x - horizontalPad;
+        const maxX = lastGlyph.x + lastGlyph.w + horizontalPad;
+        if (x < minX || x > maxX) return null;
 
         let best = null;
         let bestDist = Infinity;
@@ -2132,10 +2190,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (best) return best;
 
-        const firstIdx = targetLine.glyphIndices[0];
-        const lastIdx = targetLine.glyphIndices[targetLine.glyphIndices.length - 1];
-        if (x < (state.byIndex.get(firstIdx)?.x || 0)) return state.byIndex.get(firstIdx) || null;
-        return state.byIndex.get(lastIdx) || null;
+        if (x < firstGlyph.x) return firstGlyph;
+        return lastGlyph;
     }
 
     function setSelectionFromRange(a, b) {
@@ -2199,22 +2255,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            pointerDown = true;
-            pointerMode = 'select';
             const multi = e.ctrlKey || e.metaKey;
             const wasSelected = selectedChars.has(glyph.index);
 
-            if (wasSelected && !multi) {
-                selectionAnchor = glyph.index;
-                selectionFocus = glyph.index;
-                pointerMode = 'select-remove';
-                setSelectionFromRange(selectionAnchor, selectionFocus);
-            } else {
-                selectionAnchor = glyph.index;
-                selectionFocus = glyph.index;
-                if (!multi) setSelection([glyph.index]);
-                else setSelection([...selectedChars, glyph.index]);
+            if (multi && wasSelected) {
+                const next = new Set(selectedChars);
+                next.delete(glyph.index);
+                setSelection([...next]);
+                pointerDown = false;
+                pointerMode = null;
+                e.preventDefault();
+                return;
             }
+
+            pointerDown = true;
+            pointerMode = 'select';
+            selectionAnchor = glyph.index;
+            selectionFocus = glyph.index;
+            if (!multi) setSelection([glyph.index]);
+            else setSelection([...selectedChars, glyph.index]);
             e.preventDefault();
         });
 
@@ -2254,8 +2313,15 @@ document.addEventListener('DOMContentLoaded', function () {
             const touch = e.touches[0];
             if (!touch) return;
             const state = getCanvasState(canvas);
-            const glyph = findGlyphAt(state, touch.clientX, touch.clientY);
+            if (!state.glyphs.length) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const cx = Math.max(rect.left, Math.min(touch.clientX, rect.right - 1));
+            const cy = Math.max(rect.top, Math.min(touch.clientY, rect.bottom - 1));
+
+            const glyph = findGlyphAt(state, cx, cy);
             if (!glyph) return;
+
             selectionFocus = glyph.index;
             setSelectionFromRange(selectionAnchor, selectionFocus);
             e.preventDefault();
@@ -2265,10 +2331,15 @@ document.addEventListener('DOMContentLoaded', function () {
             pointerDown = false;
             pointerMode = null;
         });
+
+        canvas.addEventListener('touchcancel', () => {
+            pointerDown = false;
+            pointerMode = null;
+        });
     }
 
     document.addEventListener('mousemove', e => {
-        if (!pointerDown || (pointerMode !== 'select' && pointerMode !== 'select-remove')) return;
+        if (!pointerDown || pointerMode !== 'select') return;
 
         const activeCanvas = isPreviewOpen() ? elements.previewLarge : elements.preview;
         if (!activeCanvas) return;
@@ -2283,19 +2354,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!glyph) return;
 
         selectionFocus = glyph.index;
-        if (pointerMode === 'select-remove') {
-            const lo = Math.min(selectionAnchor, selectionFocus);
-            const hi = Math.max(selectionAnchor, selectionFocus);
-            const next = new Set(selectedChars);
-            for (let i = lo; i <= hi; i++) next.delete(i);
-            setSelection([...next]);
-        } else {
-            setSelectionFromRange(selectionAnchor, selectionFocus);
-        }
+        setSelectionFromRange(selectionAnchor, selectionFocus);
     });
 
     function setSelection(indexes) {
         selectedChars = new Set(indexes);
+        charColorDirty = false;
+        charFontDirty = false;
         charStrokeColorDirty = false;
         charStrokeThicknessDirty = false;
         updateCharEditor();
@@ -2413,8 +2478,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const colors = new Set(arr.map(i => charColors[i] || null));
         if (colors.size === 1) {
             const c = [...colors][0];
-            if (c) { elements.charColor.value = c; elements.charColorHex.value = c; }
+            if (c) {
+                elements.charColor.value = c;
+                elements.charColorHex.value = c;
+                charColorLastShown = c;
+            } else {
+                charColorLastShown = null;
+            }
+        } else {
+            charColorLastShown = null;
         }
+        charColorDirty = false;
 
         const transps = new Set(arr.map(i =>
             charTransparency[i] !== undefined ? String(roundTransparency(charTransparency[i])) : ''
@@ -2434,7 +2508,13 @@ document.addEventListener('DOMContentLoaded', function () {
         setAllOrMixed(charStrike, elements.charStrike);
 
         const fonts = new Set(arr.map(i => charFont[i] || ''));
-        elements.charFont.value = fonts.size === 1 ? ([...fonts][0] || '') : '';
+        if (fonts.size === 1) {
+            const f = [...fonts][0] || '';
+            elements.charFont.value = f;
+        } else {
+            elements.charFont.value = '';
+        }
+        charFontDirty = false;
 
         const strokes = new Set(arr.map(i => charStrokeColor[i] || ''));
         if (strokes.size === 1) {
@@ -2559,6 +2639,15 @@ document.addEventListener('DOMContentLoaded', function () {
     syncCharColorInputs(elements.charStrokeColor, elements.charStrokeColorHex);
     syncCharColorInputs(elements.pointColor, elements.pointColorHex);
 
+    const markCharColorDirty = () => {
+        if (charColorLastShown === null) { charColorDirty = true; return; }
+        if (elements.charColorHex.value !== charColorLastShown) charColorDirty = true;
+    };
+    elements.charColor.addEventListener('input', markCharColorDirty);
+    elements.charColorHex.addEventListener('input', markCharColorDirty);
+
+    elements.charFont.addEventListener('change', () => { charFontDirty = true; });
+
     const markStrokeColorDirty = () => {
         if (charStrokeColorLastShown === null) { charStrokeColorDirty = true; return; }
         const current = elements.charStrokeColorHex.value;
@@ -2609,11 +2698,22 @@ document.addEventListener('DOMContentLoaded', function () {
         setFlag(charUnderline, elements.charUnderline);
         setFlag(charStrike, elements.charStrike);
 
-        const chosenFont = elements.charFont.value;
-        if (chosenFont === '') {
-            selectedChars.forEach(i => delete charFont[i]);
-        } else {
-            selectedChars.forEach(i => { charFont[i] = chosenFont; });
+        if (charFontDirty) {
+            const chosenFont = elements.charFont.value;
+            if (chosenFont === '') {
+                selectedChars.forEach(i => delete charFont[i]);
+            } else {
+                selectedChars.forEach(i => { charFont[i] = chosenFont; });
+            }
+        }
+
+        if (charColorDirty) {
+            selectedChars.forEach(i => { charColors[i] = color; });
+        }
+
+        if (hasTrans) {
+            const t2 = Number(transRaw);
+            selectedChars.forEach(i => { charTransparency[i] = t2; });
         }
 
         if (charStrokeColorDirty) {
@@ -2626,16 +2726,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (charStrokeThicknessDirty) {
             const chosenThickness = parseFloat(elements.charStrokeThickness.value);
             selectedChars.forEach(i => { charStrokeThickness[i] = chosenThickness; });
-        }
-
-        if (!hasTrans) {
-            selectedChars.forEach(i => { charColors[i] = color; });
-        } else {
-            const t2 = Number(transRaw);
-            selectedChars.forEach(i => {
-                charColors[i] = color;
-                charTransparency[i] = t2;
-            });
         }
 
         generate();
@@ -3068,7 +3158,7 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.outputDefaultio.classList.remove('has-warning');
             elements.outputDefaultio.title = '';
             const jsonSafeRichText = JSON.stringify(richText).slice(1, -1);
-            elements.outputJson.value = '"' + userId + '": "' + jsonSafeRichText + '"\n\n,';
+            elements.outputJson.value = '"' + userId + '": "' + jsonSafeRichText + '",';
         }
 
         const animateState = getAnimateState();
@@ -3280,6 +3370,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (attrs.color) {
                         const hex = parseCssColorToHex(attrs.color);
                         if (hex) frame.color = hex;
+                        else warnings.push(t('importUnknownColor').replace('{value}', attrs.color));
                     }
                     if (attrs.transparency !== undefined) {
                         const n = parseFloat(attrs.transparency);
@@ -3301,6 +3392,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (attrs.color) {
                         const hex = parseCssColorToHex(attrs.color);
                         if (hex) frame.strokeColor = hex;
+                        else warnings.push(t('importUnknownColor').replace('{value}', attrs.color));
                     }
                     if (attrs.thickness !== undefined) {
                         const n = parseFloat(attrs.thickness);
@@ -3308,9 +3400,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     openStack.push(frame);
                 }
-            } else if (/^[A-Z][A-Za-z]*=/.test(trimmed) || /^[A-Z][A-Za-z]*=\//.test(trimmed)) {
-                if (trimmed.endsWith('=/') || trimmed.endsWith('=/>')) {
-                    const key = trimmed.replace(/=\/?>?$/, '');
+            } else if (/^[A-Z][A-Za-z]*=/.test(trimmed)) {
+                if (isSelfClosing && /^[A-Z][A-Za-z]*=$/.test(trimmed)) {
+                    const key = trimmed.replace(/=$/, '');
                     if (/^AnimateStyle$/i.test(key)) {
                         state.animateStyle = null;
                     }
@@ -3853,6 +3945,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (elements.helpOverlay && !elements.helpOverlay.classList.contains('hidden')) { closeHelp(); return; }
             if (elements.importOverlay && !elements.importOverlay.classList.contains('hidden')) { closeImport(); return; }
             if (elements.previewOverlay && !elements.previewOverlay.classList.contains('hidden')) { closePreview(); return; }
+            if (pointerDown || isPanning) {
+                pointerDown = false;
+                pointerMode = null;
+                if (isPanning) endPan();
+            }
             if (isTyping) return;
             setSelection([]);
             selectionAnchor = null;
@@ -3861,6 +3958,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (isTyping) return;
+
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+            const len = currentRawText.length;
+            if (len > 0) {
+                const all = [];
+                for (let i = 0; i < len; i++) all.push(i);
+                selectionAnchor = 0;
+                selectionFocus = len - 1;
+                setSelection(all);
+            }
+            e.preventDefault();
+            return;
+        }
 
         if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
             e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -3979,14 +4089,16 @@ document.addEventListener('DOMContentLoaded', function () {
             charItalic = (s.charItalic && typeof s.charItalic === 'object') ? { ...s.charItalic } : {};
             charUnderline = (s.charUnderline && typeof s.charUnderline === 'object') ? { ...s.charUnderline } : {};
             charStrike = (s.charStrike && typeof s.charStrike === 'object') ? { ...s.charStrike } : {};
-            const validFontNames = new Set(ALL_FONTS);
             const rawCharFont = (s.charFont && typeof s.charFont === 'object') ? s.charFont : {};
             charFont = {};
             Object.keys(rawCharFont).forEach(k => {
                 const v = rawCharFont[k];
-                if (typeof v === 'string' && validFontNames.has(v)) {
-                    charFont[k] = v;
-                }
+                if (typeof v !== 'string') return;
+                const trimmed = v.trim();
+                if (!trimmed) return;
+                if (trimmed.length > 100) return;
+                if (/^\[object /.test(trimmed)) return;
+                charFont[k] = trimmed;
             });
             charStrokeColor = (s.charStrokeColor && typeof s.charStrokeColor === 'object') ? { ...s.charStrokeColor } : {};
             charStrokeThickness = (s.charStrokeThickness && typeof s.charStrokeThickness === 'object') ? { ...s.charStrokeThickness } : {};
