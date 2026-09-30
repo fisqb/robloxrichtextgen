@@ -112,6 +112,8 @@ document.addEventListener('DOMContentLoaded', function () {
         strokeThickness: $('strokeThickness'),
         strokeThicknessValue: $('strokeThicknessValue'),
         fontFamily: $('fontFamily'),
+        fontSize: $('fontSize'),
+        fontSizeValue: $('fontSizeValue'),
         preview: $('preview'),
         previewLarge: $('previewLarge'),
         previewOverlay: $('previewOverlay'),
@@ -137,6 +139,8 @@ document.addEventListener('DOMContentLoaded', function () {
         charUnderline: $('charUnderline'),
         charStrike: $('charStrike'),
         charFont: $('charFont'),
+        charFontSize: $('charFontSize'),
+        charFontSizeValue: $('charFontSizeValue'),
         charStrokeColor: $('charStrokeColor'),
         charStrokeColorHex: $('charStrokeColorHex'),
         charStrokeThickness: $('charStrokeThickness'),
@@ -209,6 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let charUnderline = {};
     let charStrike = {};
     let charFont = {};
+    let charFontSize = {};
     let charStrokeColor = {};
     let charStrokeThickness = {};
     let selectedChars = new Set();
@@ -216,6 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let charColorDirty = false;
     let charColorLastShown = null;
     let charFontDirty = false;
+    let charFontSizeDirty = false;
     let charStrokeColorDirty = false;
     let charStrokeThicknessDirty = false;
     let charStrokeColorLastShown = null;
@@ -384,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparency', formatting: 'Formatting',
             lineBreaks: 'Line Breaks', rgbColors: 'RGB Colors',
             stroke: 'Stroke', strokeWidth: 'Stroke Width', font: 'Font',
+            fontSize: 'Font Size',
             animation: 'Animation', none: 'None',
             animateGrouping: 'Animate Grouping',
             groupLetter: 'Letter', groupWord: 'Word', groupAll: 'All',
@@ -469,6 +476,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparencia', formatting: 'Formato',
             lineBreaks: 'Saltos de línea', rgbColors: 'Colores RGB',
             stroke: 'Contorno', strokeWidth: 'Grosor del contorno', font: 'Fuente',
+            fontSize: 'Tamaño de fuente',
             animation: 'Animación', none: 'Ninguna',
             animateGrouping: 'Agrupación de animación',
             groupLetter: 'Letra', groupWord: 'Palabra', groupAll: 'Todo',
@@ -554,6 +562,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparence', formatting: 'Mise en forme',
             lineBreaks: 'Sauts de ligne', rgbColors: 'Couleurs RGB',
             stroke: 'Contour', strokeWidth: 'Épaisseur du contour', font: 'Police',
+            fontSize: 'Taille de police',
             animation: 'Animation', none: 'Aucune',
             animateGrouping: "Groupement d'animation",
             groupLetter: 'Lettre', groupWord: 'Mot', groupAll: 'Tout',
@@ -639,6 +648,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparenz', formatting: 'Formatierung',
             lineBreaks: 'Zeilenumbrüche', rgbColors: 'RGB-Farben',
             stroke: 'Kontur', strokeWidth: 'Konturstärke', font: 'Schriftart',
+            fontSize: 'Schriftgröße',
             animation: 'Animation', none: 'Keine',
             animateGrouping: 'Animationsgruppierung',
             groupLetter: 'Buchstabe', groupWord: 'Wort', groupAll: 'Alle',
@@ -724,6 +734,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Trasparenza', formatting: 'Formattazione',
             lineBreaks: 'Interruzioni di riga', rgbColors: 'Colori RGB',
             stroke: 'Contorno', strokeWidth: 'Spessore contorno', font: 'Carattere',
+            fontSize: 'Dimensione carattere',
             animation: 'Animazione', none: 'Nessuna',
             animateGrouping: 'Raggruppamento animazione',
             groupLetter: 'Lettera', groupWord: 'Parola', groupAll: 'Tutto',
@@ -809,6 +820,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparência', formatting: 'Formatação',
             lineBreaks: 'Quebras de linha', rgbColors: 'Cores RGB',
             stroke: 'Contorno', strokeWidth: 'Largura do contorno', font: 'Fonte',
+            fontSize: 'Tamanho da fonte',
             animation: 'Animação', none: 'Nenhuma',
             animateGrouping: 'Agrupamento de animação',
             groupLetter: 'Letra', groupWord: 'Palavra', groupAll: 'Tudo',
@@ -894,6 +906,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Прозрачность', formatting: 'Форматирование',
             lineBreaks: 'Переносы строк', rgbColors: 'Цвета RGB',
             stroke: 'Обводка', strokeWidth: 'Толщина обводки', font: 'Шрифт',
+            fontSize: 'Размер шрифта',
             animation: 'Анимация', none: 'Нет',
             animateGrouping: 'Группировка анимации',
             groupLetter: 'По буквам', groupWord: 'По словам', groupAll: 'Всё сразу',
@@ -979,6 +992,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: '透明度', formatting: '書式',
             lineBreaks: '改行', rgbColors: 'RGB カラー',
             stroke: '縁取り', strokeWidth: '縁取りの太さ', font: 'フォント',
+            fontSize: 'フォントサイズ',
             animation: 'アニメーション', none: 'なし',
             animateGrouping: 'アニメーションのまとめ',
             groupLetter: '文字', groupWord: '単語', groupAll: 'すべて',
@@ -1064,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: '투명도', formatting: '서식',
             lineBreaks: '줄 바꿈', rgbColors: 'RGB 색상',
             stroke: '외곽선', strokeWidth: '외곽선 두께', font: '글꼴',
+            fontSize: '글꼴 크기',
             animation: '애니메이션', none: '없음',
             animateGrouping: '애니메이션 그룹',
             groupLetter: '글자', groupWord: '단어', groupAll: '전체',
@@ -1149,6 +1164,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: '透明度', formatting: '格式',
             lineBreaks: '换行', rgbColors: 'RGB 颜色',
             stroke: '描边', strokeWidth: '描边宽度', font: '字体',
+            fontSize: '字体大小',
             animation: '动画', none: '无',
             animateGrouping: '动画分组',
             groupLetter: '逐字', groupWord: '逐词', groupAll: '全部',
@@ -1234,6 +1250,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'الشفافية', formatting: 'التنسيق',
             lineBreaks: 'فواصل الأسطر', rgbColors: 'ألوان RGB',
             stroke: 'الحدود', strokeWidth: 'سماكة الحدود', font: 'الخط',
+            fontSize: 'حجم الخط',
             animation: 'الحركة', none: 'بلا',
             animateGrouping: 'تجميع الحركة',
             groupLetter: 'حرف', groupWord: 'كلمة', groupAll: 'الكل',
@@ -1319,6 +1336,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'पारदर्शिता', formatting: 'फॉर्मेटिंग',
             lineBreaks: 'लाइन ब्रेक', rgbColors: 'RGB रंग',
             stroke: 'स्ट्रोक', strokeWidth: 'स्ट्रोक चौड़ाई', font: 'फ़ॉन्ट',
+            fontSize: 'फ़ॉन्ट आकार',
             animation: 'एनिमेशन', none: 'कोई नहीं',
             animateGrouping: 'एनिमेशन समूह',
             groupLetter: 'अक्षर', groupWord: 'शब्द', groupAll: 'सभी',
@@ -1681,13 +1699,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const fontName = perFont || globalFontName || 'SpecialElite';
             const isBold = charBold[glyphIndex] !== undefined ? !!charBold[glyphIndex] : !!globalBold;
             const isItalic = charItalic[glyphIndex] !== undefined ? !!charItalic[glyphIndex] : !!globalItalic;
-            const key = (isItalic ? 'i' : '') + (isBold ? 'b' : '') + '|' + fontName + '|' + ch;
+            const size = charFontSize[glyphIndex] !== undefined ? charFontSize[glyphIndex] : fontSize;
+            const key = (isItalic ? 'i' : '') + (isBold ? 'b' : '') + '|' + fontName + '|' + size + '|' + ch;
             if (metricsCache.has(key)) return metricsCache.get(key);
             const prevFont = ctx.font;
             let spec = '';
             if (isItalic) spec += 'italic ';
             if (isBold) spec += 'bold ';
-            spec += fontSize + 'px ' + fontFamilyFor(fontName);
+            spec += size + 'px ' + fontFamilyFor(fontName);
             ctx.font = spec;
             const m = ctx.measureText(ch === ' ' ? ' ' : ch);
             const w = m.width;
@@ -1833,10 +1852,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const perFont = charFont[g.index];
             const fontName = perFont || options.globalFontName || 'SpecialElite';
             const fontFamily = fontFamilyFor(fontName);
+            const charSize = charFontSize[g.index] !== undefined ? charFontSize[g.index] : fontSize;
             let fontSpec = '';
             if (isItalic) fontSpec += 'italic ';
             if (isBold) fontSpec += 'bold ';
-            fontSpec += fontSize + 'px ' + fontFamily;
+            fontSpec += charSize + 'px ' + fontFamily;
 
             let dx = 0, dy = 0, rot = 0, scale = 1, animAlpha = 1;
             if (animate && animate.style && !rainbowActive) {
@@ -2361,6 +2381,7 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedChars = new Set(indexes);
         charColorDirty = false;
         charFontDirty = false;
+        charFontSizeDirty = false;
         charStrokeColorDirty = false;
         charStrokeThicknessDirty = false;
         updateCharEditor();
@@ -2516,6 +2537,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         charFontDirty = false;
 
+        const sizes = new Set(arr.map(i => charFontSize[i] !== undefined ? String(charFontSize[i]) : ''));
+        if (sizes.size === 1) {
+            const s = [...sizes][0];
+            if (s) {
+                elements.charFontSize.value = s;
+                elements.charFontSizeValue.textContent = s;
+            } else {
+                elements.charFontSize.value = parseFloat(elements.fontSize.value);
+                elements.charFontSizeValue.textContent = elements.fontSize.value;
+            }
+        } else {
+            elements.charFontSize.value = parseFloat(elements.fontSize.value);
+            elements.charFontSizeValue.textContent = elements.fontSize.value;
+        }
+        charFontSizeDirty = false;
+
         const strokes = new Set(arr.map(i => charStrokeColor[i] || ''));
         if (strokes.size === 1) {
             const s = [...strokes][0];
@@ -2648,6 +2685,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     elements.charFont.addEventListener('change', () => { charFontDirty = true; });
 
+    const markCharFontSizeDirty = () => {
+        charFontSizeDirty = true;
+    };
+    elements.charFontSize.addEventListener('input', () => {
+        elements.charFontSizeValue.textContent = elements.charFontSize.value;
+        markCharFontSizeDirty();
+    });
+
     const markStrokeColorDirty = () => {
         if (charStrokeColorLastShown === null) { charStrokeColorDirty = true; return; }
         const current = elements.charStrokeColorHex.value;
@@ -2707,6 +2752,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        if (charFontSizeDirty) {
+            const chosenSize = parseFloat(elements.charFontSize.value);
+            selectedChars.forEach(i => { charFontSize[i] = chosenSize; });
+        }
+
         if (charColorDirty) {
             selectedChars.forEach(i => { charColors[i] = color; });
         }
@@ -2740,6 +2790,7 @@ document.addEventListener('DOMContentLoaded', function () {
             delete charUnderline[i];
             delete charStrike[i];
             delete charFont[i];
+            delete charFontSize[i];
             delete charStrokeColor[i];
             delete charStrokeThickness[i];
         });
@@ -2754,6 +2805,7 @@ document.addEventListener('DOMContentLoaded', function () {
         charUnderline = {};
         charStrike = {};
         charFont = {};
+        charFontSize = {};
         charStrokeColor = {};
         charStrokeThickness = {};
         generate();
@@ -2847,6 +2899,7 @@ document.addEventListener('DOMContentLoaded', function () {
         charUnderline = shiftDictForEdit(charUnderline, oldText, newText);
         charStrike = shiftDictForEdit(charStrike, oldText, newText);
         charFont = shiftDictForEdit(charFont, oldText, newText);
+        charFontSize = shiftDictForEdit(charFontSize, oldText, newText);
         charStrokeColor = shiftDictForEdit(charStrokeColor, oldText, newText);
         charStrokeThickness = shiftDictForEdit(charStrokeThickness, oldText, newText);
         gradientPoints = shiftDictForEdit(gradientPoints, oldText, newText);
@@ -2867,7 +2920,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         };
         prune(charColors); prune(charTransparency); prune(charBold); prune(charItalic);
-        prune(charUnderline); prune(charStrike); prune(charFont);
+        prune(charUnderline); prune(charStrike); prune(charFont); prune(charFontSize);
         prune(charStrokeColor); prune(charStrokeThickness);
         Object.keys(gradientPoints).forEach(k => {
             if (Number(k) >= len) {
@@ -2949,6 +3002,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const rawText = elements.textInput.value || 'Your Text';
         const userId = elements.userId.value || '0';
         const globalFont = elements.fontFamily.value;
+        const globalFontSize = parseFloat(elements.fontSize.value);
         const globalStroke = elements.strokeColor.value;
         const globalThickness = parseFloat(elements.strokeThickness.value);
         const mode = elements.colorMode.value;
@@ -2990,11 +3044,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const isUnderline = charUnderline[i] !== undefined ? !!charUnderline[i] : globalFormatting.underline;
             const isStrike = charStrike[i] !== undefined ? !!charStrike[i] : globalFormatting.strikethrough;
             const font = charFont[i] !== undefined ? charFont[i] : globalFont;
+            const size = charFontSize[i] !== undefined ? charFontSize[i] : globalFontSize;
             const strokeColor = charStrokeColor[i] !== undefined ? charStrokeColor[i] : globalStroke;
             const strokeThickness = charStrokeThickness[i] !== undefined ? charStrokeThickness[i] : globalThickness;
             const trans = transparencyForIndex(i, globalTrans, usePoints);
             const color = colorFn(i) || null;
-            return { isBold, isItalic, isUnderline, isStrike, font, strokeColor, strokeThickness, trans, color };
+            return { isBold, isItalic, isUnderline, isStrike, font, size, strokeColor, strokeThickness, trans, color };
         };
 
         const runs = [];
@@ -3008,6 +3063,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 && a.isUnderline === b.isUnderline
                 && a.isStrike === b.isStrike
                 && a.font === b.font
+                && a.size === b.size
                 && a.strokeColor === b.strokeColor
                 && Math.abs(a.strokeThickness - b.strokeThickness) < 0.001
                 && transAreSimilar(a.trans, b.trans)
@@ -3059,6 +3115,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             desiredKeys.push('font:' + p.font);
             desiredOpen.push({ open: '<font face=\'' + p.font + '\'>', close: '</font>' });
+
+            desiredKeys.push('size:' + p.size);
+            desiredOpen.push({ open: '<font size=\'' + p.size + '\'>', close: '</font>' });
 
             if (p.strokeThickness > 0) {
                 desiredKeys.push('stroke:' + p.strokeColor + ':' + p.strokeThickness);
@@ -3185,6 +3244,7 @@ document.addEventListener('DOMContentLoaded', function () {
             text: '',
             perChar: [],
             globalFont: null,
+            globalFontSize: null,
             globalStrokeColor: null,
             globalStrokeThickness: null,
             globalTransparency: null,
@@ -3206,6 +3266,7 @@ document.addEventListener('DOMContentLoaded', function () {
             color: null,
             transparency: null,
             font: null,
+            fontSize: null,
             strokeColor: null,
             strokeThickness: null
         });
@@ -3220,6 +3281,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (frame.color) c.color = frame.color;
                 if (frame.transparency !== null && frame.transparency !== undefined) c.transparency = frame.transparency;
                 if (frame.font) c.font = frame.font;
+                if (frame.fontSize !== null && frame.fontSize !== undefined) c.fontSize = frame.fontSize;
                 if (frame.strokeColor) c.strokeColor = frame.strokeColor;
                 if (frame.strokeThickness !== null && frame.strokeThickness !== undefined) c.strokeThickness = frame.strokeThickness;
             }
@@ -3358,7 +3420,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (/^font(\s|$)/i.test(trimmed) || /^\/font$/i.test(trimmed)) {
                 if (/^\/font$/i.test(trimmed)) {
                     for (let i = openStack.length - 1; i >= 0; i--) {
-                        if (openStack[i].font !== undefined || openStack[i].color !== undefined || openStack[i].transparency !== undefined) {
+                        if (openStack[i].font !== undefined || openStack[i].color !== undefined || openStack[i].transparency !== undefined || openStack[i].fontSize !== undefined) {
                             openStack.splice(i, 1);
                             break;
                         }
@@ -3367,6 +3429,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     const attrs = parseAttrs(trimmed);
                     const frame = {};
                     if (attrs.face) frame.font = attrs.face;
+                    if (attrs.size !== undefined) {
+                        const n = parseFloat(attrs.size);
+                        if (!isNaN(n)) frame.fontSize = n;
+                    }
                     if (attrs.color) {
                         const hex = parseCssColorToHex(attrs.color);
                         if (hex) frame.color = hex;
@@ -3445,6 +3511,7 @@ document.addEventListener('DOMContentLoaded', function () {
             charUnderline = {};
             charStrike = {};
             charFont = {};
+            charFontSize = {};
             charStrokeColor = {};
             charStrokeThickness = {};
             gradientPoints = {};
@@ -3468,6 +3535,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 charTransparency[idx] = c.transparency;
             }
             if (c.font) charFont[idx] = c.font;
+            if (c.fontSize !== null && c.fontSize !== undefined) {
+                charFontSize[idx] = c.fontSize;
+            }
             if (c.strokeColor) charStrokeColor[idx] = c.strokeColor;
             if (c.strokeThickness !== null && c.strokeThickness !== undefined) {
                 charStrokeThickness[idx] = c.strokeThickness;
@@ -3475,6 +3545,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (state.globalFont) elements.fontFamily.value = state.globalFont;
+        if (state.globalFontSize !== null && state.globalFontSize !== undefined) {
+            elements.fontSize.value = state.globalFontSize;
+            elements.fontSizeValue.textContent = state.globalFontSize;
+        }
         if (state.globalStrokeColor) {
             elements.strokeColor.value = state.globalStrokeColor;
             elements.strokeColorHex.value = state.globalStrokeColor;
@@ -3619,6 +3693,10 @@ document.addEventListener('DOMContentLoaded', function () {
     syncRange(elements.strokeThickness, elements.strokeThicknessValue);
     syncRange(elements.gradientSteps, elements.gradientStepsValue);
     syncRange(elements.transparency, elements.transparencyValue);
+    elements.fontSize.addEventListener('input', () => {
+        elements.fontSizeValue.textContent = elements.fontSize.value;
+        generate();
+    });
 
     function syncGradientTypeFromMode() {
         const modeValue = elements.colorMode.value;
@@ -4045,8 +4123,9 @@ document.addEventListener('DOMContentLoaded', function () {
             strokeColor: elements.strokeColor.value,
             strokeThickness: elements.strokeThickness.value,
             fontFamily: elements.fontFamily.value,
+            fontSize: elements.fontSize.value,
             charColors, charTransparency, charBold, charItalic, charUnderline, charStrike,
-            charFont, charStrokeColor, charStrokeThickness,
+            charFont, charFontSize, charStrokeColor, charStrokeThickness,
             gradientPoints, gradientPointTransparency,
             animateStyle: elements.animateStyle.value,
             animateGrouping: elements.animateGrouping.value,
@@ -4082,6 +4161,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const opt = Array.from(elements.fontFamily.options).find(o => o.value === s.fontFamily);
                 if (opt) elements.fontFamily.value = s.fontFamily;
             }
+            if (s.fontSize !== undefined) { elements.fontSize.value = s.fontSize; elements.fontSizeValue.textContent = s.fontSize; }
 
             charColors = (s.charColors && typeof s.charColors === 'object') ? { ...s.charColors } : {};
             charTransparency = (s.charTransparency && typeof s.charTransparency === 'object') ? { ...s.charTransparency } : {};
@@ -4100,6 +4180,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (/^\[object /.test(trimmed)) return;
                 charFont[k] = trimmed;
             });
+            charFontSize = (s.charFontSize && typeof s.charFontSize === 'object') ? { ...s.charFontSize } : {};
             charStrokeColor = (s.charStrokeColor && typeof s.charStrokeColor === 'object') ? { ...s.charStrokeColor } : {};
             charStrokeThickness = (s.charStrokeThickness && typeof s.charStrokeThickness === 'object') ? { ...s.charStrokeThickness } : {};
             gradientPoints = (s.gradientPoints && typeof s.gradientPoints === 'object') ? { ...s.gradientPoints } : {};
