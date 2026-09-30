@@ -227,6 +227,13 @@
                 </div>
 
                 <div class="control-group">
+                    <label class="checkbox-label checkbox-inline">
+                        <input type="checkbox" id="fontSizeEnabled" />
+                        <span data-i18n="customFontSize">Custom Font Size</span>
+                    </label>
+                </div>
+
+                <div class="control-group" id="fontSizeGroup" style="display:none">
                     <label data-i18n="fontSize">Font Size</label>
                     <div class="range-group">
                         <input type="range" id="fontSize" min="1" max="100" step="1" value="10" />
@@ -491,7 +498,7 @@
                     <option value="" data-i18n="mixedOrDefault">—</option>
                 </select>
             </div>
-            <div class="char-editor-row advanced-only">
+            <div class="char-editor-row advanced-only" id="charFontSizeRow" style="display:none">
                 <label class="char-editor-mini-label" data-i18n="fontSize">Font Size</label>
                 <div class="range-group">
                     <input type="range" id="charFontSize" min="1" max="100" step="1" value="10" />
