@@ -310,6 +310,11 @@ textarea:focus-visible {
     cursor: pointer;
 }
 
+.checkbox-inline {
+    display: inline-flex;
+    width: auto;
+}
+
 .preview-wrap {
     position: relative;
     margin-bottom: 20px;
