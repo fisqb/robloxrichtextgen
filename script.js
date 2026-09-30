@@ -112,6 +112,8 @@ document.addEventListener('DOMContentLoaded', function () {
         strokeThickness: $('strokeThickness'),
         strokeThicknessValue: $('strokeThicknessValue'),
         fontFamily: $('fontFamily'),
+        fontSizeEnabled: $('fontSizeEnabled'),
+        fontSizeGroup: $('fontSizeGroup'),
         fontSize: $('fontSize'),
         fontSizeValue: $('fontSizeValue'),
         preview: $('preview'),
@@ -139,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
         charUnderline: $('charUnderline'),
         charStrike: $('charStrike'),
         charFont: $('charFont'),
+        charFontSizeRow: $('charFontSizeRow'),
         charFontSize: $('charFontSize'),
         charFontSizeValue: $('charFontSizeValue'),
         charStrokeColor: $('charStrokeColor'),
@@ -390,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparency', formatting: 'Formatting',
             lineBreaks: 'Line Breaks', rgbColors: 'RGB Colors',
             stroke: 'Stroke', strokeWidth: 'Stroke Width', font: 'Font',
-            fontSize: 'Font Size',
+            fontSize: 'Font Size', customFontSize: 'Custom Font Size',
             animation: 'Animation', none: 'None',
             animateGrouping: 'Animate Grouping',
             groupLetter: 'Letter', groupWord: 'Word', groupAll: 'All',
@@ -476,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparencia', formatting: 'Formato',
             lineBreaks: 'Saltos de línea', rgbColors: 'Colores RGB',
             stroke: 'Contorno', strokeWidth: 'Grosor del contorno', font: 'Fuente',
-            fontSize: 'Tamaño de fuente',
+            fontSize: 'Tamaño de fuente', customFontSize: 'Tamaño de fuente personalizado',
             animation: 'Animación', none: 'Ninguna',
             animateGrouping: 'Agrupación de animación',
             groupLetter: 'Letra', groupWord: 'Palabra', groupAll: 'Todo',
@@ -562,7 +565,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparence', formatting: 'Mise en forme',
             lineBreaks: 'Sauts de ligne', rgbColors: 'Couleurs RGB',
             stroke: 'Contour', strokeWidth: 'Épaisseur du contour', font: 'Police',
-            fontSize: 'Taille de police',
+            fontSize: 'Taille de police', customFontSize: 'Taille de police personnalisée',
             animation: 'Animation', none: 'Aucune',
             animateGrouping: "Groupement d'animation",
             groupLetter: 'Lettre', groupWord: 'Mot', groupAll: 'Tout',
@@ -648,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparenz', formatting: 'Formatierung',
             lineBreaks: 'Zeilenumbrüche', rgbColors: 'RGB-Farben',
             stroke: 'Kontur', strokeWidth: 'Konturstärke', font: 'Schriftart',
-            fontSize: 'Schriftgröße',
+            fontSize: 'Schriftgröße', customFontSize: 'Benutzerdefinierte Schriftgröße',
             animation: 'Animation', none: 'Keine',
             animateGrouping: 'Animationsgruppierung',
             groupLetter: 'Buchstabe', groupWord: 'Wort', groupAll: 'Alle',
@@ -734,7 +737,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Trasparenza', formatting: 'Formattazione',
             lineBreaks: 'Interruzioni di riga', rgbColors: 'Colori RGB',
             stroke: 'Contorno', strokeWidth: 'Spessore contorno', font: 'Carattere',
-            fontSize: 'Dimensione carattere',
+            fontSize: 'Dimensione carattere', customFontSize: 'Dimensione carattere personalizzata',
             animation: 'Animazione', none: 'Nessuna',
             animateGrouping: 'Raggruppamento animazione',
             groupLetter: 'Lettera', groupWord: 'Parola', groupAll: 'Tutto',
@@ -820,7 +823,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Transparência', formatting: 'Formatação',
             lineBreaks: 'Quebras de linha', rgbColors: 'Cores RGB',
             stroke: 'Contorno', strokeWidth: 'Largura do contorno', font: 'Fonte',
-            fontSize: 'Tamanho da fonte',
+            fontSize: 'Tamanho da fonte', customFontSize: 'Tamanho da fonte personalizado',
             animation: 'Animação', none: 'Nenhuma',
             animateGrouping: 'Agrupamento de animação',
             groupLetter: 'Letra', groupWord: 'Palavra', groupAll: 'Tudo',
@@ -906,7 +909,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'Прозрачность', formatting: 'Форматирование',
             lineBreaks: 'Переносы строк', rgbColors: 'Цвета RGB',
             stroke: 'Обводка', strokeWidth: 'Толщина обводки', font: 'Шрифт',
-            fontSize: 'Размер шрифта',
+            fontSize: 'Размер шрифта', customFontSize: 'Свой размер шрифта',
             animation: 'Анимация', none: 'Нет',
             animateGrouping: 'Группировка анимации',
             groupLetter: 'По буквам', groupWord: 'По словам', groupAll: 'Всё сразу',
@@ -992,7 +995,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: '透明度', formatting: '書式',
             lineBreaks: '改行', rgbColors: 'RGB カラー',
             stroke: '縁取り', strokeWidth: '縁取りの太さ', font: 'フォント',
-            fontSize: 'フォントサイズ',
+            fontSize: 'フォントサイズ', customFontSize: 'カスタムフォントサイズ',
             animation: 'アニメーション', none: 'なし',
             animateGrouping: 'アニメーションのまとめ',
             groupLetter: '文字', groupWord: '単語', groupAll: 'すべて',
@@ -1078,7 +1081,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: '투명도', formatting: '서식',
             lineBreaks: '줄 바꿈', rgbColors: 'RGB 색상',
             stroke: '외곽선', strokeWidth: '외곽선 두께', font: '글꼴',
-            fontSize: '글꼴 크기',
+            fontSize: '글꼴 크기', customFontSize: '사용자 지정 글꼴 크기',
             animation: '애니메이션', none: '없음',
             animateGrouping: '애니메이션 그룹',
             groupLetter: '글자', groupWord: '단어', groupAll: '전체',
@@ -1164,7 +1167,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: '透明度', formatting: '格式',
             lineBreaks: '换行', rgbColors: 'RGB 颜色',
             stroke: '描边', strokeWidth: '描边宽度', font: '字体',
-            fontSize: '字体大小',
+            fontSize: '字体大小', customFontSize: '自定义字体大小',
             animation: '动画', none: '无',
             animateGrouping: '动画分组',
             groupLetter: '逐字', groupWord: '逐词', groupAll: '全部',
@@ -1250,7 +1253,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'الشفافية', formatting: 'التنسيق',
             lineBreaks: 'فواصل الأسطر', rgbColors: 'ألوان RGB',
             stroke: 'الحدود', strokeWidth: 'سماكة الحدود', font: 'الخط',
-            fontSize: 'حجم الخط',
+            fontSize: 'حجم الخط', customFontSize: 'حجم خط مخصص',
             animation: 'الحركة', none: 'بلا',
             animateGrouping: 'تجميع الحركة',
             groupLetter: 'حرف', groupWord: 'كلمة', groupAll: 'الكل',
@@ -1336,7 +1339,7 @@ document.addEventListener('DOMContentLoaded', function () {
             transparency: 'पारदर्शिता', formatting: 'फॉर्मेटिंग',
             lineBreaks: 'लाइन ब्रेक', rgbColors: 'RGB रंग',
             stroke: 'स्ट्रोक', strokeWidth: 'स्ट्रोक चौड़ाई', font: 'फ़ॉन्ट',
-            fontSize: 'फ़ॉन्ट आकार',
+            fontSize: 'फ़ॉन्ट आकार', customFontSize: 'कस्टम फ़ॉन्ट आकार',
             animation: 'एनिमेशन', none: 'कोई नहीं',
             animateGrouping: 'एनिमेशन समूह',
             groupLetter: 'अक्षर', groupWord: 'शब्द', groupAll: 'सभी',
@@ -1447,6 +1450,19 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedPoint = null;
     }
 
+    function isFontSizeEnabled() {
+        return !!(elements.fontSizeEnabled && elements.fontSizeEnabled.checked);
+    }
+
+    function updateFontSizeVisibility() {
+        if (!elements.fontSizeGroup) return;
+        elements.fontSizeGroup.style.display = isFontSizeEnabled() ? 'block' : 'none';
+        if (elements.charFontSizeRow) {
+            elements.charFontSizeRow.style.display =
+                (isFontSizeEnabled() && currentUiMode === 'advanced') ? 'flex' : 'none';
+        }
+    }
+
     function applyUiMode(mode) {
         currentUiMode = (mode === 'advanced') ? 'advanced' : 'simple';
         if (elements.uiModeSelect) elements.uiModeSelect.value = currentUiMode;
@@ -1469,6 +1485,7 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshEditorHost();
         updateCharEditor();
         updatePointsEditor();
+        updateFontSizeVisibility();
     }
 
     function applyLanguage(lang) {
@@ -1699,7 +1716,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const fontName = perFont || globalFontName || 'SpecialElite';
             const isBold = charBold[glyphIndex] !== undefined ? !!charBold[glyphIndex] : !!globalBold;
             const isItalic = charItalic[glyphIndex] !== undefined ? !!charItalic[glyphIndex] : !!globalItalic;
-            const size = charFontSize[glyphIndex] !== undefined ? charFontSize[glyphIndex] : fontSize;
+            const size = isFontSizeEnabled() && charFontSize[glyphIndex] !== undefined
+                ? charFontSize[glyphIndex]
+                : fontSize;
             const key = (isItalic ? 'i' : '') + (isBold ? 'b' : '') + '|' + fontName + '|' + size + '|' + ch;
             if (metricsCache.has(key)) return metricsCache.get(key);
             const prevFont = ctx.font;
@@ -1852,7 +1871,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const perFont = charFont[g.index];
             const fontName = perFont || options.globalFontName || 'SpecialElite';
             const fontFamily = fontFamilyFor(fontName);
-            const charSize = charFontSize[g.index] !== undefined ? charFontSize[g.index] : fontSize;
+            const charSize = isFontSizeEnabled() && charFontSize[g.index] !== undefined
+                ? charFontSize[g.index]
+                : fontSize;
             let fontSpec = '';
             if (isItalic) fontSpec += 'italic ';
             if (isBold) fontSpec += 'bold ';
@@ -2685,12 +2706,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     elements.charFont.addEventListener('change', () => { charFontDirty = true; });
 
-    const markCharFontSizeDirty = () => {
-        charFontSizeDirty = true;
-    };
     elements.charFontSize.addEventListener('input', () => {
         elements.charFontSizeValue.textContent = elements.charFontSize.value;
-        markCharFontSizeDirty();
+        charFontSizeDirty = true;
     });
 
     const markStrokeColorDirty = () => {
@@ -2752,7 +2770,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        if (charFontSizeDirty) {
+        if (charFontSizeDirty && isFontSizeEnabled()) {
             const chosenSize = parseFloat(elements.charFontSize.value);
             selectedChars.forEach(i => { charFontSize[i] = chosenSize; });
         }
@@ -3002,7 +3020,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const rawText = elements.textInput.value || 'Your Text';
         const userId = elements.userId.value || '0';
         const globalFont = elements.fontFamily.value;
-        const globalFontSize = parseFloat(elements.fontSize.value);
+        const fontSizeEnabled = isFontSizeEnabled();
+        const globalFontSize = fontSizeEnabled ? parseFloat(elements.fontSize.value) : null;
         const globalStroke = elements.strokeColor.value;
         const globalThickness = parseFloat(elements.strokeThickness.value);
         const mode = elements.colorMode.value;
@@ -3044,7 +3063,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const isUnderline = charUnderline[i] !== undefined ? !!charUnderline[i] : globalFormatting.underline;
             const isStrike = charStrike[i] !== undefined ? !!charStrike[i] : globalFormatting.strikethrough;
             const font = charFont[i] !== undefined ? charFont[i] : globalFont;
-            const size = charFontSize[i] !== undefined ? charFontSize[i] : globalFontSize;
+            const size = fontSizeEnabled
+                ? (charFontSize[i] !== undefined ? charFontSize[i] : globalFontSize)
+                : null;
             const strokeColor = charStrokeColor[i] !== undefined ? charStrokeColor[i] : globalStroke;
             const strokeThickness = charStrokeThickness[i] !== undefined ? charStrokeThickness[i] : globalThickness;
             const trans = transparencyForIndex(i, globalTrans, usePoints);
@@ -3116,8 +3137,10 @@ document.addEventListener('DOMContentLoaded', function () {
             desiredKeys.push('font:' + p.font);
             desiredOpen.push({ open: '<font face=\'' + p.font + '\'>', close: '</font>' });
 
-            desiredKeys.push('size:' + p.size);
-            desiredOpen.push({ open: '<font size=\'' + p.size + '\'>', close: '</font>' });
+            if (p.size !== null && p.size !== undefined) {
+                desiredKeys.push('size:' + p.size);
+                desiredOpen.push({ open: '<font size=\'' + p.size + '\'>', close: '</font>' });
+            }
 
             if (p.strokeThickness > 0) {
                 desiredKeys.push('stroke:' + p.strokeColor + ':' + p.strokeThickness);
@@ -3537,6 +3560,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (c.font) charFont[idx] = c.font;
             if (c.fontSize !== null && c.fontSize !== undefined) {
                 charFontSize[idx] = c.fontSize;
+                if (elements.fontSizeEnabled) elements.fontSizeEnabled.checked = true;
             }
             if (c.strokeColor) charStrokeColor[idx] = c.strokeColor;
             if (c.strokeThickness !== null && c.strokeThickness !== undefined) {
@@ -3546,6 +3570,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (state.globalFont) elements.fontFamily.value = state.globalFont;
         if (state.globalFontSize !== null && state.globalFontSize !== undefined) {
+            if (elements.fontSizeEnabled) elements.fontSizeEnabled.checked = true;
             elements.fontSize.value = state.globalFontSize;
             elements.fontSizeValue.textContent = state.globalFontSize;
         }
@@ -3586,6 +3611,8 @@ document.addEventListener('DOMContentLoaded', function () {
         selectionFocus = null;
 
         prevText = elements.textInput.value;
+
+        updateFontSizeVisibility();
 
         return { ok: true, warnings };
     }
@@ -3695,6 +3722,14 @@ document.addEventListener('DOMContentLoaded', function () {
     syncRange(elements.transparency, elements.transparencyValue);
     elements.fontSize.addEventListener('input', () => {
         elements.fontSizeValue.textContent = elements.fontSize.value;
+        generate();
+    });
+
+    elements.fontSizeEnabled.addEventListener('change', () => {
+        if (!isFontSizeEnabled()) {
+            charFontSize = {};
+        }
+        updateFontSizeVisibility();
         generate();
     });
 
@@ -4123,6 +4158,7 @@ document.addEventListener('DOMContentLoaded', function () {
             strokeColor: elements.strokeColor.value,
             strokeThickness: elements.strokeThickness.value,
             fontFamily: elements.fontFamily.value,
+            fontSizeEnabled: isFontSizeEnabled(),
             fontSize: elements.fontSize.value,
             charColors, charTransparency, charBold, charItalic, charUnderline, charStrike,
             charFont, charFontSize, charStrokeColor, charStrokeThickness,
@@ -4161,6 +4197,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const opt = Array.from(elements.fontFamily.options).find(o => o.value === s.fontFamily);
                 if (opt) elements.fontFamily.value = s.fontFamily;
             }
+            if (typeof s.fontSizeEnabled === 'boolean') {
+                elements.fontSizeEnabled.checked = s.fontSizeEnabled;
+            }
             if (s.fontSize !== undefined) { elements.fontSize.value = s.fontSize; elements.fontSizeValue.textContent = s.fontSize; }
 
             charColors = (s.charColors && typeof s.charColors === 'object') ? { ...s.charColors } : {};
@@ -4196,6 +4235,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const z = parseFloat(s.previewZoom);
                 if (elements.previewZoomValue) elements.previewZoomValue.textContent = z.toFixed(1) + 'x';
             }
+
+            updateFontSizeVisibility();
         } catch (e) { console.warn('Failed to apply state', e); }
     }
 
@@ -4416,6 +4457,7 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleGradientColorControls();
     toggleDefaultioControls();
     toggleColorSourceControls();
+    updateFontSizeVisibility();
 
     prevText = elements.textInput.value;
 
