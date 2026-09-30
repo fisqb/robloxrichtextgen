@@ -226,6 +226,14 @@
                     <select id="fontFamily"></select>
                 </div>
 
+                <div class="control-group">
+                    <label data-i18n="fontSize">Font Size</label>
+                    <div class="range-group">
+                        <input type="range" id="fontSize" min="1" max="100" step="1" value="10" />
+                        <span id="fontSizeValue">10</span>
+                    </div>
+                </div>
+
                 <div class="control-group advanced-only" id="defaultioControls" style="display:none">
                     <label data-i18n="animation">Animation</label>
                     <select id="animateStyle">
@@ -431,7 +439,7 @@
                 <div class="import-body">
                     <label class="import-label" data-i18n="importPasteLabel" for="importTextarea">Paste your Rich Text code</label>
                     <textarea id="importTextarea" rows="14" spellcheck="false"
-    placeholder="&lt;font face='SpecialElite'&gt;&lt;stroke color='#0a0a1a' thickness='2'&gt;&lt;font color='#00d4ff'&gt;Rich Text&lt;/font&gt;&lt;/stroke&gt;&lt;/font&gt;"></textarea>
+    placeholder="&lt;font face='SpecialElite'&gt;&lt;stroke color='#0a0a1a' thickness='2'&gt;&lt;font color='#00d4ff' size='10'&gt;Rich Text&lt;/font&gt;&lt;/stroke&gt;&lt;/font&gt;"></textarea>
                     <label class="import-checkbox-label">
                         <input type="checkbox" id="importClearExisting" checked />
                         <span data-i18n="importReplaceExisting">Replace existing character formatting</span>
@@ -482,6 +490,13 @@
                 <select id="charFont">
                     <option value="" data-i18n="mixedOrDefault">—</option>
                 </select>
+            </div>
+            <div class="char-editor-row advanced-only">
+                <label class="char-editor-mini-label" data-i18n="fontSize">Font Size</label>
+                <div class="range-group">
+                    <input type="range" id="charFontSize" min="1" max="100" step="1" value="10" />
+                    <span id="charFontSizeValue">10</span>
+                </div>
             </div>
             <div class="char-editor-row advanced-only">
                 <label class="char-editor-mini-label" data-i18n="stroke">Stroke</label>
