@@ -286,6 +286,7 @@ textarea:focus-visible {
 .formatting-group {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .checkbox-label {
