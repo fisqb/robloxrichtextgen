@@ -78,6 +78,17 @@ document.addEventListener('DOMContentLoaded', function () {
         'magenta': '#ff00ff', 'fuchsia': '#ff00ff', 'navy': '#000080'
     };
 
+    const WEIGHT_NAMES = {
+        'thin': 'Thin', 'extralight': 'ExtraLight', 'light': 'Light',
+        'regular': 'Regular', 'medium': 'Medium', 'semibold': 'SemiBold',
+        'bold': 'Bold', 'extrabold': 'ExtraBold', 'heavy': 'Heavy'
+    };
+
+    const WEIGHT_TO_NUMBER = {
+        'Thin': 100, 'ExtraLight': 200, 'Light': 300, 'Regular': 400,
+        'Medium': 500, 'SemiBold': 600, 'Bold': 700, 'ExtraBold': 800, 'Heavy': 900
+    };
+
     const fontFamilyFor = (robloxFont) => FONT_FALLBACK_MAP[robloxFont] || robloxFont || 'Arial, sans-serif';
 
     const $ = id => document.getElementById(id);
@@ -99,18 +110,35 @@ document.addEventListener('DOMContentLoaded', function () {
         gradientType: $('gradientType'),
         gradientSteps: $('gradientSteps'),
         gradientStepsValue: $('gradientStepsValue'),
-        transparency: $('transparency'),
-        transparencyValue: $('transparencyValue'),
+        fontTransparency: $('fontTransparency'),
+        fontTransparencyValue: $('fontTransparencyValue'),
         bold: $('bold'),
         italic: $('italic'),
         underline: $('underline'),
         strikethrough: $('strikethrough'),
+        fontWeight: $('fontWeight'),
+        uppercase: $('uppercase'),
+        smallcaps: $('smallcaps'),
+        markEnabled: $('markEnabled'),
+        markDetailsGroup: $('markDetailsGroup'),
+        markColor: $('markColor'),
+        markColorHex: $('markColorHex'),
+        markTransparency: $('markTransparency'),
+        markTransparencyValue: $('markTransparencyValue'),
+        commentText: $('commentText'),
+        commentBefore: $('commentBefore'),
+        commentAfter: $('commentAfter'),
         lineBreaks: $('lineBreaks'),
         rgbColors: $('rgbColors'),
         strokeColor: $('strokeColor'),
         strokeColorHex: $('strokeColorHex'),
         strokeThickness: $('strokeThickness'),
         strokeThicknessValue: $('strokeThicknessValue'),
+        strokeTransparency: $('strokeTransparency'),
+        strokeTransparencyValue: $('strokeTransparencyValue'),
+        strokeJoins: $('strokeJoins'),
+        strokeSizing: $('strokeSizing'),
+        shortAttributes: $('shortAttributes'),
         fontFamily: $('fontFamily'),
         fontSizeEnabled: $('fontSizeEnabled'),
         fontSizeGroup: $('fontSizeGroup'),
@@ -135,12 +163,16 @@ document.addEventListener('DOMContentLoaded', function () {
         charEditorClose: $('charEditorClose'),
         charColor: $('charColor'),
         charColorHex: $('charColorHex'),
-        charTransparency: $('charTransparency'),
+        charFontTransparency: $('charFontTransparency'),
         charBold: $('charBold'),
         charItalic: $('charItalic'),
         charUnderline: $('charUnderline'),
         charStrike: $('charStrike'),
+        charUppercase: $('charUppercase'),
+        charSmallcaps: $('charSmallcaps'),
+        charMarkEnabled: $('charMarkEnabled'),
         charFont: $('charFont'),
+        charFontWeight: $('charFontWeight'),
         charFontSizeRow: $('charFontSizeRow'),
         charFontSize: $('charFontSize'),
         charFontSizeValue: $('charFontSizeValue'),
@@ -148,6 +180,15 @@ document.addEventListener('DOMContentLoaded', function () {
         charStrokeColorHex: $('charStrokeColorHex'),
         charStrokeThickness: $('charStrokeThickness'),
         charStrokeThicknessValue: $('charStrokeThicknessValue'),
+        charStrokeTransparency: $('charStrokeTransparency'),
+        charStrokeTransparencyValue: $('charStrokeTransparencyValue'),
+        charStrokeJoins: $('charStrokeJoins'),
+        charStrokeSizing: $('charStrokeSizing'),
+        charMarkDetailsGroup: $('charMarkDetailsGroup'),
+        charMarkColor: $('charMarkColor'),
+        charMarkColorHex: $('charMarkColorHex'),
+        charMarkTransparency: $('charMarkTransparency'),
+        charMarkTransparencyValue: $('charMarkTransparencyValue'),
         charApply: $('charApply'),
         charReset: $('charReset'),
         charResetAll: $('charResetAll'),
@@ -210,25 +251,38 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     let charColors = {};
-    let charTransparency = {};
+    let charFontTransparency = {};
     let charBold = {};
     let charItalic = {};
     let charUnderline = {};
     let charStrike = {};
+    let charUppercase = {};
+    let charSmallcaps = {};
+    let charMarkEnabled = {};
     let charFont = {};
     let charFontSize = {};
+    let charWeight = {};
     let charStrokeColor = {};
     let charStrokeThickness = {};
+    let charStrokeTransparency = {};
+    let charStrokeJoins = {};
+    let charStrokeSizing = {};
+    let charMarkColor = {};
+    let charMarkTransparency = {};
     let selectedChars = new Set();
 
     let charColorDirty = false;
     let charColorLastShown = null;
     let charFontDirty = false;
     let charFontSizeDirty = false;
+    let charWeightDirty = false;
     let charStrokeColorDirty = false;
     let charStrokeThicknessDirty = false;
     let charStrokeColorLastShown = null;
     let charStrokeThicknessLastShown = null;
+    let charMarkColorDirty = false;
+    let charMarkColorLastShown = null;
+    let charMarkTransparencyDirty = false;
 
     let gradientPoints = {};
     let gradientPointTransparency = {};
@@ -246,6 +300,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const isValidHex = hex => /^#[0-9A-F]{6}$/i.test(hex);
     const isValidTransparency = v => v !== '' && !isNaN(v) && Number(v) >= 0 && Number(v) <= 1;
     const roundTransparency = t => Math.round(Number(t) * 10) / 10;
+    const roundThickness = t => Math.round(Number(t) * 2) / 2;
 
     const TRANSPARENCY_MERGE_THRESHOLD = 0.001;
     const transAreSimilar = (a, b) => {
@@ -377,6 +432,48 @@ document.addEventListener('DOMContentLoaded', function () {
         return { canvas: _measureCanvas, ctx: _measureCtx };
     };
 
+    const isShortAttrsEnabled = () => !!(elements.shortAttributes && elements.shortAttributes.checked);
+    const attrThickness = () => isShortAttrsEnabled() ? 'th' : 'thickness';
+    const attrTransparency = () => isShortAttrsEnabled() ? 'tr' : 'transparency';
+    const tagUppercase = () => isShortAttrsEnabled() ? 'uc' : 'uppercase';
+    const tagSmallcaps = () => isShortAttrsEnabled() ? 'sc' : 'smallcaps';
+
+    const normalizeWeight = (value) => {
+        if (value === null || value === undefined) return null;
+        const s = String(value).trim();
+        if (s === '') return null;
+        if (/^\d+$/.test(s)) {
+            const n = parseInt(s, 10);
+            if (n >= 100 && n <= 900 && n % 100 === 0) {
+                for (const [name, num] of Object.entries(WEIGHT_TO_NUMBER)) {
+                    if (num === n) return name;
+                }
+                return null;
+            }
+            return null;
+        }
+        const key = s.toLowerCase().replace(/[\s_-]/g, '');
+        return WEIGHT_NAMES[key] || null;
+    };
+
+    const weightToCss = (name) => {
+        if (!name) return 400;
+        if (WEIGHT_TO_NUMBER[name]) return WEIGHT_TO_NUMBER[name];
+        const norm = normalizeWeight(name);
+        return norm && WEIGHT_TO_NUMBER[norm] ? WEIGHT_TO_NUMBER[norm] : 400;
+    };
+
+    const buildOutputComment = () => {
+        if (currentUiMode !== 'advanced') return { before: '', after: '' };
+        const txt = (elements.commentText && elements.commentText.value || '').trim();
+        if (!txt) return { before: '', after: '' };
+        const wrapped = '<!--' + txt + '-->';
+        return {
+            before: elements.commentBefore && elements.commentBefore.checked ? wrapped : '',
+            after: elements.commentAfter && elements.commentAfter.checked ? wrapped : ''
+        };
+    };
+
     const SETTINGS_KEY = 'richTextGenSettings';
     const translations = {
         en: {
@@ -390,9 +487,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: 'Color Source', modeOption: 'Mode (Solid / Gradient / Rainbow)', gradientPoints: 'Gradient Points',
             outputFormat: 'Output Format', robloxRichText: 'Roblox RichText (native)', defaultioRichText: 'Defaultio RichText Module',
             color: 'Color', color1: 'Color 1', color2: 'Color 2', steps: 'Steps',
-            transparency: 'Transparency', formatting: 'Formatting',
+            fontTransparency: 'Font Transparency',
+            strokeTransparency: 'Stroke Transparency',
+            strokeJoins: 'Stroke Joins',
+            strokeSizing: 'Stroke Sizing',
+            joinsRound: 'Round', joinsBevel: 'Bevel', joinsMiter: 'Miter',
+            sizingFixed: 'Fixed (pixels)', sizingScaled: 'Scaled (relative)',
+            shortAttributes: 'Short attributes (th/tr/uc/sc)',
+            commentText: 'Comment',
+            commentBefore: 'Before output',
+            commentAfter: 'After output',
+            weight: 'Font Weight', weightDefault: '— Default —',
+            textTransform: 'Text Transform',
+            uppercaseLabel: 'Uppercase', smallcapsLabel: 'Small Caps',
+            uppercaseShort: 'UC', smallcapsShort: 'SC',
+            mark: 'Mark', markEnabled: 'Enable Mark', markTransparency: 'Mark Transparency',
+            formatting: 'Formatting',
             lineBreaks: 'Line Breaks', rgbColors: 'RGB Colors',
-            stroke: 'Stroke', strokeWidth: 'Stroke Width', font: 'Font',
+            stroke: 'Stroke', strokeThickness: 'Stroke Thickness', font: 'Font',
             fontSize: 'Font Size', customFontSize: 'Custom Font Size',
             animation: 'Animation', none: 'None',
             animateGrouping: 'Animate Grouping',
@@ -431,6 +543,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'Nothing to import — the code was empty or contained no readable text.',
             importBadTag: 'Unrecognized or malformed tag: {tag}',
             importUnknownColor: 'Unknown color value: {value}',
+            importUnknownWeight: 'Unknown font weight value: {value}',
             cancel: 'Cancel',
             importBtn: 'Import',
             helpTitle: 'Tips & Help', helpGettingStarted: 'Getting started',
@@ -462,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: 'The generated Rich Text / Defaultio output is unaffected.',
             helpImportRichText: 'Importing Rich Text',
             helpImportRichText1: 'Click Import next to the output to paste an existing Rich Text code.',
-            helpImportRichText2: 'Both Roblox native tags (font, b, i, u, s, stroke) and Defaultio tags are supported.',
+            helpImportRichText2: 'Both Roblox native tags (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) and Defaultio tags are supported.',
             helpImportRichText3: 'The imported code replaces the current character formatting and can be edited normally afterwards.'
         },
         es: {
@@ -476,9 +589,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: 'Fuente de color', modeOption: 'Modo (Sólido / Degradado / Arcoíris)', gradientPoints: 'Puntos de degradado',
             outputFormat: 'Formato de salida', robloxRichText: 'Roblox RichText (nativo)', defaultioRichText: 'Módulo Defaultio RichText',
             color: 'Color', color1: 'Color 1', color2: 'Color 2', steps: 'Pasos',
+            fontTransparency: 'Transparencia del texto',
+            strokeTransparency: 'Transparencia del contorno',
+            strokeJoins: 'Uniones del contorno',
+            strokeSizing: 'Escalado del contorno',
+            joinsRound: 'Redondeado', joinsBevel: 'Biselado', joinsMiter: 'Inglete',
+            sizingFixed: 'Fijo (píxeles)', sizingScaled: 'Escalado (relativo)',
+            shortAttributes: 'Atributos cortos (th/tr/uc/sc)',
+            commentText: 'Comentario',
+            commentBefore: 'Antes de la salida',
+            commentAfter: 'Después de la salida',
+            weight: 'Grosor de fuente', weightDefault: '— Predeterminado —',
+            textTransform: 'Transformación de texto',
+            uppercaseLabel: 'Mayúsculas', smallcapsLabel: 'Versalitas',
+            uppercaseShort: 'MAY', smallcapsShort: 'VER',
+            mark: 'Resaltado', markEnabled: 'Activar resaltado', markTransparency: 'Transparencia del resaltado',
             transparency: 'Transparencia', formatting: 'Formato',
             lineBreaks: 'Saltos de línea', rgbColors: 'Colores RGB',
-            stroke: 'Contorno', strokeWidth: 'Grosor del contorno', font: 'Fuente',
+            stroke: 'Contorno', strokeThickness: 'Grosor del contorno', font: 'Fuente',
             fontSize: 'Tamaño de fuente', customFontSize: 'Tamaño de fuente personalizado',
             animation: 'Animación', none: 'Ninguna',
             animateGrouping: 'Agrupación de animación',
@@ -517,6 +645,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'Nada que importar: el código estaba vacío o no contenía texto legible.',
             importBadTag: 'Etiqueta no reconocida o mal formada: {tag}',
             importUnknownColor: 'Valor de color desconocido: {value}',
+            importUnknownWeight: 'Valor de grosor de fuente desconocido: {value}',
             cancel: 'Cancelar',
             importBtn: 'Importar',
             helpTitle: 'Ayuda y consejos', helpGettingStarted: 'Primeros pasos',
@@ -548,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: 'La salida generada de Rich Text / Defaultio no se ve afectada.',
             helpImportRichText: 'Importar Rich Text',
             helpImportRichText1: 'Haz clic en Importar Rich Text junto a la salida para pegar un código Rich Text existente.',
-            helpImportRichText2: 'Se admiten tanto las etiquetas nativas de Roblox (font, b, i, u, s, stroke) como las etiquetas Defaultio.',
+            helpImportRichText2: 'Se admiten tanto las etiquetas nativas de Roblox (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) como las etiquetas Defaultio.',
             helpImportRichText3: 'El código importado reemplaza el formato de caracteres actual y se puede editar normalmente después.'
         },
         fr: {
@@ -562,9 +691,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: 'Source de couleur', modeOption: 'Mode (Uni / Dégradé / Arc-en-ciel)', gradientPoints: 'Points de dégradé',
             outputFormat: 'Format de sortie', robloxRichText: 'Roblox RichText (natif)', defaultioRichText: 'Module Defaultio RichText',
             color: 'Couleur', color1: 'Couleur 1', color2: 'Couleur 2', steps: 'Étapes',
+            fontTransparency: 'Transparence du texte',
+            strokeTransparency: 'Transparence du contour',
+            strokeJoins: 'Jonctions du contour',
+            strokeSizing: 'Mise à l\'échelle du contour',
+            joinsRound: 'Arrondi', joinsBevel: 'Biseauté', joinsMiter: 'Onglet',
+            sizingFixed: 'Fixe (pixels)', sizingScaled: 'Relatif (échelle)',
+            shortAttributes: 'Attributs courts (th/tr/uc/sc)',
+            commentText: 'Commentaire',
+            commentBefore: 'Avant la sortie',
+            commentAfter: 'Après la sortie',
+            weight: 'Graisse de police', weightDefault: '— Par défaut —',
+            textTransform: 'Transformation du texte',
+            uppercaseLabel: 'Majuscules', smallcapsLabel: 'Petites capitales',
+            uppercaseShort: 'MAJ', smallcapsShort: 'PC',
+            mark: 'Surlignage', markEnabled: 'Activer le surlignage', markTransparency: 'Transparence du surlignage',
             transparency: 'Transparence', formatting: 'Mise en forme',
             lineBreaks: 'Sauts de ligne', rgbColors: 'Couleurs RGB',
-            stroke: 'Contour', strokeWidth: 'Épaisseur du contour', font: 'Police',
+            stroke: 'Contour', strokeThickness: 'Épaisseur du contour', font: 'Police',
             fontSize: 'Taille de police', customFontSize: 'Taille de police personnalisée',
             animation: 'Animation', none: 'Aucune',
             animateGrouping: "Groupement d'animation",
@@ -603,6 +747,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'Rien à importer — le code était vide ou ne contenait aucun texte lisible.',
             importBadTag: 'Balise non reconnue ou mal formée : {tag}',
             importUnknownColor: 'Valeur de couleur inconnue : {value}',
+            importUnknownWeight: 'Valeur de graisse de police inconnue : {value}',
             cancel: 'Annuler',
             importBtn: 'Importer',
             helpTitle: 'Aide et astuces', helpGettingStarted: 'Pour commencer',
@@ -634,7 +779,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: 'La sortie Rich Text / Defaultio générée n\'est pas affectée.',
             helpImportRichText: 'Importer du Rich Text',
             helpImportRichText1: 'Cliquez sur Importer Rich Text à côté de la sortie pour coller un code Rich Text existant.',
-            helpImportRichText2: 'Les balises natives Roblox (font, b, i, u, s, stroke) et les balises Defaultio sont prises en charge.',
+            helpImportRichText2: 'Les balises natives Roblox (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) et les balises Defaultio sont prises en charge.',
             helpImportRichText3: 'Le code importé remplace la mise en forme actuelle des caractères et peut ensuite être modifié normalement.'
         },
         de: {
@@ -648,9 +793,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: 'Farbquelle', modeOption: 'Modus (Einfarbig / Verlauf / Regenbogen)', gradientPoints: 'Verlaufspunkte',
             outputFormat: 'Ausgabeformat', robloxRichText: 'Roblox RichText (nativ)', defaultioRichText: 'Defaultio RichText-Modul',
             color: 'Farbe', color1: 'Farbe 1', color2: 'Farbe 2', steps: 'Schritte',
+            fontTransparency: 'Texttransparenz',
+            strokeTransparency: 'Konturtransparenz',
+            strokeJoins: 'Konturverbindungen',
+            strokeSizing: 'Konturskalierung',
+            joinsRound: 'Rund', joinsBevel: 'Abschrägung', joinsMiter: 'Gehrung',
+            sizingFixed: 'Fest (Pixel)', sizingScaled: 'Skaliert (relativ)',
+            shortAttributes: 'Kurze Attribute (th/tr/uc/sc)',
+            commentText: 'Kommentar',
+            commentBefore: 'Vor der Ausgabe',
+            commentAfter: 'Nach der Ausgabe',
+            weight: 'Schriftstärke', weightDefault: '— Standard —',
+            textTransform: 'Texttransformation',
+            uppercaseLabel: 'Großbuchstaben', smallcapsLabel: 'Kapitälchen',
+            uppercaseShort: 'GB', smallcapsShort: 'KÄ',
+            mark: 'Markierung', markEnabled: 'Markierung aktivieren', markTransparency: 'Markierungstransparenz',
             transparency: 'Transparenz', formatting: 'Formatierung',
             lineBreaks: 'Zeilenumbrüche', rgbColors: 'RGB-Farben',
-            stroke: 'Kontur', strokeWidth: 'Konturstärke', font: 'Schriftart',
+            stroke: 'Kontur', strokeThickness: 'Konturstärke', font: 'Schriftart',
             fontSize: 'Schriftgröße', customFontSize: 'Benutzerdefinierte Schriftgröße',
             animation: 'Animation', none: 'Keine',
             animateGrouping: 'Animationsgruppierung',
@@ -689,6 +849,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'Nichts zu importieren — der Code war leer oder enthielt keinen lesbaren Text.',
             importBadTag: 'Unbekanntes oder fehlerhaftes Tag: {tag}',
             importUnknownColor: 'Unbekannter Farbwert: {value}',
+            importUnknownWeight: 'Unbekannter Schriftstärkewert: {value}',
             cancel: 'Abbrechen',
             importBtn: 'Importieren',
             helpTitle: 'Tipps & Hilfe', helpGettingStarted: 'Erste Schritte',
@@ -720,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: 'Die generierte Rich Text / Defaultio-Ausgabe ist davon nicht betroffen.',
             helpImportRichText: 'Rich Text importieren',
             helpImportRichText1: 'Klicke auf Rich Text importieren neben der Ausgabe, um einen vorhandenen Rich-Text-Code einzufügen.',
-            helpImportRichText2: 'Sowohl Roblox-native Tags (font, b, i, u, s, stroke) als auch Defaultio-Tags werden unterstützt.',
+            helpImportRichText2: 'Sowohl Roblox-native Tags (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) als auch Defaultio-Tags werden unterstützt.',
             helpImportRichText3: 'Der importierte Code ersetzt die aktuelle Zeichenformatierung und kann anschließend normal bearbeitet werden.'
         },
         it: {
@@ -734,9 +895,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: 'Sorgente colore', modeOption: 'Modalità (Tinta unita / Sfumatura / Arcobaleno)', gradientPoints: 'Punti sfumatura',
             outputFormat: 'Formato output', robloxRichText: 'Roblox RichText (nativo)', defaultioRichText: 'Modulo Defaultio RichText',
             color: 'Colore', color1: 'Colore 1', color2: 'Colore 2', steps: 'Passi',
+            fontTransparency: 'Trasparenza testo',
+            strokeTransparency: 'Trasparenza contorno',
+            strokeJoins: 'Giunzioni contorno',
+            strokeSizing: 'Scalatura contorno',
+            joinsRound: 'Arrotondato', joinsBevel: 'Smussato', joinsMiter: 'Mitrato',
+            sizingFixed: 'Fisso (pixel)', sizingScaled: 'Scalato (relativo)',
+            shortAttributes: 'Attributi brevi (th/tr/uc/sc)',
+            commentText: 'Commento',
+            commentBefore: 'Prima dell\'output',
+            commentAfter: 'Dopo l\'output',
+            weight: 'Spessore carattere', weightDefault: '— Predefinito —',
+            textTransform: 'Trasformazione testo',
+            uppercaseLabel: 'Maiuscole', smallcapsLabel: 'Maiuscoletto',
+            uppercaseShort: 'MAI', smallcapsShort: 'MC',
+            mark: 'Evidenziazione', markEnabled: 'Attiva evidenziazione', markTransparency: 'Trasparenza evidenziazione',
             transparency: 'Trasparenza', formatting: 'Formattazione',
             lineBreaks: 'Interruzioni di riga', rgbColors: 'Colori RGB',
-            stroke: 'Contorno', strokeWidth: 'Spessore contorno', font: 'Carattere',
+            stroke: 'Contorno', strokeThickness: 'Spessore contorno', font: 'Carattere',
             fontSize: 'Dimensione carattere', customFontSize: 'Dimensione carattere personalizzata',
             animation: 'Animazione', none: 'Nessuna',
             animateGrouping: 'Raggruppamento animazione',
@@ -775,6 +951,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'Niente da importare — il codice era vuoto o non conteneva testo leggibile.',
             importBadTag: 'Tag non riconosciuto o malformato: {tag}',
             importUnknownColor: 'Valore di colore sconosciuto: {value}',
+            importUnknownWeight: 'Valore di spessore carattere sconosciuto: {value}',
             cancel: 'Annulla',
             importBtn: 'Importa',
             helpTitle: 'Suggerimenti e aiuto', helpGettingStarted: 'Per iniziare',
@@ -806,7 +983,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: 'L\'output generato di Rich Text / Defaultio non è interessato.',
             helpImportRichText: 'Importa Rich Text',
             helpImportRichText1: 'Clicca su Importa Rich Text accanto all\'output per incollare un codice Rich Text esistente.',
-            helpImportRichText2: 'Sono supportati sia i tag nativi Roblox (font, b, i, u, s, stroke) sia i tag Defaultio.',
+            helpImportRichText2: 'Sono supportati sia i tag nativi Roblox (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) sia i tag Defaultio.',
             helpImportRichText3: 'Il codice importato sostituisce la formattazione attuale dei caratteri e può essere modificato normalmente in seguito.'
         },
         pt: {
@@ -820,9 +997,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: 'Fonte de cor', modeOption: 'Modo (Sólido / Gradiente / Arco-íris)', gradientPoints: 'Pontos de gradiente',
             outputFormat: 'Formato de saída', robloxRichText: 'Roblox RichText (nativo)', defaultioRichText: 'Módulo Defaultio RichText',
             color: 'Cor', color1: 'Cor 1', color2: 'Cor 2', steps: 'Passos',
+            fontTransparency: 'Transparência do texto',
+            strokeTransparency: 'Transparência do contorno',
+            strokeJoins: 'Junções do contorno',
+            strokeSizing: 'Dimensionamento do contorno',
+            joinsRound: 'Arredondado', joinsBevel: 'Chanfrado', joinsMiter: 'Mitrado',
+            sizingFixed: 'Fixo (pixels)', sizingScaled: 'Escalado (relativo)',
+            shortAttributes: 'Atributos curtos (th/tr/uc/sc)',
+            commentText: 'Comentário',
+            commentBefore: 'Antes da saída',
+            commentAfter: 'Depois da saída',
+            weight: 'Peso da fonte', weightDefault: '— Padrão —',
+            textTransform: 'Transformação de texto',
+            uppercaseLabel: 'Maiúsculas', smallcapsLabel: 'Versaletes',
+            uppercaseShort: 'MAI', smallcapsShort: 'VER',
+            mark: 'Destaque', markEnabled: 'Ativar destaque', markTransparency: 'Transparência do destaque',
             transparency: 'Transparência', formatting: 'Formatação',
             lineBreaks: 'Quebras de linha', rgbColors: 'Cores RGB',
-            stroke: 'Contorno', strokeWidth: 'Largura do contorno', font: 'Fonte',
+            stroke: 'Contorno', strokeThickness: 'Largura do contorno', font: 'Fonte',
             fontSize: 'Tamanho da fonte', customFontSize: 'Tamanho da fonte personalizado',
             animation: 'Animação', none: 'Nenhuma',
             animateGrouping: 'Agrupamento de animação',
@@ -861,6 +1053,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'Nada para importar — o código estava vazio ou não continha texto legível.',
             importBadTag: 'Tag não reconhecida ou malformada: {tag}',
             importUnknownColor: 'Valor de cor desconhecido: {value}',
+            importUnknownWeight: 'Valor de peso da fonte desconhecido: {value}',
             cancel: 'Cancelar',
             importBtn: 'Importar',
             helpTitle: 'Dicas e ajuda', helpGettingStarted: 'Primeiros passos',
@@ -892,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: 'A saída gerada de Rich Text / Defaultio não é afetada.',
             helpImportRichText: 'Importar Rich Text',
             helpImportRichText1: 'Clique em Importar Rich Text ao lado da saída para colar um código Rich Text existente.',
-            helpImportRichText2: 'Tanto as tags nativas do Roblox (font, b, i, u, s, stroke) quanto as tags Defaultio são suportadas.',
+            helpImportRichText2: 'Tanto as tags nativas do Roblox (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) quanto as tags Defaultio são suportadas.',
             helpImportRichText3: 'O código importado substitui a formatação atual dos caracteres e pode ser editado normalmente depois.'
         },
         ru: {
@@ -906,9 +1099,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: 'Источник цвета', modeOption: 'Режим (Solid / Gradient / Rainbow)', gradientPoints: 'Точки градиента',
             outputFormat: 'Формат вывода', robloxRichText: 'Roblox RichText (нативный)', defaultioRichText: 'Модуль Defaultio RichText',
             color: 'Цвет', color1: 'Цвет 1', color2: 'Цвет 2', steps: 'Шаги',
+            fontTransparency: 'Прозрачность текста',
+            strokeTransparency: 'Прозрачность обводки',
+            strokeJoins: 'Соединения обводки',
+            strokeSizing: 'Масштабирование обводки',
+            joinsRound: 'Скруглённые', joinsBevel: 'Скошенные', joinsMiter: 'Острые',
+            sizingFixed: 'Фиксированный (пиксели)', sizingScaled: 'Масштабируемый (относительный)',
+            shortAttributes: 'Короткие атрибуты (th/tr/uc/sc)',
+            commentText: 'Комментарий',
+            commentBefore: 'Перед выводом',
+            commentAfter: 'После вывода',
+            weight: 'Насыщенность шрифта', weightDefault: '— По умолчанию —',
+            textTransform: 'Преобразование текста',
+            uppercaseLabel: 'Верхний регистр', smallcapsLabel: 'Капитель',
+            uppercaseShort: 'ВР', smallcapsShort: 'КА',
+            mark: 'Выделение', markEnabled: 'Включить выделение', markTransparency: 'Прозрачность выделения',
             transparency: 'Прозрачность', formatting: 'Форматирование',
             lineBreaks: 'Переносы строк', rgbColors: 'Цвета RGB',
-            stroke: 'Обводка', strokeWidth: 'Толщина обводки', font: 'Шрифт',
+            stroke: 'Обводка', strokeThickness: 'Толщина обводки', font: 'Шрифт',
             fontSize: 'Размер шрифта', customFontSize: 'Свой размер шрифта',
             animation: 'Анимация', none: 'Нет',
             animateGrouping: 'Группировка анимации',
@@ -947,6 +1155,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'Нечего импортировать — код пуст или не содержит читаемого текста.',
             importBadTag: 'Неизвестный или повреждённый тег: {tag}',
             importUnknownColor: 'Неизвестное значение цвета: {value}',
+            importUnknownWeight: 'Неизвестное значение насыщенности шрифта: {value}',
             cancel: 'Отмена',
             importBtn: 'Импортировать',
             helpTitle: 'Справка и советы', helpGettingStarted: 'С чего начать',
@@ -978,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: 'На сгенерированный вывод Rich Text / Defaultio это не влияет.',
             helpImportRichText: 'Импорт Rich Text',
             helpImportRichText1: 'Нажмите Импорт Rich Text рядом с выводом, чтобы вставить существующий код Rich Text.',
-            helpImportRichText2: 'Поддерживаются как нативные теги Roblox (font, b, i, u, s, stroke), так и теги Defaultio.',
+            helpImportRichText2: 'Поддерживаются как нативные теги Roblox (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight), так и теги Defaultio.',
             helpImportRichText3: 'Импортированный код заменяет текущее форматирование символов, после чего его можно редактировать как обычно.'
         },
         ja: {
@@ -992,9 +1201,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: '色のソース', modeOption: 'モード (単色 / グラデーション / 虹色)', gradientPoints: 'グラデーションポイント',
             outputFormat: '出力形式', robloxRichText: 'Roblox RichText (ネイティブ)', defaultioRichText: 'Defaultio RichText モジュール',
             color: '色', color1: '色 1', color2: '色 2', steps: 'ステップ',
+            fontTransparency: 'テキストの透明度',
+            strokeTransparency: '縁取りの透明度',
+            strokeJoins: '縁取りの接続',
+            strokeSizing: '縁取りのサイズ',
+            joinsRound: 'ラウンド', joinsBevel: 'ベベル', joinsMiter: 'マイター',
+            sizingFixed: '固定 (ピクセル)', sizingScaled: 'スケール (相対)',
+            shortAttributes: '短縮属性 (th/tr/uc/sc)',
+            commentText: 'コメント',
+            commentBefore: '出力の前',
+            commentAfter: '出力の後',
+            weight: 'フォントの太さ', weightDefault: '— デフォルト —',
+            textTransform: 'テキスト変換',
+            uppercaseLabel: '大文字', smallcapsLabel: 'スモールキャップス',
+            uppercaseShort: '大', smallcapsShort: '小',
+            mark: 'マーク', markEnabled: 'マークを有効化', markTransparency: 'マークの透明度',
             transparency: '透明度', formatting: '書式',
             lineBreaks: '改行', rgbColors: 'RGB カラー',
-            stroke: '縁取り', strokeWidth: '縁取りの太さ', font: 'フォント',
+            stroke: '縁取り', strokeThickness: '縁取りの太さ', font: 'フォント',
             fontSize: 'フォントサイズ', customFontSize: 'カスタムフォントサイズ',
             animation: 'アニメーション', none: 'なし',
             animateGrouping: 'アニメーションのまとめ',
@@ -1033,6 +1257,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'インポートするものがありません — コードが空か、読み取れるテキストが含まれていません。',
             importBadTag: '認識できない、または不正なタグ: {tag}',
             importUnknownColor: '不明な色の値: {value}',
+            importUnknownWeight: '不明なフォントの太さの値: {value}',
             cancel: 'キャンセル',
             importBtn: 'インポート',
             helpTitle: 'ヒントとヘルプ', helpGettingStarted: 'はじめに',
@@ -1064,7 +1289,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: '生成される Rich Text / Defaultio 出力には影響しません。',
             helpImportRichText: 'Rich Text のインポート',
             helpImportRichText1: '出力の横の「Rich Text をインポート」をクリックして、既存の Rich Text コードを貼り付けます。',
-            helpImportRichText2: 'Roblox ネイティブのタグ (font, b, i, u, s, stroke) と Defaultio タグの両方に対応しています。',
+            helpImportRichText2: 'Roblox ネイティブのタグ (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) と Defaultio タグの両方に対応しています。',
             helpImportRichText3: 'インポートしたコードは現在の文字書式を置き換え、その後は通常通り編集できます。'
         },
         ko: {
@@ -1078,9 +1303,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: '색상 소스', modeOption: '모드 (단색 / 그라데이션 / 무지개)', gradientPoints: '그라데이션 포인트',
             outputFormat: '출력 형식', robloxRichText: 'Roblox RichText (기본)', defaultioRichText: 'Defaultio RichText 모듈',
             color: '색상', color1: '색상 1', color2: '색상 2', steps: '단계',
+            fontTransparency: '텍스트 투명도',
+            strokeTransparency: '외곽선 투명도',
+            strokeJoins: '외곽선 연결',
+            strokeSizing: '외곽선 크기',
+            joinsRound: '둥글게', joinsBevel: '비스듬히', joinsMiter: '뾰족하게',
+            sizingFixed: '고정 (픽셀)', sizingScaled: '스케일 (상대)',
+            shortAttributes: '축약 속성 (th/tr/uc/sc)',
+            commentText: '주석',
+            commentBefore: '출력 앞',
+            commentAfter: '출력 뒤',
+            weight: '글꼴 두께', weightDefault: '— 기본값 —',
+            textTransform: '텍스트 변환',
+            uppercaseLabel: '대문자', smallcapsLabel: '작은 대문자',
+            uppercaseShort: '대', smallcapsShort: '소',
+            mark: '마크', markEnabled: '마크 활성화', markTransparency: '마크 투명도',
             transparency: '투명도', formatting: '서식',
             lineBreaks: '줄 바꿈', rgbColors: 'RGB 색상',
-            stroke: '외곽선', strokeWidth: '외곽선 두께', font: '글꼴',
+            stroke: '외곽선', strokeThickness: '외곽선 두께', font: '글꼴',
             fontSize: '글꼴 크기', customFontSize: '사용자 지정 글꼴 크기',
             animation: '애니메이션', none: '없음',
             animateGrouping: '애니메이션 그룹',
@@ -1119,6 +1359,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: '가져올 내용이 없습니다 — 코드가 비어 있거나 읽을 수 있는 텍스트가 없습니다.',
             importBadTag: '알 수 없거나 잘못된 태그: {tag}',
             importUnknownColor: '알 수 없는 색상 값: {value}',
+            importUnknownWeight: '알 수 없는 글꼴 두께 값: {value}',
             cancel: '취소',
             importBtn: '가져오기',
             helpTitle: '도움말 및 팁', helpGettingStarted: '시작하기',
@@ -1150,7 +1391,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: '생성되는 Rich Text / Defaultio 출력에는 영향을 주지 않습니다.',
             helpImportRichText: 'Rich Text 가져오기',
             helpImportRichText1: '출력 옆의 Rich Text 가져오기를 클릭하여 기존 Rich Text 코드를 붙여넣으세요.',
-            helpImportRichText2: 'Roblox 네이티브 태그(font, b, i, u, s, stroke)와 Defaultio 태그를 모두 지원합니다.',
+            helpImportRichText2: 'Roblox 네이티브 태그(font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight)와 Defaultio 태그를 모두 지원합니다.',
             helpImportRichText3: '가져온 코드는 현재 문자 서식을 대체하며, 이후 정상적으로 편집할 수 있습니다.'
         },
         zh: {
@@ -1164,9 +1405,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: '颜色来源', modeOption: '模式 (纯色 / 渐变 / 彩虹)', gradientPoints: '渐变点',
             outputFormat: '输出格式', robloxRichText: 'Roblox RichText (原生)', defaultioRichText: 'Defaultio RichText 模块',
             color: '颜色', color1: '颜色 1', color2: '颜色 2', steps: '步数',
+            fontTransparency: '文字透明度',
+            strokeTransparency: '描边透明度',
+            strokeJoins: '描边连接',
+            strokeSizing: '描边缩放',
+            joinsRound: '圆角', joinsBevel: '斜角', joinsMiter: '尖角',
+            sizingFixed: '固定 (像素)', sizingScaled: '缩放 (相对)',
+            shortAttributes: '短属性 (th/tr/uc/sc)',
+            commentText: '注释',
+            commentBefore: '输出之前',
+            commentAfter: '输出之后',
+            weight: '字体粗细', weightDefault: '— 默认 —',
+            textTransform: '文本转换',
+            uppercaseLabel: '大写', smallcapsLabel: '小型大写字母',
+            uppercaseShort: '大', smallcapsShort: '小',
+            mark: '标记', markEnabled: '启用标记', markTransparency: '标记透明度',
             transparency: '透明度', formatting: '格式',
             lineBreaks: '换行', rgbColors: 'RGB 颜色',
-            stroke: '描边', strokeWidth: '描边宽度', font: '字体',
+            stroke: '描边', strokeThickness: '描边粗细', font: '字体',
             fontSize: '字体大小', customFontSize: '自定义字体大小',
             animation: '动画', none: '无',
             animateGrouping: '动画分组',
@@ -1205,6 +1461,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: '没有可导入的内容 — 代码为空或不包含可读文本。',
             importBadTag: '无法识别或格式错误的标签: {tag}',
             importUnknownColor: '未知颜色值: {value}',
+            importUnknownWeight: '未知字体粗细值: {value}',
             cancel: '取消',
             importBtn: '导入',
             helpTitle: '帮助与提示', helpGettingStarted: '开始使用',
@@ -1236,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: '生成的 Rich Text / Defaultio 输出不受影响。',
             helpImportRichText: '导入 Rich Text',
             helpImportRichText1: '点击输出旁边的“导入 Rich Text”以粘贴现有的 Rich Text 代码。',
-            helpImportRichText2: '同时支持 Roblox 原生标签（font、b、i、u、s、stroke）和 Defaultio 标签。',
+            helpImportRichText2: '同时支持 Roblox 原生标签（font、b、i、u、s、stroke、mark、uppercase、smallcaps、weight）和 Defaultio 标签。',
             helpImportRichText3: '导入的代码会替换当前的字符格式，之后可正常编辑。'
         },
         ar: {
@@ -1250,9 +1507,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: 'مصدر اللون', modeOption: 'الوضع (لون واحد / تدرج / قوس قزح)', gradientPoints: 'نقاط التدرج',
             outputFormat: 'صيغة الإخراج', robloxRichText: 'Roblox RichText (أصلي)', defaultioRichText: 'وحدة Defaultio RichText',
             color: 'اللون', color1: 'اللون 1', color2: 'اللون 2', steps: 'الخطوات',
+            fontTransparency: 'شفافية النص',
+            strokeTransparency: 'شفافية الحدود',
+            strokeJoins: 'وصلات الحدود',
+            strokeSizing: 'قياس الحدود',
+            joinsRound: 'دائري', joinsBevel: 'مشطوف', joinsMiter: 'حاد',
+            sizingFixed: 'ثابت (بكسل)', sizingScaled: 'مقياس (نسبي)',
+            shortAttributes: 'سمات مختصرة (th/tr/uc/sc)',
+            commentText: 'تعليق',
+            commentBefore: 'قبل الإخراج',
+            commentAfter: 'بعد الإخراج',
+            weight: 'سماكة الخط', weightDefault: '— افتراضي —',
+            textTransform: 'تحويل النص',
+            uppercaseLabel: 'أحرف كبيرة', smallcapsLabel: 'أحرف صغيرة كبيرة',
+            uppercaseShort: 'كبير', smallcapsShort: 'صغير',
+            mark: 'تمييز', markEnabled: 'تفعيل التمييز', markTransparency: 'شفافية التمييز',
             transparency: 'الشفافية', formatting: 'التنسيق',
             lineBreaks: 'فواصل الأسطر', rgbColors: 'ألوان RGB',
-            stroke: 'الحدود', strokeWidth: 'سماكة الحدود', font: 'الخط',
+            stroke: 'الحدود', strokeThickness: 'سماكة الحدود', font: 'الخط',
             fontSize: 'حجم الخط', customFontSize: 'حجم خط مخصص',
             animation: 'الحركة', none: 'بلا',
             animateGrouping: 'تجميع الحركة',
@@ -1291,6 +1563,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'لا يوجد شيء للاستيراد — الكود فارغ أو لا يحتوي على نص قابل للقراءة.',
             importBadTag: 'علامة غير معروفة أو مشوهة: {tag}',
             importUnknownColor: 'قيمة لون غير معروفة: {value}',
+            importUnknownWeight: 'قيمة سماكة خط غير معروفة: {value}',
             cancel: 'إلغاء',
             importBtn: 'استيراد',
             helpTitle: 'نصائح ومساعدة', helpGettingStarted: 'البدء',
@@ -1322,7 +1595,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: 'لا يتأثر الإخراج المُنشأ لـ Rich Text / Defaultio.',
             helpImportRichText: 'استيراد Rich Text',
             helpImportRichText1: 'اضغط على استيراد Rich Text بجانب الإخراج للصق كود Rich Text موجود.',
-            helpImportRichText2: 'يتم دعم كلاً من علامات Roblox الأصلية (font, b, i, u, s, stroke) وعلامات Defaultio.',
+            helpImportRichText2: 'يتم دعم كلاً من علامات Roblox الأصلية (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) وعلامات Defaultio.',
             helpImportRichText3: 'يحل الكود المستورد محل تنسيق الأحرف الحالي ويمكن تعديله بشكل طبيعي بعد ذلك.'
         },
         hi: {
@@ -1336,9 +1609,24 @@ document.addEventListener('DOMContentLoaded', function () {
             colorSource: 'रंग स्रोत', modeOption: 'मोड (ठोस / ग्रेडिएंट / इंद्रधनुष)', gradientPoints: 'ग्रेडिएंट पॉइंट',
             outputFormat: 'आउटपुट प्रारूप', robloxRichText: 'Roblox RichText (नेटिव)', defaultioRichText: 'Defaultio RichText मॉड्यूल',
             color: 'रंग', color1: 'रंग 1', color2: 'रंग 2', steps: 'चरण',
+            fontTransparency: 'टेक्स्ट पारदर्शिता',
+            strokeTransparency: 'स्ट्रोक पारदर्शिता',
+            strokeJoins: 'स्ट्रोक जोड़',
+            strokeSizing: 'स्ट्रोक आकार',
+            joinsRound: 'गोल', joinsBevel: 'बेवल', joinsMiter: 'माइटर',
+            sizingFixed: 'स्थिर (पिक्सेल)', sizingScaled: 'स्केल (सापेक्ष)',
+            shortAttributes: 'संक्षिप्त विशेषताएँ (th/tr/uc/sc)',
+            commentText: 'टिप्पणी',
+            commentBefore: 'आउटपुट से पहले',
+            commentAfter: 'आउटपुट के बाद',
+            weight: 'फ़ॉन्ट वज़न', weightDefault: '— डिफ़ॉल्ट —',
+            textTransform: 'टेक्स्ट ट्रांसफ़ॉर्म',
+            uppercaseLabel: 'अपरकेस', smallcapsLabel: 'स्मॉल कैप्स',
+            uppercaseShort: 'अ', smallcapsShort: 'स',
+            mark: 'मार्क', markEnabled: 'मार्क सक्षम करें', markTransparency: 'मार्क पारदर्शिता',
             transparency: 'पारदर्शिता', formatting: 'फॉर्मेटिंग',
             lineBreaks: 'लाइन ब्रेक', rgbColors: 'RGB रंग',
-            stroke: 'स्ट्रोक', strokeWidth: 'स्ट्रोक चौड़ाई', font: 'फ़ॉन्ट',
+            stroke: 'स्ट्रोक', strokeThickness: 'स्ट्रोक मोटाई', font: 'फ़ॉन्ट',
             fontSize: 'फ़ॉन्ट आकार', customFontSize: 'कस्टम फ़ॉन्ट आकार',
             animation: 'एनिमेशन', none: 'कोई नहीं',
             animateGrouping: 'एनिमेशन समूह',
@@ -1377,6 +1665,7 @@ document.addEventListener('DOMContentLoaded', function () {
             importNothingToImport: 'आयात करने के लिए कुछ नहीं — कोड खाली था या इसमें कोई पठनीय टेक्स्ट नहीं था।',
             importBadTag: 'अपरिचित या विकृत टैग: {tag}',
             importUnknownColor: 'अज्ञात रंग मान: {value}',
+            importUnknownWeight: 'अज्ञात फ़ॉन्ट वज़न मान: {value}',
             cancel: 'रद्द करें',
             importBtn: 'आयात करें',
             helpTitle: 'सुझाव और सहायता', helpGettingStarted: 'शुरू करें',
@@ -1408,7 +1697,7 @@ document.addEventListener('DOMContentLoaded', function () {
             helpRtl2: 'उत्पन्न Rich Text / Defaultio आउटपुट प्रभावित नहीं होता।',
             helpImportRichText: 'Rich Text आयात करें',
             helpImportRichText1: 'आउटपुट के पास Rich Text आयात करें पर क्लिक करें और मौजूदा Rich Text कोड पेस्ट करें।',
-            helpImportRichText2: 'Roblox नेटिव टैग (font, b, i, u, s, stroke) और Defaultio टैग दोनों समर्थित हैं।',
+            helpImportRichText2: 'Roblox नेटिव टैग (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) और Defaultio टैग दोनों समर्थित हैं।',
             helpImportRichText3: 'आयातित कोड वर्तमान अक्षर फ़ॉर्मेटिंग को बदल देता है और इसके बाद सामान्य रूप से संपादित किया जा सकता है।'
         }
     };
@@ -1432,6 +1721,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         if (elements.charFont && elements.charFont.options.length > 0) {
             const first = elements.charFont.options[0];
+            if (first && first.value === '') {
+                first.textContent = t('mixedOrDefault');
+            }
+        }
+        if (elements.charFontWeight && elements.charFontWeight.options.length > 0) {
+            const first = elements.charFontWeight.options[0];
+            if (first && first.value === '') {
+                first.textContent = t('mixedOrDefault');
+            }
+        }
+        if (elements.charStrokeJoins && elements.charStrokeJoins.options.length > 0) {
+            const first = elements.charStrokeJoins.options[0];
+            if (first && first.value === '') {
+                first.textContent = t('mixedOrDefault');
+            }
+        }
+        if (elements.charStrokeSizing && elements.charStrokeSizing.options.length > 0) {
+            const first = elements.charStrokeSizing.options[0];
             if (first && first.value === '') {
                 first.textContent = t('mixedOrDefault');
             }
@@ -1463,6 +1770,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function isMarkAllowed() {
+        return currentUiMode === 'advanced' && !!(elements.markEnabled && elements.markEnabled.checked);
+    }
+
+    function updateMarkVisibility() {
+        if (elements.markDetailsGroup) {
+            elements.markDetailsGroup.style.display = isMarkAllowed() ? 'block' : 'none';
+        }
+        if (elements.charMarkDetailsGroup) {
+            const anyCharMarkOn = [...selectedChars].some(i => charMarkEnabled[i] === true);
+            const checkboxOn = elements.charMarkEnabled && elements.charMarkEnabled.checked;
+            const showCharMark = currentUiMode === 'advanced'
+                && (isMarkAllowed() || anyCharMarkOn || checkboxOn);
+            elements.charMarkDetailsGroup.style.display = showCharMark ? 'block' : 'none';
+        }
+    }
+
     function applyUiMode(mode) {
         currentUiMode = (mode === 'advanced') ? 'advanced' : 'simple';
         if (elements.uiModeSelect) elements.uiModeSelect.value = currentUiMode;
@@ -1486,6 +1810,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCharEditor();
         updatePointsEditor();
         updateFontSizeVisibility();
+        updateMarkVisibility();
     }
 
     function applyLanguage(lang) {
@@ -1624,8 +1949,8 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    function transparencyForIndex(i, globalTrans, usePoints) {
-        const custom = charTransparency[i];
+    function fontTransparencyForIndex(i, globalTrans, usePoints) {
+        const custom = charFontTransparency[i];
         if (custom !== undefined) return custom;
         if (usePoints) {
             const pt = getPointTransparencyForIndex(i);
@@ -1655,23 +1980,84 @@ document.addEventListener('DOMContentLoaded', function () {
         return canvasStates.get(canvas);
     }
 
+    function parseCommentRanges(text) {
+        const ranges = [];
+        const re = /<!--[\s\S]*?-->/g;
+        let m;
+        while ((m = re.exec(text)) !== null) {
+            ranges.push({ start: m.index, end: m.index + m[0].length });
+        }
+        return ranges;
+    }
+
+    function buildDisplayText(rawText) {
+        const ranges = parseCommentRanges(rawText);
+        if (ranges.length === 0) {
+            const map = new Array(rawText.length);
+            for (let i = 0; i < rawText.length; i++) map[i] = i;
+            return { display: rawText, toRaw: map };
+        }
+        const toRaw = [];
+        let display = '';
+        let rangeIdx = 0;
+        let i = 0;
+        while (i < rawText.length) {
+            if (rangeIdx < ranges.length && i === ranges[rangeIdx].start) {
+                i = ranges[rangeIdx].end;
+                rangeIdx++;
+                continue;
+            }
+            display += rawText[i];
+            toRaw.push(i);
+            i++;
+        }
+        return { display, toRaw };
+    }
+
     function buildCharCells(rawText, enableLineBreaks) {
+        const displayInfo = buildDisplayText(rawText);
+        const display = displayInfo.display;
+        const toRaw = displayInfo.toRaw;
         const cells = [];
-        let index = 0;
-        for (let i = 0; i < rawText.length; i++) {
-            const ch = rawText[i];
+        for (let di = 0; di < display.length; di++) {
+            const ch = display[di];
+            const rawIndex = toRaw[di];
             if (ch === '\n') {
                 if (enableLineBreaks) {
-                    cells.push({ char: '\n', index, isBreak: true, original: '\n' });
+                    cells.push({ char: '\n', index: rawIndex, displayIndex: di, isBreak: true, original: '\n' });
                 } else {
-                    cells.push({ char: ' ', index, isBreak: false, original: '\n' });
+                    cells.push({ char: ' ', index: rawIndex, displayIndex: di, isBreak: false, original: '\n' });
                 }
             } else {
-                cells.push({ char: ch, index, isBreak: false, original: ch });
+                cells.push({ char: ch, index: rawIndex, displayIndex: di, isBreak: false, original: ch });
             }
-            index++;
         }
-        return cells;
+        return { cells, displayInfo };
+    }
+
+    function applyCaseTransform(ch, isUpper, isSmall) {
+        if (isUpper) return ch.toUpperCase();
+        if (isSmall) {
+            if (isLowercaseLetter(ch)) return ch.toUpperCase();
+            return ch;
+        }
+        return ch;
+    }
+
+    function isLowercaseLetter(ch) {
+        return ch !== ch.toUpperCase() && ch === ch.toLowerCase() && /[a-zа-яё]/i.test(ch);
+    }
+
+    function buildFontSpec(size, fontFamily, isItalic, isBold, weightCss) {
+        let spec = '';
+        if (isItalic) spec += 'italic ';
+        if (weightCss) {
+            spec += weightCss + ' ';
+        } else if (isBold) {
+            spec += 'bold ';
+        }
+        spec += size + 'px ' + fontFamily;
+        return spec;
     }
 
     function layoutText(state, rawText, enableLineBreaks, options) {
@@ -1687,7 +2073,8 @@ document.addEventListener('DOMContentLoaded', function () {
             animate
         } = options;
 
-        const cells = buildCharCells(rawText, enableLineBreaks);
+        const built = buildCharCells(rawText, enableLineBreaks);
+        const cells = built.cells;
         const ctx = state.ctx;
         const fontSpec = fontSize + 'px ' + fontCss;
         state.font = fontSpec;
@@ -1711,27 +2098,30 @@ document.addEventListener('DOMContentLoaded', function () {
         let gLastSpacePos = -1;
 
         const metricsCache = new Map();
-        const measure = (ch, glyphIndex) => {
-            const perFont = charFont[glyphIndex];
+        const measure = (ch, rawIndex) => {
+            const perFont = charFont[rawIndex];
             const fontName = perFont || globalFontName || 'SpecialElite';
-            const isBold = charBold[glyphIndex] !== undefined ? !!charBold[glyphIndex] : !!globalBold;
-            const isItalic = charItalic[glyphIndex] !== undefined ? !!charItalic[glyphIndex] : !!globalItalic;
-            const size = isFontSizeEnabled() && charFontSize[glyphIndex] !== undefined
-                ? charFontSize[glyphIndex]
+            const isBold = charBold[rawIndex] !== undefined ? !!charBold[rawIndex] : !!globalBold;
+            const isItalic = charItalic[rawIndex] !== undefined ? !!charItalic[rawIndex] : !!globalItalic;
+            const size = isFontSizeEnabled() && charFontSize[rawIndex] !== undefined
+                ? charFontSize[rawIndex]
                 : fontSize;
-            const key = (isItalic ? 'i' : '') + (isBold ? 'b' : '') + '|' + fontName + '|' + size + '|' + ch;
-            if (metricsCache.has(key)) return metricsCache.get(key);
+            const weight = charWeight[rawIndex] !== undefined ? charWeight[rawIndex] : null;
+            const weightCss = weight ? weightToCss(weight) : null;
+            const isUpper = !!charUppercase[rawIndex];
+            const isSmall = !!charSmallcaps[rawIndex];
+            const renderCh = applyCaseTransform(ch === ' ' ? ' ' : ch, isUpper, isSmall);
+            let smallScale = 1;
+            if (isSmall && isLowercaseLetter(ch)) smallScale = 0.72;
+            const key = (isItalic ? 'i' : '') + (isBold ? 'b' : '') + '|' + fontName + '|' + size + '|' + (weightCss || '') + '|' + (isUpper ? 'U' : '') + '|' + (isSmall ? 'S' : '') + '|' + renderCh;
+            if (metricsCache.has(key)) return metricsCache.get(key) * smallScale;
             const prevFont = ctx.font;
-            let spec = '';
-            if (isItalic) spec += 'italic ';
-            if (isBold) spec += 'bold ';
-            spec += size + 'px ' + fontFamilyFor(fontName);
-            ctx.font = spec;
-            const m = ctx.measureText(ch === ' ' ? ' ' : ch);
+            ctx.font = buildFontSpec(size, fontFamilyFor(fontName), isItalic, isBold, weightCss);
+            const m = ctx.measureText(renderCh);
             const w = m.width;
             ctx.font = prevFont;
             metricsCache.set(key, w);
-            return w;
+            return w * smallScale;
         };
 
         const flushGlyphLine = () => {
@@ -1837,10 +2227,15 @@ document.addEventListener('DOMContentLoaded', function () {
             globalItalic,
             globalUnderline,
             globalStrike,
+            globalWeight,
+            globalUppercase,
+            globalSmallcaps,
+            globalMarkEnabled,
+            globalMarkColor,
+            globalMarkTransparency,
             animate
         } = options;
 
-        drawSelectionRects(state, ctx);
         drawPointMarkers(state, ctx);
 
         const rainbowActive = animate && animate.style === 'Rainbow';
@@ -1860,13 +2255,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            const trans = transparencyForIndex(g.index, globalTrans, usePoints);
+            const trans = fontTransparencyForIndex(g.index, globalTrans, usePoints);
             const alpha = Math.max(0, Math.min(1, 1 - (trans || 0)));
 
             const isBold = charBold[g.index] !== undefined ? !!charBold[g.index] : globalBold;
             const isItalic = charItalic[g.index] !== undefined ? !!charItalic[g.index] : globalItalic;
             const isUnderline = charUnderline[g.index] !== undefined ? !!charUnderline[g.index] : globalUnderline;
             const isStrike = charStrike[g.index] !== undefined ? !!charStrike[g.index] : globalStrike;
+            const isUpper = charUppercase[g.index] !== undefined ? !!charUppercase[g.index] : !!globalUppercase;
+            const isSmall = charSmallcaps[g.index] !== undefined ? !!charSmallcaps[g.index] : !!globalSmallcaps;
 
             const perFont = charFont[g.index];
             const fontName = perFont || options.globalFontName || 'SpecialElite';
@@ -1874,10 +2271,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const charSize = isFontSizeEnabled() && charFontSize[g.index] !== undefined
                 ? charFontSize[g.index]
                 : fontSize;
-            let fontSpec = '';
-            if (isItalic) fontSpec += 'italic ';
-            if (isBold) fontSpec += 'bold ';
-            fontSpec += charSize + 'px ' + fontFamily;
+            const weightName = charWeight[g.index] !== undefined ? charWeight[g.index] : globalWeight;
+            const weightCss = weightName ? weightToCss(weightName) : null;
+
+            const fontSpec = buildFontSpec(charSize, fontFamily, isItalic, isBold, weightCss);
 
             let dx = 0, dy = 0, rot = 0, scale = 1, animAlpha = 1;
             if (animate && animate.style && !rainbowActive) {
@@ -1885,30 +2282,67 @@ document.addEventListener('DOMContentLoaded', function () {
                 dx = res.dx; dy = res.dy; rot = res.rot; scale = res.scale; animAlpha = res.alpha;
             }
 
+            const renderCh = applyCaseTransform(g.char, isUpper, isSmall);
+            let smallScale = 1;
+            if (isSmall && isLowercaseLetter(g.char)) smallScale = 0.72;
+
+            const perCharMarkOn = charMarkEnabled[g.index] === true;
+            const perCharMarkOff = charMarkEnabled[g.index] === false;
+            const useMark = perCharMarkOn || (!perCharMarkOff && globalMarkEnabled);
+            if (useMark) {
+                const markColor = charMarkColor[g.index] !== undefined ? charMarkColor[g.index] : globalMarkColor;
+                const markTrans = charMarkTransparency[g.index] !== undefined ? charMarkTransparency[g.index] : globalMarkTransparency;
+                const markRgb = hexToRgb(markColor);
+                if (markRgb) {
+                    const markAlpha = Math.max(0, Math.min(1, 1 - (markTrans || 0)));
+                    ctx.save();
+                    ctx.globalAlpha = markAlpha;
+                    ctx.fillStyle = markColor;
+                    ctx.fillRect(g.x + dx, g.y + dy, g.w, g.h);
+                    ctx.restore();
+                }
+            }
+
             ctx.save();
             ctx.translate(g.x + g.w / 2 + dx, g.y + g.h * 0.75 + dy);
             if (rot) ctx.rotate(rot);
             if (scale !== 1) ctx.scale(scale, scale);
+            if (smallScale !== 1) ctx.scale(smallScale, smallScale);
 
             ctx.globalAlpha = alpha * animAlpha;
             ctx.font = fontSpec;
             ctx.textBaseline = 'alphabetic';
 
             const strokeColor = charStrokeColor[g.index] || options.globalStrokeColor;
-            const strokeThickness = charStrokeThickness[g.index] !== undefined
+            const baseStrokeThickness = charStrokeThickness[g.index] !== undefined
                 ? charStrokeThickness[g.index]
                 : options.globalStrokeThickness;
+            const strokeTrans = charStrokeTransparency[g.index] !== undefined
+                ? charStrokeTransparency[g.index]
+                : options.globalStrokeTransparency;
+            const strokeJoins = charStrokeJoins[g.index] || options.globalStrokeJoins || 'miter';
+            const strokeSizing = charStrokeSizing[g.index] || options.globalStrokeSizing || 'fixed';
+
+            const strokeThickness = strokeSizing === 'scaled'
+                ? baseStrokeThickness * (charSize / 24)
+                : baseStrokeThickness;
 
             if (strokeThickness > 0 && strokeColor) {
-                ctx.lineJoin = 'miter';
-                ctx.miterLimit = 2;
+                const strokeAlpha = Math.max(0, Math.min(1, 1 - (strokeTrans || 0)));
+                ctx.save();
+                ctx.globalAlpha = ctx.globalAlpha * strokeAlpha;
+                ctx.lineJoin = strokeJoins;
+                if (strokeJoins === 'miter') {
+                    ctx.miterLimit = 2;
+                }
                 ctx.lineWidth = strokeThickness * 2;
                 ctx.strokeStyle = strokeColor;
-                ctx.strokeText(g.char, -g.w / 2, 0);
+                ctx.strokeText(renderCh, -g.w / 2, 0);
+                ctx.restore();
             }
 
             ctx.fillStyle = color;
-            ctx.fillText(g.char, -g.w / 2, 0);
+            ctx.fillText(renderCh, -g.w / 2, 0);
 
             ctx.restore();
 
@@ -1932,6 +2366,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             ctx.restore();
         });
+
+        drawSelectionRects(state, ctx);
     }
 
     function drawSelectionRects(state, ctx) {
@@ -2141,10 +2577,19 @@ document.addEventListener('DOMContentLoaded', function () {
             globalFontName: opts.globalFontName || elements.fontFamily.value,
             globalStrokeColor: elements.strokeColor.value,
             globalStrokeThickness: parseFloat(elements.strokeThickness.value),
+            globalStrokeTransparency: parseFloat(elements.strokeTransparency.value),
+            globalStrokeJoins: elements.strokeJoins.value || 'miter',
+            globalStrokeSizing: elements.strokeSizing.value || 'fixed',
             globalBold: elements.bold.checked,
             globalItalic: elements.italic.checked,
             globalUnderline: elements.underline.checked,
             globalStrike: elements.strikethrough.checked,
+            globalWeight: elements.fontWeight.value || null,
+            globalUppercase: elements.uppercase.checked,
+            globalSmallcaps: elements.smallcaps.checked,
+            globalMarkEnabled: isMarkAllowed(),
+            globalMarkColor: elements.markColor.value,
+            globalMarkTransparency: parseFloat(elements.markTransparency.value),
             usePoints: opts.usePoints,
             colorFn: opts.colorFn,
             globalTrans: opts.trans,
@@ -2160,7 +2605,8 @@ document.addEventListener('DOMContentLoaded', function () {
             mirror.setAttribute('aria-hidden', 'true');
             document.body.appendChild(mirror);
         }
-        mirror.textContent = rawText;
+        const displayText = buildDisplayText(rawText).display;
+        mirror.textContent = displayText;
 
         document.querySelectorAll('.preview-wrap > .sr-mirror, .preview-modal-body > .sr-mirror')
             .forEach(el => el.remove());
@@ -2403,8 +2849,11 @@ document.addEventListener('DOMContentLoaded', function () {
         charColorDirty = false;
         charFontDirty = false;
         charFontSizeDirty = false;
+        charWeightDirty = false;
         charStrokeColorDirty = false;
         charStrokeThicknessDirty = false;
+        charMarkColorDirty = false;
+        charMarkTransparencyDirty = false;
         updateCharEditor();
         redrawCanvasesOnly();
     }
@@ -2419,7 +2868,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const source = elements.colorSource.value;
             const isAdvanced = currentUiMode === 'advanced';
             const usePoints = isAdvanced && source === 'points' && getSortedPointIndexes().length > 0;
-            const globalTrans = parseFloat(elements.transparency.value);
+            const globalTrans = parseFloat(elements.fontTransparency.value);
 
             let gradientColors = [];
             if (mode === 'gradient') {
@@ -2448,10 +2897,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 globalFontName: elements.fontFamily.value,
                 globalStrokeColor: elements.strokeColor.value,
                 globalStrokeThickness: parseFloat(elements.strokeThickness.value),
+                globalStrokeTransparency: parseFloat(elements.strokeTransparency.value),
+                globalStrokeJoins: elements.strokeJoins.value || 'miter',
+                globalStrokeSizing: elements.strokeSizing.value || 'fixed',
                 globalBold: elements.bold.checked,
                 globalItalic: elements.italic.checked,
                 globalUnderline: elements.underline.checked,
                 globalStrike: elements.strikethrough.checked,
+                globalWeight: elements.fontWeight.value || null,
+                globalUppercase: elements.uppercase.checked,
+                globalSmallcaps: elements.smallcaps.checked,
+                globalMarkEnabled: isMarkAllowed(),
+                globalMarkColor: elements.markColor.value,
+                globalMarkTransparency: parseFloat(elements.markTransparency.value),
                 animate: animateState
             });
         });
@@ -2532,10 +2990,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         charColorDirty = false;
 
-        const transps = new Set(arr.map(i =>
-            charTransparency[i] !== undefined ? String(roundTransparency(charTransparency[i])) : ''
+        const fontTransps = new Set(arr.map(i =>
+            charFontTransparency[i] !== undefined ? String(roundTransparency(charFontTransparency[i])) : ''
         ));
-        elements.charTransparency.value = transps.size === 1 ? ([...transps][0] || '') : '';
+        elements.charFontTransparency.value = fontTransps.size === 1 ? ([...fontTransps][0] || '') : '';
 
         const setAllOrMixed = (dict, checkbox) => {
             const values = arr.map(i => !!dict[i]);
@@ -2548,6 +3006,24 @@ document.addEventListener('DOMContentLoaded', function () {
         setAllOrMixed(charItalic, elements.charItalic);
         setAllOrMixed(charUnderline, elements.charUnderline);
         setAllOrMixed(charStrike, elements.charStrike);
+        setAllOrMixed(charUppercase, elements.charUppercase);
+        setAllOrMixed(charSmallcaps, elements.charSmallcaps);
+
+        const markValues = arr.map(i => charMarkEnabled[i]);
+        const anyMarkTrue = markValues.some(v => v === true);
+        const anyMarkFalse = markValues.some(v => v === false);
+        if (anyMarkTrue && !anyMarkFalse) {
+            elements.charMarkEnabled.checked = true;
+            elements.charMarkEnabled.indeterminate = false;
+        } else if (anyMarkFalse && !anyMarkTrue) {
+            elements.charMarkEnabled.checked = false;
+            elements.charMarkEnabled.indeterminate = false;
+        } else if (anyMarkTrue && anyMarkFalse) {
+            elements.charMarkEnabled.indeterminate = true;
+        } else {
+            elements.charMarkEnabled.checked = false;
+            elements.charMarkEnabled.indeterminate = false;
+        }
 
         const fonts = new Set(arr.map(i => charFont[i] || ''));
         if (fonts.size === 1) {
@@ -2557,6 +3033,14 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.charFont.value = '';
         }
         charFontDirty = false;
+
+        const weights = new Set(arr.map(i => charWeight[i] || ''));
+        if (weights.size === 1) {
+            elements.charFontWeight.value = [...weights][0] || '';
+        } else {
+            elements.charFontWeight.value = '';
+        }
+        charWeightDirty = false;
 
         const sizes = new Set(arr.map(i => charFontSize[i] !== undefined ? String(charFontSize[i]) : ''));
         if (sizes.size === 1) {
@@ -2590,7 +3074,7 @@ document.addEventListener('DOMContentLoaded', function () {
         charStrokeColorDirty = false;
 
         const thicknesses = new Set(arr.map(i =>
-            charStrokeThickness[i] !== undefined ? String(roundTransparency(charStrokeThickness[i])) : ''
+            charStrokeThickness[i] !== undefined ? String(roundThickness(charStrokeThickness[i])) : ''
         ));
         if (thicknesses.size === 1) {
             const v = [...thicknesses][0];
@@ -2605,6 +3089,62 @@ document.addEventListener('DOMContentLoaded', function () {
             charStrokeThicknessLastShown = null;
         }
         charStrokeThicknessDirty = false;
+
+        const strokeTransps = new Set(arr.map(i =>
+            charStrokeTransparency[i] !== undefined ? String(roundTransparency(charStrokeTransparency[i])) : ''
+        ));
+        if (strokeTransps.size === 1) {
+            const v = [...strokeTransps][0];
+            elements.charStrokeTransparency.value = v || '0';
+            elements.charStrokeTransparencyValue.textContent = v || '0';
+        } else {
+            elements.charStrokeTransparency.value = '0';
+            elements.charStrokeTransparencyValue.textContent = '0';
+        }
+
+        const joinsSet = new Set(arr.map(i => charStrokeJoins[i] || ''));
+        if (joinsSet.size === 1) {
+            elements.charStrokeJoins.value = [...joinsSet][0] || '';
+        } else {
+            elements.charStrokeJoins.value = '';
+        }
+
+        const sizingSet = new Set(arr.map(i => charStrokeSizing[i] || ''));
+        if (sizingSet.size === 1) {
+            elements.charStrokeSizing.value = [...sizingSet][0] || '';
+        } else {
+            elements.charStrokeSizing.value = '';
+        }
+
+        const markColors = new Set(arr.map(i => charMarkColor[i] || ''));
+        if (markColors.size === 1) {
+            const c = [...markColors][0];
+            if (c) {
+                elements.charMarkColor.value = c;
+                elements.charMarkColorHex.value = c;
+                charMarkColorLastShown = c;
+            } else {
+                charMarkColorLastShown = null;
+            }
+        } else {
+            charMarkColorLastShown = null;
+        }
+        charMarkColorDirty = false;
+
+        const markTransps = new Set(arr.map(i =>
+            charMarkTransparency[i] !== undefined ? String(roundTransparency(charMarkTransparency[i])) : ''
+        ));
+        if (markTransps.size === 1) {
+            const v = [...markTransps][0];
+            elements.charMarkTransparency.value = v || '0';
+            elements.charMarkTransparencyValue.textContent = v || '0';
+        } else {
+            elements.charMarkTransparency.value = '0';
+            elements.charMarkTransparencyValue.textContent = '0';
+        }
+        charMarkTransparencyDirty = false;
+
+        updateMarkVisibility();
     }
 
     function updatePointsEditor() {
@@ -2666,10 +3206,10 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedChars.forEach(i => {
             if (raw[i] === '\n') return;
             gradientPoints[i] = charColors[i] || color;
-            const t2 = charTransparency[i];
+            const t2 = charFontTransparency[i];
             if (t2 !== undefined) gradientPointTransparency[i] = t2;
             delete charColors[i];
-            delete charTransparency[i];
+            delete charFontTransparency[i];
         });
 
         const arr = [...selectedChars].sort((a, b) => a - b);
@@ -2696,6 +3236,7 @@ document.addEventListener('DOMContentLoaded', function () {
     syncCharColorInputs(elements.charColor, elements.charColorHex);
     syncCharColorInputs(elements.charStrokeColor, elements.charStrokeColorHex);
     syncCharColorInputs(elements.pointColor, elements.pointColorHex);
+    syncCharColorInputs(elements.charMarkColor, elements.charMarkColorHex);
 
     const markCharColorDirty = () => {
         if (charColorLastShown === null) { charColorDirty = true; return; }
@@ -2705,6 +3246,7 @@ document.addEventListener('DOMContentLoaded', function () {
     elements.charColorHex.addEventListener('input', markCharColorDirty);
 
     elements.charFont.addEventListener('change', () => { charFontDirty = true; });
+    elements.charFontWeight.addEventListener('change', () => { charWeightDirty = true; });
 
     elements.charFontSize.addEventListener('input', () => {
         elements.charFontSizeValue.textContent = elements.charFontSize.value;
@@ -2730,17 +3272,42 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.charStrokeThicknessValue.textContent = elements.charStrokeThickness.value;
     });
 
-    ['charBold', 'charItalic', 'charUnderline', 'charStrike'].forEach(id => {
+    elements.charStrokeTransparency.addEventListener('input', () => {
+        elements.charStrokeTransparencyValue.textContent = elements.charStrokeTransparency.value;
+    });
+
+    const markCharMarkColorDirty = () => {
+        if (charMarkColorLastShown === null) { charMarkColorDirty = true; return; }
+        if (elements.charMarkColorHex.value !== charMarkColorLastShown) charMarkColorDirty = true;
+    };
+    elements.charMarkColor.addEventListener('input', markCharMarkColorDirty);
+    elements.charMarkColorHex.addEventListener('input', markCharMarkColorDirty);
+
+    elements.charMarkTransparency.addEventListener('input', () => {
+        elements.charMarkTransparencyValue.textContent = elements.charMarkTransparency.value;
+    });
+
+    ['charBold', 'charItalic', 'charUnderline', 'charStrike', 'charUppercase', 'charSmallcaps'].forEach(id => {
         elements[id].addEventListener('change', () => {
             elements[id].indeterminate = false;
         });
     });
 
+    elements.charMarkEnabled.addEventListener('change', () => {
+        elements.charMarkEnabled.indeterminate = false;
+        if (selectedChars.size === 0) return;
+        const on = elements.charMarkEnabled.checked;
+        selectedChars.forEach(i => { charMarkEnabled[i] = on; });
+        updateMarkVisibility();
+        redrawCanvasesOnly();
+    });
+
     elements.charApply.addEventListener('click', () => {
         if (selectedChars.size === 0) return;
-        const transRaw = elements.charTransparency.value.trim();
-        const hasTrans = transRaw !== '';
-        if (hasTrans && !isValidTransparency(transRaw)) {
+
+        const fontTransRaw = elements.charFontTransparency.value.trim();
+        const hasFontTrans = fontTransRaw !== '';
+        if (hasFontTrans && !isValidTransparency(fontTransRaw)) {
             alert(t('invalidTransparency'));
             return;
         }
@@ -2760,6 +3327,8 @@ document.addEventListener('DOMContentLoaded', function () {
         setFlag(charItalic, elements.charItalic);
         setFlag(charUnderline, elements.charUnderline);
         setFlag(charStrike, elements.charStrike);
+        setFlag(charUppercase, elements.charUppercase);
+        setFlag(charSmallcaps, elements.charSmallcaps);
 
         if (charFontDirty) {
             const chosenFont = elements.charFont.value;
@@ -2767,6 +3336,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 selectedChars.forEach(i => delete charFont[i]);
             } else {
                 selectedChars.forEach(i => { charFont[i] = chosenFont; });
+            }
+        }
+
+        if (charWeightDirty) {
+            const chosenWeight = elements.charFontWeight.value;
+            if (chosenWeight === '') {
+                selectedChars.forEach(i => delete charWeight[i]);
+            } else {
+                selectedChars.forEach(i => { charWeight[i] = chosenWeight; });
             }
         }
 
@@ -2779,9 +3357,9 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedChars.forEach(i => { charColors[i] = color; });
         }
 
-        if (hasTrans) {
-            const t2 = Number(transRaw);
-            selectedChars.forEach(i => { charTransparency[i] = t2; });
+        if (hasFontTrans) {
+            const t2 = Number(fontTransRaw);
+            selectedChars.forEach(i => { charFontTransparency[i] = t2; });
         }
 
         if (charStrokeColorDirty) {
@@ -2796,36 +3374,91 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedChars.forEach(i => { charStrokeThickness[i] = chosenThickness; });
         }
 
+        const strokeTransRaw = elements.charStrokeTransparency.value;
+        if (strokeTransRaw !== '' && strokeTransRaw !== '0') {
+            const st = parseFloat(strokeTransRaw);
+            if (!isNaN(st)) {
+                selectedChars.forEach(i => { charStrokeTransparency[i] = st; });
+            }
+        }
+
+        const chosenJoins = elements.charStrokeJoins.value;
+        if (chosenJoins === '') {
+            selectedChars.forEach(i => delete charStrokeJoins[i]);
+        } else {
+            selectedChars.forEach(i => { charStrokeJoins[i] = chosenJoins; });
+        }
+
+        const chosenSizing = elements.charStrokeSizing.value;
+        if (chosenSizing === '') {
+            selectedChars.forEach(i => delete charStrokeSizing[i]);
+        } else {
+            selectedChars.forEach(i => { charStrokeSizing[i] = chosenSizing; });
+        }
+
+        if (charMarkColorDirty) {
+            const chosenMark = isValidHex(elements.charMarkColorHex.value)
+                ? elements.charMarkColorHex.value
+                : elements.charMarkColor.value;
+            selectedChars.forEach(i => { charMarkColor[i] = chosenMark; });
+        }
+
+        const markTransRaw = elements.charMarkTransparency.value;
+        if (markTransRaw !== '' && markTransRaw !== '0') {
+            const mt = parseFloat(markTransRaw);
+            if (!isNaN(mt)) {
+                selectedChars.forEach(i => { charMarkTransparency[i] = mt; });
+            }
+        }
+
         generate();
     });
 
     elements.charReset.addEventListener('click', () => {
         selectedChars.forEach(i => {
             delete charColors[i];
-            delete charTransparency[i];
+            delete charFontTransparency[i];
             delete charBold[i];
             delete charItalic[i];
             delete charUnderline[i];
             delete charStrike[i];
+            delete charUppercase[i];
+            delete charSmallcaps[i];
+            delete charMarkEnabled[i];
             delete charFont[i];
             delete charFontSize[i];
+            delete charWeight[i];
             delete charStrokeColor[i];
             delete charStrokeThickness[i];
+            delete charStrokeTransparency[i];
+            delete charStrokeJoins[i];
+            delete charStrokeSizing[i];
+            delete charMarkColor[i];
+            delete charMarkTransparency[i];
         });
         generate();
     });
 
     elements.charResetAll.addEventListener('click', () => {
         charColors = {};
-        charTransparency = {};
+        charFontTransparency = {};
         charBold = {};
         charItalic = {};
         charUnderline = {};
         charStrike = {};
+        charUppercase = {};
+        charSmallcaps = {};
+        charMarkEnabled = {};
         charFont = {};
         charFontSize = {};
+        charWeight = {};
         charStrokeColor = {};
         charStrokeThickness = {};
+        charStrokeTransparency = {};
+        charStrokeJoins = {};
+        charStrokeSizing = {};
+        charMarkColor = {};
+        charMarkTransparency = {};
         generate();
     });
 
@@ -2911,15 +3544,24 @@ document.addEventListener('DOMContentLoaded', function () {
     function shiftIndexedStateForTextChange(oldText, newText) {
         if (oldText === newText) return;
         charColors = shiftDictForEdit(charColors, oldText, newText);
-        charTransparency = shiftDictForEdit(charTransparency, oldText, newText);
+        charFontTransparency = shiftDictForEdit(charFontTransparency, oldText, newText);
         charBold = shiftDictForEdit(charBold, oldText, newText);
         charItalic = shiftDictForEdit(charItalic, oldText, newText);
         charUnderline = shiftDictForEdit(charUnderline, oldText, newText);
         charStrike = shiftDictForEdit(charStrike, oldText, newText);
+        charUppercase = shiftDictForEdit(charUppercase, oldText, newText);
+        charSmallcaps = shiftDictForEdit(charSmallcaps, oldText, newText);
+        charMarkEnabled = shiftDictForEdit(charMarkEnabled, oldText, newText);
         charFont = shiftDictForEdit(charFont, oldText, newText);
         charFontSize = shiftDictForEdit(charFontSize, oldText, newText);
+        charWeight = shiftDictForEdit(charWeight, oldText, newText);
         charStrokeColor = shiftDictForEdit(charStrokeColor, oldText, newText);
         charStrokeThickness = shiftDictForEdit(charStrokeThickness, oldText, newText);
+        charStrokeTransparency = shiftDictForEdit(charStrokeTransparency, oldText, newText);
+        charStrokeJoins = shiftDictForEdit(charStrokeJoins, oldText, newText);
+        charStrokeSizing = shiftDictForEdit(charStrokeSizing, oldText, newText);
+        charMarkColor = shiftDictForEdit(charMarkColor, oldText, newText);
+        charMarkTransparency = shiftDictForEdit(charMarkTransparency, oldText, newText);
         gradientPoints = shiftDictForEdit(gradientPoints, oldText, newText);
         gradientPointTransparency = shiftDictForEdit(gradientPointTransparency, oldText, newText);
         const newSel = new Set();
@@ -2937,9 +3579,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (Number(k) >= len) delete dict[k];
             });
         };
-        prune(charColors); prune(charTransparency); prune(charBold); prune(charItalic);
-        prune(charUnderline); prune(charStrike); prune(charFont); prune(charFontSize);
-        prune(charStrokeColor); prune(charStrokeThickness);
+        prune(charColors); prune(charFontTransparency); prune(charBold); prune(charItalic);
+        prune(charUnderline); prune(charStrike); prune(charUppercase); prune(charSmallcaps);
+        prune(charMarkEnabled); prune(charFont); prune(charFontSize); prune(charWeight);
+        prune(charStrokeColor); prune(charStrokeThickness); prune(charStrokeTransparency);
+        prune(charStrokeJoins); prune(charStrokeSizing);
+        prune(charMarkColor); prune(charMarkTransparency);
         Object.keys(gradientPoints).forEach(k => {
             if (Number(k) >= len) {
                 delete gradientPoints[k];
@@ -3024,10 +3669,19 @@ document.addEventListener('DOMContentLoaded', function () {
         const globalFontSize = fontSizeEnabled ? parseFloat(elements.fontSize.value) : null;
         const globalStroke = elements.strokeColor.value;
         const globalThickness = parseFloat(elements.strokeThickness.value);
+        const globalStrokeTrans = parseFloat(elements.strokeTransparency.value);
+        const globalStrokeJoins = elements.strokeJoins.value || 'round';
+        const globalStrokeSizing = elements.strokeSizing.value || 'fixed';
+        const globalWeight = elements.fontWeight.value || null;
+        const globalUppercase = elements.uppercase.checked;
+        const globalSmallcaps = elements.smallcaps.checked;
+        const globalMarkEnabled = isMarkAllowed();
+        const globalMarkColor = elements.markColor.value;
+        const globalMarkTrans = parseFloat(elements.markTransparency.value);
         const mode = elements.colorMode.value;
         const source = elements.colorSource.value;
         const format = elements.outputFormat.value;
-        const globalTrans = parseFloat(elements.transparency.value);
+        const globalTrans = parseFloat(elements.fontTransparency.value);
 
         const globalFormatting = {
             bold: elements.bold.checked,
@@ -3062,15 +3716,38 @@ document.addEventListener('DOMContentLoaded', function () {
             const isItalic = charItalic[i] !== undefined ? !!charItalic[i] : globalFormatting.italic;
             const isUnderline = charUnderline[i] !== undefined ? !!charUnderline[i] : globalFormatting.underline;
             const isStrike = charStrike[i] !== undefined ? !!charStrike[i] : globalFormatting.strikethrough;
+            const isUpper = charUppercase[i] !== undefined ? !!charUppercase[i] : globalUppercase;
+            const isSmall = charSmallcaps[i] !== undefined ? !!charSmallcaps[i] : globalSmallcaps;
             const font = charFont[i] !== undefined ? charFont[i] : globalFont;
             const size = fontSizeEnabled
                 ? (charFontSize[i] !== undefined ? charFontSize[i] : globalFontSize)
                 : null;
+            const weight = charWeight[i] !== undefined ? charWeight[i] : globalWeight;
             const strokeColor = charStrokeColor[i] !== undefined ? charStrokeColor[i] : globalStroke;
             const strokeThickness = charStrokeThickness[i] !== undefined ? charStrokeThickness[i] : globalThickness;
-            const trans = transparencyForIndex(i, globalTrans, usePoints);
+            const strokeTrans = charStrokeTransparency[i] !== undefined ? charStrokeTransparency[i] : globalStrokeTrans;
+            const strokeJoins = charStrokeJoins[i] !== undefined ? charStrokeJoins[i] : globalStrokeJoins;
+            const strokeSizing = charStrokeSizing[i] !== undefined ? charStrokeSizing[i] : globalStrokeSizing;
+
+            const perCharMarkOn = charMarkEnabled[i] === true;
+            const perCharMarkOff = charMarkEnabled[i] === false;
+            const useMarkForChar = perCharMarkOn || (!perCharMarkOff && globalMarkEnabled);
+            const markColor = useMarkForChar
+                ? (charMarkColor[i] !== undefined ? charMarkColor[i] : globalMarkColor)
+                : null;
+            const markTrans = useMarkForChar
+                ? (charMarkTransparency[i] !== undefined ? charMarkTransparency[i] : globalMarkTrans)
+                : 0;
+
+            const trans = fontTransparencyForIndex(i, globalTrans, usePoints);
             const color = colorFn(i) || null;
-            return { isBold, isItalic, isUnderline, isStrike, font, size, strokeColor, strokeThickness, trans, color };
+            return {
+                isBold, isItalic, isUnderline, isStrike, isUpper, isSmall,
+                font, size, weight,
+                strokeColor, strokeThickness, strokeTrans, strokeJoins, strokeSizing,
+                markColor, markTrans,
+                trans, color
+            };
         };
 
         const runs = [];
@@ -3083,10 +3760,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 && a.isItalic === b.isItalic
                 && a.isUnderline === b.isUnderline
                 && a.isStrike === b.isStrike
+                && a.isUpper === b.isUpper
+                && a.isSmall === b.isSmall
                 && a.font === b.font
                 && a.size === b.size
+                && a.weight === b.weight
                 && a.strokeColor === b.strokeColor
                 && Math.abs(a.strokeThickness - b.strokeThickness) < 0.001
+                && transAreSimilar(a.strokeTrans, b.strokeTrans)
+                && a.strokeJoins === b.strokeJoins
+                && a.strokeSizing === b.strokeSizing
+                && a.markColor === b.markColor
+                && transAreSimilar(a.markTrans, b.markTrans)
                 && transAreSimilar(a.trans, b.trans)
                 && a.color === b.color;
         };
@@ -3098,8 +3783,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
+        const commentRanges = parseCommentRanges(rawText);
+        const isInComment = idx => commentRanges.some(r => idx >= r.start && idx < r.end);
+
         for (let i = 0; i < rawText.length; i++) {
             const ch = rawText[i];
+            if (isInComment(i)) {
+                continue;
+            }
             const props = buildCharProps(i);
             if (ch === '\n' && enableLineBreaks) {
                 flush();
@@ -3121,80 +3812,148 @@ document.addEventListener('DOMContentLoaded', function () {
         let inner = '';
         let openStack = [];
 
-        runs.forEach(run => {
-            if (run.isBreak) {
-                while (openStack.length > 0) {
-                    const top = openStack.pop();
-                    inner += top.close;
+        const rawToRun = new Array(rawText.length);
+        {
+            let pos = 0;
+            for (let r = 0; r < runs.length; r++) {
+                const run = runs[r];
+                if (run.isBreak) {
+                    rawToRun[pos] = { runIdx: -1, charIdx: -1 };
+                    pos++;
+                    continue;
                 }
-                inner += '<br/>';
-                return;
+                for (let c = 0; c < run.text.length; c++) {
+                    rawToRun[pos] = { runIdx: r, charIdx: c };
+                    pos++;
+                }
             }
-            const p = run.props;
-            const desiredKeys = [];
-            const desiredOpen = [];
-
-            desiredKeys.push('font:' + p.font);
-            desiredOpen.push({ open: '<font face=\'' + p.font + '\'>', close: '</font>' });
-
-            if (p.size !== null && p.size !== undefined) {
-                desiredKeys.push('size:' + p.size);
-                desiredOpen.push({ open: '<font size=\'' + p.size + '\'>', close: '</font>' });
-            }
-
-            if (p.strokeThickness > 0) {
-                desiredKeys.push('stroke:' + p.strokeColor + ':' + p.strokeThickness);
-                desiredOpen.push({
-                    open: '<stroke color=\'' + formatColor(p.strokeColor) + '\' thickness=\'' + p.strokeThickness + '\'>',
-                    close: '</stroke>'
-                });
-            }
-
-            if (p.trans > 0) {
-                desiredKeys.push('trans:' + roundTransparency(p.trans));
-                desiredOpen.push({
-                    open: '<font transparency=\'' + roundTransparency(p.trans) + '\'>',
-                    close: '</font>'
-                });
-            }
-
-            const fmtTags = [];
-            if (p.isStrike) fmtTags.push('s');
-            if (p.isUnderline) fmtTags.push('u');
-            if (p.isItalic) fmtTags.push('i');
-            if (p.isBold) fmtTags.push('b');
-            fmtTags.forEach(tag => {
-                desiredKeys.push('fmt:' + tag);
-                desiredOpen.push({ open: '<' + tag + '>', close: '</' + tag + '>' });
-            });
-            if (p.color) {
-                desiredKeys.push('color:' + p.color);
-                desiredOpen.push({
-                    open: '<font color=\'' + formatColor(p.color) + '\'>',
-                    close: '</font>'
-                });
-            }
-
-            let commonLen = 0;
-            while (commonLen < openStack.length && commonLen < desiredKeys.length
-                && openStack[commonLen].key === desiredKeys[commonLen]) commonLen++;
-            while (openStack.length > commonLen) {
-                const top = openStack.pop();
-                inner += top.close;
-            }
-            for (let k = commonLen; k < desiredKeys.length; k++) {
-                inner += desiredOpen[k].open;
-                openStack.push({ key: desiredKeys[k], close: desiredOpen[k].close });
-            }
-            inner += escapeRichText(run.text);
-        });
-
-        while (openStack.length > 0) {
-            const top = openStack.pop();
-            inner += top.close;
         }
 
-        const richText = inner;
+        let rp2 = 0;
+        for (let i = 0; i < rawText.length; i++) {
+            let inComment = false;
+            for (const range of commentRanges) {
+                if (i >= range.start && i < range.end) { inComment = true; break; }
+            }
+            if (inComment) {
+                inner += rawText[i];
+                continue;
+            }
+            while (rp2 < runs.length) {
+                const run = runs[rp2];
+                const mapped = rawToRun[i];
+                if (run.isBreak) {
+                    if (mapped && mapped.runIdx === -1) {
+                        while (openStack.length > 0) { inner += openStack.pop().close; }
+                        inner += '<br/>';
+                        rp2++;
+                        break;
+                    }
+                    rp2++;
+                    continue;
+                }
+                if (mapped && mapped.runIdx === rp2) {
+                    const p = run.props;
+                    const desiredKeys = [];
+                    const desiredOpen = [];
+
+                    desiredKeys.push('font:' + p.font);
+                    desiredOpen.push({ open: '<font face=\'' + p.font + '\'>', close: '</font>' });
+
+                    if (p.weight) {
+                        desiredKeys.push('weight:' + p.weight);
+                        desiredOpen.push({ open: '<font weight=\'' + p.weight + '\'>', close: '</font>' });
+                    }
+
+                    if (p.size !== null && p.size !== undefined) {
+                        desiredKeys.push('size:' + p.size);
+                        desiredOpen.push({ open: '<font size=\'' + p.size + '\'>', close: '</font>' });
+                    }
+
+                    if (p.strokeThickness > 0) {
+                        let strokeAttrs =
+                            ' color=\'' + formatColor(p.strokeColor) + '\'' +
+                            ' ' + attrThickness() + '=\'' + p.strokeThickness + '\'';
+                        if (p.strokeTrans > 0) {
+                            strokeAttrs += ' ' + attrTransparency() + '=\'' + roundTransparency(p.strokeTrans) + '\'';
+                        }
+                        strokeAttrs += ' joins=\'' + p.strokeJoins + '\'';
+                        strokeAttrs += ' sizing=\'' + p.strokeSizing + '\'';
+                        desiredKeys.push('stroke:' + p.strokeColor + ':' + p.strokeThickness + ':' + roundTransparency(p.strokeTrans) + ':' + p.strokeJoins + ':' + p.strokeSizing);
+                        desiredOpen.push({
+                            open: '<stroke' + strokeAttrs + '>',
+                            close: '</stroke>'
+                        });
+                    }
+
+                    if (p.markColor) {
+                        let markAttrs = ' color=\'' + formatColor(p.markColor) + '\'';
+                        if (p.markTrans > 0) {
+                            markAttrs += ' ' + attrTransparency() + '=\'' + roundTransparency(p.markTrans) + '\'';
+                        }
+                        desiredKeys.push('mark:' + p.markColor + ':' + roundTransparency(p.markTrans));
+                        desiredOpen.push({ open: '<mark' + markAttrs + '>', close: '</mark>' });
+                    }
+
+                    if (p.trans > 0) {
+                        desiredKeys.push('trans:' + roundTransparency(p.trans));
+                        desiredOpen.push({
+                            open: '<font ' + attrTransparency() + '=\'' + roundTransparency(p.trans) + '\'>',
+                            close: '</font>'
+                        });
+                    }
+
+                    const fmtTags = [];
+                    if (p.isStrike) fmtTags.push('s');
+                    if (p.isUnderline) fmtTags.push('u');
+                    if (p.isItalic) fmtTags.push('i');
+                    if (p.isBold) fmtTags.push('b');
+                    fmtTags.forEach(tag => {
+                        desiredKeys.push('fmt:' + tag);
+                        desiredOpen.push({ open: '<' + tag + '>', close: '</' + tag + '>' });
+                    });
+                    if (p.isUpper) {
+                        desiredKeys.push('uc');
+                        desiredOpen.push({ open: '<' + tagUppercase() + '>', close: '</' + tagUppercase() + '>' });
+                    }
+                    if (p.isSmall) {
+                        desiredKeys.push('sc');
+                        desiredOpen.push({ open: '<' + tagSmallcaps() + '>', close: '</' + tagSmallcaps() + '>' });
+                    }
+                    if (p.color) {
+                        desiredKeys.push('color:' + p.color);
+                        desiredOpen.push({
+                            open: '<font color=\'' + formatColor(p.color) + '\'>',
+                            close: '</font>'
+                        });
+                    }
+
+                    let commonLen = 0;
+                    while (commonLen < openStack.length && commonLen < desiredKeys.length
+                        && openStack[commonLen].key === desiredKeys[commonLen]) commonLen++;
+                    while (openStack.length > commonLen) {
+                        const top = openStack.pop();
+                        inner += top.close;
+                    }
+                    for (let k = commonLen; k < desiredKeys.length; k++) {
+                        inner += desiredOpen[k].open;
+                        openStack.push({ key: desiredKeys[k], close: desiredOpen[k].close });
+                    }
+                    inner += escapeRichText(run.text[mapped.charIdx]);
+                    if (mapped.charIdx === run.text.length - 1) {
+                        rp2++;
+                    }
+                    break;
+                }
+                rp2++;
+            }
+        }
+        while (openStack.length > 0) {
+            inner += openStack.pop().close;
+        }
+
+        const cmt = buildOutputComment();
+        const richText = cmt.before + inner + cmt.after;
         elements.outputCode.value = richText;
 
         if (format === 'defaultio') {
@@ -3239,7 +3998,7 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.outputDefaultio.value = '';
             elements.outputDefaultio.classList.remove('has-warning');
             elements.outputDefaultio.title = '';
-            const jsonSafeRichText = JSON.stringify(richText).slice(1, -1);
+            const jsonSafeRichText = JSON.stringify(inner).slice(1, -1);
             elements.outputJson.value = '"' + userId + '": "' + jsonSafeRichText + '",';
         }
 
@@ -3268,9 +4027,16 @@ document.addEventListener('DOMContentLoaded', function () {
             perChar: [],
             globalFont: null,
             globalFontSize: null,
+            globalWeight: null,
             globalStrokeColor: null,
             globalStrokeThickness: null,
-            globalTransparency: null,
+            globalStrokeTransparency: null,
+            globalStrokeJoins: null,
+            globalStrokeSizing: null,
+            globalFontTransparency: null,
+            globalMarkColor: null,
+            globalMarkTransparency: null,
+            globalMarkEnabled: false,
             animateStyle: null,
             animateGrouping: null,
             animateStepTime: null,
@@ -3286,12 +4052,20 @@ document.addEventListener('DOMContentLoaded', function () {
             italic: false,
             underline: false,
             strike: false,
+            uppercase: false,
+            smallcaps: false,
             color: null,
             transparency: null,
             font: null,
             fontSize: null,
+            weight: null,
             strokeColor: null,
-            strokeThickness: null
+            strokeThickness: null,
+            strokeTransparency: null,
+            strokeJoins: null,
+            strokeSizing: null,
+            markColor: null,
+            markTransparency: null
         });
 
         const recomputeCurrent = () => {
@@ -3301,12 +4075,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (frame.italic) c.italic = true;
                 if (frame.underline) c.underline = true;
                 if (frame.strike) c.strike = true;
+                if (frame.uppercase) c.uppercase = true;
+                if (frame.smallcaps) c.smallcaps = true;
                 if (frame.color) c.color = frame.color;
                 if (frame.transparency !== null && frame.transparency !== undefined) c.transparency = frame.transparency;
                 if (frame.font) c.font = frame.font;
                 if (frame.fontSize !== null && frame.fontSize !== undefined) c.fontSize = frame.fontSize;
+                if (frame.weight) c.weight = frame.weight;
                 if (frame.strokeColor) c.strokeColor = frame.strokeColor;
                 if (frame.strokeThickness !== null && frame.strokeThickness !== undefined) c.strokeThickness = frame.strokeThickness;
+                if (frame.strokeTransparency !== null && frame.strokeTransparency !== undefined) c.strokeTransparency = frame.strokeTransparency;
+                if (frame.strokeJoins) c.strokeJoins = frame.strokeJoins;
+                if (frame.strokeSizing) c.strokeSizing = frame.strokeSizing;
+                if (frame.markColor) c.markColor = frame.markColor;
+                if (frame.markTransparency !== null && frame.markTransparency !== undefined) c.markTransparency = frame.markTransparency;
             }
             return c;
         };
@@ -3318,9 +4100,6 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         const tagRegex = /<\/?[A-Za-z][^>]*\/?>/g;
-        let lastIndex = 0;
-        let match;
-
         const attrRegex = /([A-Za-z][A-Za-z0-9]*)\s*=\s*(?:'([^']*)'|"([^"]*)"|([^\s/>]+))/g;
 
         const parseAttrs = (s) => {
@@ -3331,6 +4110,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 out[m[1].toLowerCase()] = m[2] !== undefined ? m[2] : (m[3] !== undefined ? m[3] : m[4]);
             }
             return out;
+        };
+
+        const readThickness = (attrs) => {
+            if (attrs.th !== undefined) return parseFloat(attrs.th);
+            if (attrs.thickness !== undefined) return parseFloat(attrs.thickness);
+            return null;
+        };
+
+        const readTransparency = (attrs) => {
+            if (attrs.tr !== undefined) return parseFloat(attrs.tr);
+            if (attrs.transparency !== undefined) return parseFloat(attrs.transparency);
+            return null;
         };
 
         const handleDefaultioTag = (tagContent, isSelfClose) => {
@@ -3360,9 +4151,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     return true;
                 }
                 case 'TextStrokeTransparency': {
-                    if (parseFloat(val) === 0) {
-                        openStack.push({ strokeThickness: 2 });
-                        if (openStack.length === 1) state.globalStrokeThickness = 2;
+                    const n = parseFloat(val);
+                    if (!isNaN(n)) {
+                        openStack.push({ strokeTransparency: n });
+                        if (openStack.length === 1) state.globalStrokeTransparency = n;
                     }
                     return true;
                 }
@@ -3370,7 +4162,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const n = parseFloat(val);
                     if (!isNaN(n)) {
                         openStack.push({ transparency: n });
-                        if (openStack.length === 1) state.globalTransparency = n;
+                        if (openStack.length === 1) state.globalFontTransparency = n;
                     }
                     return true;
                 }
@@ -3401,14 +4193,42 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        while ((match = tagRegex.exec(input)) !== null) {
-            const between = input.slice(lastIndex, match.index);
+        const commentRanges = parseCommentRanges(input);
+        const inComment = idx => commentRanges.some(r => idx >= r.start && idx < r.end);
+
+        let scanPos = 0;
+        while (scanPos < input.length) {
+            if (inComment(scanPos)) {
+                const range = commentRanges.find(r => scanPos >= r.start && scanPos < r.end);
+                const commentText = input.slice(range.start, range.end);
+                for (const ch of commentText) {
+                    state.text += ch;
+                    state.perChar.push(null);
+                }
+                scanPos = range.end;
+                continue;
+            }
+            const nextComment = commentRanges.find(r => r.start >= scanPos);
+            tagRegex.lastIndex = scanPos;
+            const nextTagMatch = tagRegex.exec(input);
+
+            if (!nextTagMatch || (nextComment && nextComment.start < nextTagMatch.index)) {
+                const between = input.slice(scanPos, nextComment ? nextComment.start : input.length);
+                if (between) {
+                    const decoded = decodeHtmlEntities(between);
+                    for (const ch of decoded) pushChar(ch);
+                }
+                scanPos = nextComment ? nextComment.start : input.length;
+                continue;
+            }
+
+            const between = input.slice(scanPos, nextTagMatch.index);
             if (between) {
                 const decoded = decodeHtmlEntities(between);
                 for (const ch of decoded) pushChar(ch);
             }
 
-            const rawTag = match[0];
+            const rawTag = nextTagMatch[0];
             const inner = rawTag.slice(1, -1);
             const isSelfClosing = inner.endsWith('/') || /^<br\s*\/?>$/i.test(rawTag);
             const trimmed = inner.replace(/\/$/, '').trim();
@@ -3440,10 +4260,52 @@ document.addEventListener('DOMContentLoaded', function () {
                 for (let i = openStack.length - 1; i >= 0; i--) {
                     if (openStack[i].strike) { openStack.splice(i, 1); break; }
                 }
+            } else if (/^(uppercase|uc)$/i.test(trimmed)) {
+                openStack.push({ uppercase: true });
+            } else if (/^\/(uppercase|uc)$/i.test(trimmed)) {
+                for (let i = openStack.length - 1; i >= 0; i--) {
+                    if (openStack[i].uppercase) { openStack.splice(i, 1); break; }
+                }
+            } else if (/^(smallcaps|sc)$/i.test(trimmed)) {
+                openStack.push({ smallcaps: true });
+            } else if (/^\/(smallcaps|sc)$/i.test(trimmed)) {
+                for (let i = openStack.length - 1; i >= 0; i--) {
+                    if (openStack[i].smallcaps) { openStack.splice(i, 1); break; }
+                }
+            } else if (/^mark(\s|$)/i.test(trimmed) || /^\/mark$/i.test(trimmed)) {
+                if (/^\/mark$/i.test(trimmed)) {
+                    for (let i = openStack.length - 1; i >= 0; i--) {
+                        if (openStack[i].markColor !== undefined || openStack[i].markTransparency !== undefined) {
+                            openStack.splice(i, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    const attrs = parseAttrs(trimmed);
+                    const frame = {};
+                    if (attrs.color) {
+                        const hex = parseCssColorToHex(attrs.color);
+                        if (hex) {
+                            frame.markColor = hex;
+                            if (!state.globalMarkColor) state.globalMarkColor = hex;
+                        } else {
+                            warnings.push(t('importUnknownColor').replace('{value}', attrs.color));
+                        }
+                    }
+                    const tr = readTransparency(attrs);
+                    if (tr !== null && !isNaN(tr)) {
+                        frame.markTransparency = tr;
+                        if (state.globalMarkTransparency === null) state.globalMarkTransparency = tr;
+                    }
+                    if (frame.markColor) state.globalMarkEnabled = true;
+                    openStack.push(frame);
+                }
             } else if (/^font(\s|$)/i.test(trimmed) || /^\/font$/i.test(trimmed)) {
                 if (/^\/font$/i.test(trimmed)) {
                     for (let i = openStack.length - 1; i >= 0; i--) {
-                        if (openStack[i].font !== undefined || openStack[i].color !== undefined || openStack[i].transparency !== undefined || openStack[i].fontSize !== undefined) {
+                        const f = openStack[i];
+                        if (f.font !== undefined || f.color !== undefined || f.transparency !== undefined
+                            || f.fontSize !== undefined || f.weight !== undefined) {
                             openStack.splice(i, 1);
                             break;
                         }
@@ -3456,21 +4318,30 @@ document.addEventListener('DOMContentLoaded', function () {
                         const n = parseFloat(attrs.size);
                         if (!isNaN(n)) frame.fontSize = n;
                     }
+                    if (attrs.weight !== undefined) {
+                        const w = normalizeWeight(attrs.weight);
+                        if (w) {
+                            frame.weight = w;
+                            if (!state.globalWeight) state.globalWeight = w;
+                        } else {
+                            warnings.push(t('importUnknownWeight').replace('{value}', attrs.weight));
+                        }
+                    }
                     if (attrs.color) {
                         const hex = parseCssColorToHex(attrs.color);
                         if (hex) frame.color = hex;
                         else warnings.push(t('importUnknownColor').replace('{value}', attrs.color));
                     }
-                    if (attrs.transparency !== undefined) {
-                        const n = parseFloat(attrs.transparency);
-                        if (!isNaN(n)) frame.transparency = n;
-                    }
+                    const ft = readTransparency(attrs);
+                    if (ft !== null && !isNaN(ft)) frame.transparency = ft;
                     openStack.push(frame);
                 }
             } else if (/^stroke(\s|$)/i.test(trimmed) || /^\/stroke$/i.test(trimmed)) {
                 if (/^\/stroke$/i.test(trimmed)) {
                     for (let i = openStack.length - 1; i >= 0; i--) {
-                        if (openStack[i].strokeColor !== undefined || openStack[i].strokeThickness !== undefined) {
+                        if (openStack[i].strokeColor !== undefined || openStack[i].strokeThickness !== undefined
+                            || openStack[i].strokeTransparency !== undefined || openStack[i].strokeJoins !== undefined
+                            || openStack[i].strokeSizing !== undefined) {
                             openStack.splice(i, 1);
                             break;
                         }
@@ -3483,10 +4354,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (hex) frame.strokeColor = hex;
                         else warnings.push(t('importUnknownColor').replace('{value}', attrs.color));
                     }
-                    if (attrs.thickness !== undefined) {
-                        const n = parseFloat(attrs.thickness);
-                        if (!isNaN(n)) frame.strokeThickness = n;
-                    }
+                    const th = readThickness(attrs);
+                    if (th !== null && !isNaN(th)) frame.strokeThickness = th;
+                    const tr = readTransparency(attrs);
+                    if (tr !== null && !isNaN(tr)) frame.strokeTransparency = tr;
+                    if (attrs.joins) frame.strokeJoins = attrs.joins.toLowerCase();
+                    if (attrs.sizing) frame.strokeSizing = attrs.sizing.toLowerCase();
                     openStack.push(frame);
                 }
             } else if (/^[A-Z][A-Za-z]*=/.test(trimmed)) {
@@ -3506,13 +4379,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 warnings.push(t('importBadTag').replace('{tag}', rawTag));
             }
 
-            lastIndex = match.index + rawTag.length;
-        }
-
-        const tail = input.slice(lastIndex);
-        if (tail) {
-            const decoded = decodeHtmlEntities(tail);
-            for (const ch of decoded) pushChar(ch);
+            scanPos = nextTagMatch.index + rawTag.length;
         }
 
         return { state, warnings };
@@ -3528,15 +4395,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (replaceExisting) {
             charColors = {};
-            charTransparency = {};
+            charFontTransparency = {};
             charBold = {};
             charItalic = {};
             charUnderline = {};
             charStrike = {};
+            charUppercase = {};
+            charSmallcaps = {};
+            charMarkEnabled = {};
             charFont = {};
             charFontSize = {};
+            charWeight = {};
             charStrokeColor = {};
             charStrokeThickness = {};
+            charStrokeTransparency = {};
+            charStrokeJoins = {};
+            charStrokeSizing = {};
+            charMarkColor = {};
+            charMarkTransparency = {};
             gradientPoints = {};
             gradientPointTransparency = {};
             selectedPoint = null;
@@ -3546,25 +4422,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
         for (let i = 0; i < state.perChar.length; i++) {
             const c = state.perChar[i];
+            if (!c) continue;
             const idx = i;
 
             if (c.bold) charBold[idx] = true;
             if (c.italic) charItalic[idx] = true;
             if (c.underline) charUnderline[idx] = true;
             if (c.strike) charStrike[idx] = true;
+            if (c.uppercase) charUppercase[idx] = true;
+            if (c.smallcaps) charSmallcaps[idx] = true;
 
             if (c.color) charColors[idx] = c.color;
             if (c.transparency !== null && c.transparency !== undefined) {
-                charTransparency[idx] = c.transparency;
+                charFontTransparency[idx] = c.transparency;
             }
             if (c.font) charFont[idx] = c.font;
             if (c.fontSize !== null && c.fontSize !== undefined) {
                 charFontSize[idx] = c.fontSize;
                 if (elements.fontSizeEnabled) elements.fontSizeEnabled.checked = true;
             }
+            if (c.weight) charWeight[idx] = c.weight;
             if (c.strokeColor) charStrokeColor[idx] = c.strokeColor;
             if (c.strokeThickness !== null && c.strokeThickness !== undefined) {
                 charStrokeThickness[idx] = c.strokeThickness;
+            }
+            if (c.strokeTransparency !== null && c.strokeTransparency !== undefined) {
+                charStrokeTransparency[idx] = c.strokeTransparency;
+            }
+            if (c.strokeJoins) charStrokeJoins[idx] = c.strokeJoins;
+            if (c.strokeSizing) charStrokeSizing[idx] = c.strokeSizing;
+            if (c.markColor) charMarkColor[idx] = c.markColor;
+            if (c.markTransparency !== null && c.markTransparency !== undefined) {
+                charMarkTransparency[idx] = c.markTransparency;
             }
         }
 
@@ -3574,6 +4463,7 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.fontSize.value = state.globalFontSize;
             elements.fontSizeValue.textContent = state.globalFontSize;
         }
+        if (state.globalWeight) elements.fontWeight.value = state.globalWeight;
         if (state.globalStrokeColor) {
             elements.strokeColor.value = state.globalStrokeColor;
             elements.strokeColorHex.value = state.globalStrokeColor;
@@ -3582,9 +4472,26 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.strokeThickness.value = state.globalStrokeThickness;
             elements.strokeThicknessValue.textContent = state.globalStrokeThickness;
         }
-        if (state.globalTransparency !== null && state.globalTransparency !== undefined) {
-            elements.transparency.value = state.globalTransparency;
-            elements.transparencyValue.textContent = state.globalTransparency;
+        if (state.globalStrokeTransparency !== null && state.globalStrokeTransparency !== undefined) {
+            elements.strokeTransparency.value = state.globalStrokeTransparency;
+            elements.strokeTransparencyValue.textContent = state.globalStrokeTransparency;
+        }
+        if (state.globalStrokeJoins) elements.strokeJoins.value = state.globalStrokeJoins;
+        if (state.globalStrokeSizing) elements.strokeSizing.value = state.globalStrokeSizing;
+        if (state.globalFontTransparency !== null && state.globalFontTransparency !== undefined) {
+            elements.fontTransparency.value = state.globalFontTransparency;
+            elements.fontTransparencyValue.textContent = state.globalFontTransparency;
+        }
+        if (state.globalMarkEnabled) {
+            elements.markEnabled.checked = true;
+        }
+        if (state.globalMarkColor) {
+            elements.markColor.value = state.globalMarkColor;
+            elements.markColorHex.value = state.globalMarkColor;
+        }
+        if (state.globalMarkTransparency !== null && state.globalMarkTransparency !== undefined) {
+            elements.markTransparency.value = state.globalMarkTransparency;
+            elements.markTransparencyValue.textContent = state.globalMarkTransparency;
         }
         if (state.animateStyle !== null && state.animateStyle !== undefined) {
             elements.animateStyle.value = state.animateStyle;
@@ -3613,6 +4520,7 @@ document.addEventListener('DOMContentLoaded', function () {
         prevText = elements.textInput.value;
 
         updateFontSizeVisibility();
+        updateMarkVisibility();
 
         return { ok: true, warnings };
     }
@@ -3710,6 +4618,7 @@ document.addEventListener('DOMContentLoaded', function () {
     syncColorPickers(elements.gradientColor1, elements.gradientColor1Hex);
     syncColorPickers(elements.gradientColor2, elements.gradientColor2Hex);
     syncColorPickers(elements.strokeColor, elements.strokeColorHex);
+    syncColorPickers(elements.markColor, elements.markColorHex);
 
     const syncRange = (range, valueDisplay) => {
         range.addEventListener('input', () => {
@@ -3719,7 +4628,9 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     syncRange(elements.strokeThickness, elements.strokeThicknessValue);
     syncRange(elements.gradientSteps, elements.gradientStepsValue);
-    syncRange(elements.transparency, elements.transparencyValue);
+    syncRange(elements.fontTransparency, elements.fontTransparencyValue);
+    syncRange(elements.strokeTransparency, elements.strokeTransparencyValue);
+    syncRange(elements.markTransparency, elements.markTransparencyValue);
     elements.fontSize.addEventListener('input', () => {
         elements.fontSizeValue.textContent = elements.fontSize.value;
         generate();
@@ -3732,6 +4643,22 @@ document.addEventListener('DOMContentLoaded', function () {
         updateFontSizeVisibility();
         generate();
     });
+
+    elements.strokeJoins.addEventListener('change', generate);
+    elements.strokeSizing.addEventListener('change', generate);
+    elements.shortAttributes.addEventListener('change', generate);
+
+    elements.fontWeight.addEventListener('change', generate);
+    elements.uppercase.addEventListener('change', generate);
+    elements.smallcaps.addEventListener('change', generate);
+    elements.markEnabled.addEventListener('change', () => {
+        updateMarkVisibility();
+        generate();
+    });
+
+    if (elements.commentText) elements.commentText.addEventListener('input', generate);
+    if (elements.commentBefore) elements.commentBefore.addEventListener('change', generate);
+    if (elements.commentAfter) elements.commentAfter.addEventListener('change', generate);
 
     function syncGradientTypeFromMode() {
         const modeValue = elements.colorMode.value;
@@ -3805,7 +4732,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setSelectedPoint(null);
         if (goingToPoints) {
             charColors = {};
-            charTransparency = {};
+            charFontTransparency = {};
             if (Object.keys(gradientPoints).length === 0) {
                 const firstChar = elements.textInput.value[0];
                 if (firstChar && firstChar !== '\n') gradientPoints[0] = elements.gradientColor1.value;
@@ -4148,20 +5075,36 @@ document.addEventListener('DOMContentLoaded', function () {
             gradientColor2: elements.gradientColor2.value,
             gradientType: elements.gradientType.value,
             gradientSteps: elements.gradientSteps.value,
-            transparency: elements.transparency.value,
+            fontTransparency: elements.fontTransparency.value,
             bold: elements.bold.checked,
             italic: elements.italic.checked,
             underline: elements.underline.checked,
             strikethrough: elements.strikethrough.checked,
+            fontWeight: elements.fontWeight.value,
+            uppercase: elements.uppercase.checked,
+            smallcaps: elements.smallcaps.checked,
+            markEnabled: elements.markEnabled.checked,
+            markColor: elements.markColor.value,
+            markTransparency: elements.markTransparency.value,
+            commentText: elements.commentText ? elements.commentText.value : '',
+            commentBefore: elements.commentBefore ? elements.commentBefore.checked : false,
+            commentAfter: elements.commentAfter ? elements.commentAfter.checked : false,
             lineBreaks: elements.lineBreaks.checked,
             rgbColors: elements.rgbColors.checked,
             strokeColor: elements.strokeColor.value,
             strokeThickness: elements.strokeThickness.value,
+            strokeTransparency: elements.strokeTransparency.value,
+            strokeJoins: elements.strokeJoins.value,
+            strokeSizing: elements.strokeSizing.value,
+            shortAttributes: elements.shortAttributes.checked,
             fontFamily: elements.fontFamily.value,
             fontSizeEnabled: isFontSizeEnabled(),
             fontSize: elements.fontSize.value,
-            charColors, charTransparency, charBold, charItalic, charUnderline, charStrike,
-            charFont, charFontSize, charStrokeColor, charStrokeThickness,
+            charColors, charFontTransparency, charBold, charItalic, charUnderline, charStrike,
+            charUppercase, charSmallcaps, charMarkEnabled,
+            charFont, charFontSize, charWeight, charStrokeColor, charStrokeThickness,
+            charStrokeTransparency, charStrokeJoins, charStrokeSizing,
+            charMarkColor, charMarkTransparency,
             gradientPoints, gradientPointTransparency,
             animateStyle: elements.animateStyle.value,
             animateGrouping: elements.animateGrouping.value,
@@ -4184,15 +5127,34 @@ document.addEventListener('DOMContentLoaded', function () {
             if (s.gradientColor1) { elements.gradientColor1.value = s.gradientColor1; elements.gradientColor1Hex.value = s.gradientColor1; }
             if (s.gradientColor2) { elements.gradientColor2.value = s.gradientColor2; elements.gradientColor2Hex.value = s.gradientColor2; }
             if (s.gradientSteps !== undefined) { elements.gradientSteps.value = s.gradientSteps; elements.gradientStepsValue.textContent = s.gradientSteps; }
-            if (s.transparency !== undefined) { elements.transparency.value = s.transparency; elements.transparencyValue.textContent = s.transparency; }
+            if (s.fontTransparency !== undefined) { elements.fontTransparency.value = s.fontTransparency; elements.fontTransparencyValue.textContent = s.fontTransparency; }
+            if (s.transparency !== undefined && s.fontTransparency === undefined) {
+                elements.fontTransparency.value = s.transparency;
+                elements.fontTransparencyValue.textContent = s.transparency;
+            }
             elements.bold.checked = !!s.bold;
             elements.italic.checked = !!s.italic;
             elements.underline.checked = !!s.underline;
             elements.strikethrough.checked = !!s.strikethrough;
+            if (s.fontWeight) elements.fontWeight.value = s.fontWeight;
+            elements.uppercase.checked = !!s.uppercase;
+            elements.smallcaps.checked = !!s.smallcaps;
+            elements.markEnabled.checked = !!s.markEnabled;
+            if (s.markColor) { elements.markColor.value = s.markColor; elements.markColorHex.value = s.markColor; }
+            if (s.markTransparency !== undefined) { elements.markTransparency.value = s.markTransparency; elements.markTransparencyValue.textContent = s.markTransparency; }
+            if (typeof s.commentText === 'string' && elements.commentText) elements.commentText.value = s.commentText;
+            if (typeof s.commentBefore === 'boolean' && elements.commentBefore) elements.commentBefore.checked = s.commentBefore;
+            if (typeof s.commentAfter === 'boolean' && elements.commentAfter) elements.commentAfter.checked = s.commentAfter;
             elements.lineBreaks.checked = !!s.lineBreaks;
             elements.rgbColors.checked = !!s.rgbColors;
             if (s.strokeColor) { elements.strokeColor.value = s.strokeColor; elements.strokeColorHex.value = s.strokeColor; }
             if (s.strokeThickness !== undefined) { elements.strokeThickness.value = s.strokeThickness; elements.strokeThicknessValue.textContent = s.strokeThickness; }
+            if (s.strokeTransparency !== undefined) { elements.strokeTransparency.value = s.strokeTransparency; elements.strokeTransparencyValue.textContent = s.strokeTransparency; }
+            if (s.strokeJoins) elements.strokeJoins.value = s.strokeJoins;
+            if (s.strokeSizing) elements.strokeSizing.value = s.strokeSizing;
+            if (typeof s.shortAttributes === 'boolean') {
+                elements.shortAttributes.checked = s.shortAttributes;
+            }
             if (s.fontFamily) {
                 const opt = Array.from(elements.fontFamily.options).find(o => o.value === s.fontFamily);
                 if (opt) elements.fontFamily.value = s.fontFamily;
@@ -4203,11 +5165,17 @@ document.addEventListener('DOMContentLoaded', function () {
             if (s.fontSize !== undefined) { elements.fontSize.value = s.fontSize; elements.fontSizeValue.textContent = s.fontSize; }
 
             charColors = (s.charColors && typeof s.charColors === 'object') ? { ...s.charColors } : {};
-            charTransparency = (s.charTransparency && typeof s.charTransparency === 'object') ? { ...s.charTransparency } : {};
+            charFontTransparency = (s.charFontTransparency && typeof s.charFontTransparency === 'object') ? { ...s.charFontTransparency } : {};
+            if (s.charTransparency && typeof s.charTransparency === 'object' && Object.keys(charFontTransparency).length === 0) {
+                charFontTransparency = { ...s.charTransparency };
+            }
             charBold = (s.charBold && typeof s.charBold === 'object') ? { ...s.charBold } : {};
             charItalic = (s.charItalic && typeof s.charItalic === 'object') ? { ...s.charItalic } : {};
             charUnderline = (s.charUnderline && typeof s.charUnderline === 'object') ? { ...s.charUnderline } : {};
             charStrike = (s.charStrike && typeof s.charStrike === 'object') ? { ...s.charStrike } : {};
+            charUppercase = (s.charUppercase && typeof s.charUppercase === 'object') ? { ...s.charUppercase } : {};
+            charSmallcaps = (s.charSmallcaps && typeof s.charSmallcaps === 'object') ? { ...s.charSmallcaps } : {};
+            charMarkEnabled = (s.charMarkEnabled && typeof s.charMarkEnabled === 'object') ? { ...s.charMarkEnabled } : {};
             const rawCharFont = (s.charFont && typeof s.charFont === 'object') ? s.charFont : {};
             charFont = {};
             Object.keys(rawCharFont).forEach(k => {
@@ -4220,8 +5188,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 charFont[k] = trimmed;
             });
             charFontSize = (s.charFontSize && typeof s.charFontSize === 'object') ? { ...s.charFontSize } : {};
+            charWeight = (s.charWeight && typeof s.charWeight === 'object') ? { ...s.charWeight } : {};
             charStrokeColor = (s.charStrokeColor && typeof s.charStrokeColor === 'object') ? { ...s.charStrokeColor } : {};
             charStrokeThickness = (s.charStrokeThickness && typeof s.charStrokeThickness === 'object') ? { ...s.charStrokeThickness } : {};
+            charStrokeTransparency = (s.charStrokeTransparency && typeof s.charStrokeTransparency === 'object') ? { ...s.charStrokeTransparency } : {};
+            charStrokeJoins = (s.charStrokeJoins && typeof s.charStrokeJoins === 'object') ? { ...s.charStrokeJoins } : {};
+            charStrokeSizing = (s.charStrokeSizing && typeof s.charStrokeSizing === 'object') ? { ...s.charStrokeSizing } : {};
+            charMarkColor = (s.charMarkColor && typeof s.charMarkColor === 'object') ? { ...s.charMarkColor } : {};
+            charMarkTransparency = (s.charMarkTransparency && typeof s.charMarkTransparency === 'object') ? { ...s.charMarkTransparency } : {};
             gradientPoints = (s.gradientPoints && typeof s.gradientPoints === 'object') ? { ...s.gradientPoints } : {};
             gradientPointTransparency = (s.gradientPointTransparency && typeof s.gradientPointTransparency === 'object') ? { ...s.gradientPointTransparency } : {};
 
@@ -4237,6 +5211,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             updateFontSizeVisibility();
+            updateMarkVisibility();
         } catch (e) { console.warn('Failed to apply state', e); }
     }
 
@@ -4458,6 +5433,7 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleDefaultioControls();
     toggleColorSourceControls();
     updateFontSizeVisibility();
+    updateMarkVisibility();
 
     prevText = elements.textInput.value;
 
