@@ -283,6 +283,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let charMarkColorDirty = false;
     let charMarkColorLastShown = null;
     let charMarkTransparencyDirty = false;
+    let charMarkTransparencyLastShown = null;
+    let charStrokeTransparencyDirty = false;
+    let charStrokeTransparencyLastShown = null;
 
     let gradientPoints = {};
     let gradientPointTransparency = {};
@@ -533,8 +536,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: 'Select char for formatting',
             invalidTransparency: 'Transparency must be a number between 0 and 1.',
             defaultioSkipChars: 'Warning: "<" and ">" characters were skipped in the Defaultio output.',
+            defaultioUnsupportedFeatures: 'Warning: Defaultio output does not support the following active features and they will be omitted: {list}',
+            defaultioFeatureWeight: 'Font Weight',
+            defaultioFeatureUppercase: 'Uppercase',
+            defaultioFeatureSmallcaps: 'Small Caps',
+            defaultioFeatureMark: 'Mark',
+            defaultioFeatureFontSize: 'Custom Font Size',
+            defaultioFeatureStrokeTransparency: 'Stroke Transparency',
+            defaultioFeatureStrokeJoins: 'Stroke Joins',
+            defaultioFeatureStrokeSizing: 'Stroke Sizing',
+            defaultioFeaturePerChar: 'Per-character formatting',
             confirmSwitchPointsToGradient: 'Switching to Gradient/Solid will delete all Gradient Points. Continue?',
             confirmSwitchGradientToPoints: 'Switching to Gradient Points will reset per-character colors. Continue?',
+            confirmDisableFontSize: 'Disabling Custom Font Size will reset all per-character font sizes. Continue?',
             importRichText: 'Import',
             importPasteLabel: 'Paste your Rich Text code',
             importReplaceExisting: 'Replace existing character formatting',
@@ -635,8 +649,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: 'Seleccionar carácter para formato',
             invalidTransparency: 'La transparencia debe ser un número entre 0 y 1.',
             defaultioSkipChars: 'Aviso: los caracteres "<" y ">" se omitieron en la salida de Defaultio.',
+            defaultioUnsupportedFeatures: 'Aviso: la salida Defaultio no admite las siguientes funciones activas y se omitirán: {list}',
+            defaultioFeatureWeight: 'Grosor de fuente',
+            defaultioFeatureUppercase: 'Mayúsculas',
+            defaultioFeatureSmallcaps: 'Versalitas',
+            defaultioFeatureMark: 'Resaltado',
+            defaultioFeatureFontSize: 'Tamaño de fuente personalizado',
+            defaultioFeatureStrokeTransparency: 'Transparencia del contorno',
+            defaultioFeatureStrokeJoins: 'Uniones del contorno',
+            defaultioFeatureStrokeSizing: 'Escalado del contorno',
+            defaultioFeaturePerChar: 'Formato por carácter',
             confirmSwitchPointsToGradient: 'Cambiar a Degradado/Sólido eliminará todos los Puntos de degradado. ¿Continuar?',
             confirmSwitchGradientToPoints: 'Cambiar a Puntos de degradado restablecerá los colores por carácter. ¿Continuar?',
+            confirmDisableFontSize: 'Desactivar Tamaño de fuente personalizado restablecerá todos los tamaños por carácter. ¿Continuar?',
             importRichText: 'Importar Rich Text',
             importPasteLabel: 'Pega tu código Rich Text',
             importReplaceExisting: 'Reemplazar el formato de caracteres existente',
@@ -737,8 +762,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: 'Sélectionner le caractère',
             invalidTransparency: 'La transparence doit être un nombre entre 0 et 1.',
             defaultioSkipChars: 'Attention : les caractères "<" et ">" ont été ignorés dans la sortie Defaultio.',
+            defaultioUnsupportedFeatures: 'Attention : la sortie Defaultio ne prend pas en charge les fonctionnalités actives suivantes et elles seront omises : {list}',
+            defaultioFeatureWeight: 'Graisse de police',
+            defaultioFeatureUppercase: 'Majuscules',
+            defaultioFeatureSmallcaps: 'Petites capitales',
+            defaultioFeatureMark: 'Surlignage',
+            defaultioFeatureFontSize: 'Taille de police personnalisée',
+            defaultioFeatureStrokeTransparency: 'Transparence du contour',
+            defaultioFeatureStrokeJoins: 'Jonctions du contour',
+            defaultioFeatureStrokeSizing: 'Mise à l\'échelle du contour',
+            defaultioFeaturePerChar: 'Mise en forme par caractère',
             confirmSwitchPointsToGradient: 'Passer à Dégradé/Uni supprimera tous les Points de dégradé. Continuer ?',
             confirmSwitchGradientToPoints: 'Passer à Points de dégradé réinitialisera les couleurs par caractère. Continuer ?',
+            confirmDisableFontSize: 'Désactiver la Taille de police personnalisée réinitialisera toutes les tailles par caractère. Continuer ?',
             importRichText: 'Importer Rich Text',
             importPasteLabel: 'Collez votre code Rich Text',
             importReplaceExisting: 'Remplacer la mise en forme des caractères existante',
@@ -839,8 +875,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: 'Zeichen auswählen',
             invalidTransparency: 'Die Transparenz muss eine Zahl zwischen 0 und 1 sein.',
             defaultioSkipChars: 'Warnung: Die Zeichen "<" und ">" wurden in der Defaultio-Ausgabe übersprungen.',
+            defaultioUnsupportedFeatures: 'Warnung: Die Defaultio-Ausgabe unterstützt die folgenden aktiven Funktionen nicht und sie werden weggelassen: {list}',
+            defaultioFeatureWeight: 'Schriftstärke',
+            defaultioFeatureUppercase: 'Großbuchstaben',
+            defaultioFeatureSmallcaps: 'Kapitälchen',
+            defaultioFeatureMark: 'Markierung',
+            defaultioFeatureFontSize: 'Benutzerdefinierte Schriftgröße',
+            defaultioFeatureStrokeTransparency: 'Konturtransparenz',
+            defaultioFeatureStrokeJoins: 'Konturverbindungen',
+            defaultioFeatureStrokeSizing: 'Konturskalierung',
+            defaultioFeaturePerChar: 'Zeichenweise Formatierung',
             confirmSwitchPointsToGradient: 'Beim Wechsel zu Verlauf/Einfarbig werden alle Verlaufspunkte gelöscht. Fortfahren?',
             confirmSwitchGradientToPoints: 'Beim Wechsel zu Verlaufspunkten werden Zeichenfarben zurückgesetzt. Fortfahren?',
+            confirmDisableFontSize: 'Das Deaktivieren der benutzerdefinierten Schriftgröße setzt alle zeichenweisen Schriftgrößen zurück. Fortfahren?',
             importRichText: 'Rich Text importieren',
             importPasteLabel: 'Füge deinen Rich-Text-Code ein',
             importReplaceExisting: 'Bestehende Zeichenformatierung ersetzen',
@@ -941,8 +988,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: 'Seleziona carattere',
             invalidTransparency: 'La trasparenza deve essere un numero tra 0 e 1.',
             defaultioSkipChars: 'Attenzione: i caratteri "<" e ">" sono stati saltati nell\'output Defaultio.',
+            defaultioUnsupportedFeatures: 'Attenzione: l\'output Defaultio non supporta le seguenti funzionalità attive e verranno omesse: {list}',
+            defaultioFeatureWeight: 'Spessore carattere',
+            defaultioFeatureUppercase: 'Maiuscole',
+            defaultioFeatureSmallcaps: 'Maiuscoletto',
+            defaultioFeatureMark: 'Evidenziazione',
+            defaultioFeatureFontSize: 'Dimensione carattere personalizzata',
+            defaultioFeatureStrokeTransparency: 'Trasparenza contorno',
+            defaultioFeatureStrokeJoins: 'Giunzioni contorno',
+            defaultioFeatureStrokeSizing: 'Scalatura contorno',
+            defaultioFeaturePerChar: 'Formattazione per carattere',
             confirmSwitchPointsToGradient: 'Passando a Sfumatura/Tinta unita verranno eliminati tutti i Punti sfumatura. Continuare?',
             confirmSwitchGradientToPoints: 'Passando a Punti sfumatura verranno reimpostati i colori per carattere. Continuare?',
+            confirmDisableFontSize: 'Disattivare Dimensione carattere personalizzata reimposterà tutte le dimensioni per carattere. Continuare?',
             importRichText: 'Importa Rich Text',
             importPasteLabel: 'Incolla il tuo codice Rich Text',
             importReplaceExisting: 'Sostituisci la formattazione dei caratteri esistente',
@@ -1043,8 +1101,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: 'Selecionar caractere',
             invalidTransparency: 'A transparência deve ser um número entre 0 e 1.',
             defaultioSkipChars: 'Aviso: os caracteres "<" e ">" foram ignorados na saída do Defaultio.',
+            defaultioUnsupportedFeatures: 'Aviso: a saída Defaultio não suporta os seguintes recursos ativos e eles serão omitidos: {list}',
+            defaultioFeatureWeight: 'Peso da fonte',
+            defaultioFeatureUppercase: 'Maiúsculas',
+            defaultioFeatureSmallcaps: 'Versaletes',
+            defaultioFeatureMark: 'Destaque',
+            defaultioFeatureFontSize: 'Tamanho da fonte personalizado',
+            defaultioFeatureStrokeTransparency: 'Transparência do contorno',
+            defaultioFeatureStrokeJoins: 'Junções do contorno',
+            defaultioFeatureStrokeSizing: 'Dimensionamento do contorno',
+            defaultioFeaturePerChar: 'Formatação por caractere',
             confirmSwitchPointsToGradient: 'Mudar para Gradiente/Sólido excluirá todos os Pontos de gradiente. Continuar?',
             confirmSwitchGradientToPoints: 'Mudar para Pontos de gradiente redefinirá as cores por caractere. Continuar?',
+            confirmDisableFontSize: 'Desativar Tamanho da fonte personalizado redefinirá todos os tamanhos por caractere. Continuar?',
             importRichText: 'Importar Rich Text',
             importPasteLabel: 'Cole seu código Rich Text',
             importReplaceExisting: 'Substituir a formatação de caracteres existente',
@@ -1145,8 +1214,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: 'Выбрать букву',
             invalidTransparency: 'Прозрачность должна быть числом от 0 до 1.',
             defaultioSkipChars: 'Внимание: символы "<" и ">" были пропущены в выводе Defaultio.',
+            defaultioUnsupportedFeatures: 'Внимание: вывод Defaultio не поддерживает следующие активные функции, и они будут пропущены: {list}',
+            defaultioFeatureWeight: 'Насыщенность шрифта',
+            defaultioFeatureUppercase: 'Верхний регистр',
+            defaultioFeatureSmallcaps: 'Капитель',
+            defaultioFeatureMark: 'Выделение',
+            defaultioFeatureFontSize: 'Свой размер шрифта',
+            defaultioFeatureStrokeTransparency: 'Прозрачность обводки',
+            defaultioFeatureStrokeJoins: 'Соединения обводки',
+            defaultioFeatureStrokeSizing: 'Масштабирование обводки',
+            defaultioFeaturePerChar: 'Посимвольное форматирование',
             confirmSwitchPointsToGradient: 'Переключение на Gradient/Solid удалит все точки градиента. Продолжить?',
             confirmSwitchGradientToPoints: 'Переключение на Gradient Points сбросит посимвольные цвета. Продолжить?',
+            confirmDisableFontSize: 'Отключение своего размера шрифта сбросит все посимвольные размеры. Продолжить?',
             importRichText: 'Импорт Rich Text',
             importPasteLabel: 'Вставьте ваш код Rich Text',
             importReplaceExisting: 'Заменить текущее форматирование символов',
@@ -1247,8 +1327,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: '書式設定する文字を選択',
             invalidTransparency: '透明度は 0 から 1 の数値で指定してください。',
             defaultioSkipChars: '警告: Defaultio 出力では "<" と ">" はスキップされました。',
+            defaultioUnsupportedFeatures: '警告: Defaultio 出力は以下のアクティブな機能をサポートしておらず、省略されます: {list}',
+            defaultioFeatureWeight: 'フォントの太さ',
+            defaultioFeatureUppercase: '大文字',
+            defaultioFeatureSmallcaps: 'スモールキャップス',
+            defaultioFeatureMark: 'マーク',
+            defaultioFeatureFontSize: 'カスタムフォントサイズ',
+            defaultioFeatureStrokeTransparency: '縁取りの透明度',
+            defaultioFeatureStrokeJoins: '縁取りの接続',
+            defaultioFeatureStrokeSizing: '縁取りのサイズ',
+            defaultioFeaturePerChar: '文字ごとの書式',
             confirmSwitchPointsToGradient: 'グラデーション/単色に切り替えると、すべてのグラデーションポイントが削除されます。続行しますか?',
             confirmSwitchGradientToPoints: 'グラデーションポイントに切り替えると、文字ごとの色がリセットされます。続行しますか?',
+            confirmDisableFontSize: 'カスタムフォントサイズを無効にすると、文字ごとのフォントサイズがすべてリセットされます。続行しますか?',
             importRichText: 'Rich Text をインポート',
             importPasteLabel: 'Rich Text コードを貼り付けてください',
             importReplaceExisting: '既存の文字書式を置き換える',
@@ -1349,8 +1440,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: '서식 지정할 문자 선택',
             invalidTransparency: '투명도는 0에서 1 사이의 숫자여야 합니다.',
             defaultioSkipChars: '경고: Defaultio 출력에서 "<" 및 ">" 문자가 건너뛰어졌습니다.',
+            defaultioUnsupportedFeatures: '경고: Defaultio 출력은 다음 활성 기능을 지원하지 않으며 생략됩니다: {list}',
+            defaultioFeatureWeight: '글꼴 두께',
+            defaultioFeatureUppercase: '대문자',
+            defaultioFeatureSmallcaps: '작은 대문자',
+            defaultioFeatureMark: '마크',
+            defaultioFeatureFontSize: '사용자 지정 글꼴 크기',
+            defaultioFeatureStrokeTransparency: '외곽선 투명도',
+            defaultioFeatureStrokeJoins: '외곽선 연결',
+            defaultioFeatureStrokeSizing: '외곽선 크기',
+            defaultioFeaturePerChar: '문자별 서식',
             confirmSwitchPointsToGradient: '그라데이션/단색으로 전환하면 모든 그라데이션 포인트가 삭제됩니다. 계속할까요?',
             confirmSwitchGradientToPoints: '그라데이션 포인트로 전환하면 문자별 색상이 초기화됩니다. 계속할까요?',
+            confirmDisableFontSize: '사용자 지정 글꼴 크기를 비활성화하면 문자별 글꼴 크기가 모두 초기화됩니다. 계속할까요?',
             importRichText: 'Rich Text 가져오기',
             importPasteLabel: 'Rich Text 코드를 붙여넣으세요',
             importReplaceExisting: '기존 문자 서식 바꾸기',
@@ -1451,8 +1553,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: '选择字符以设置格式',
             invalidTransparency: '透明度必须是 0 到 1 之间的数字。',
             defaultioSkipChars: '警告: Defaultio 输出中的 "<" 和 ">" 字符已被跳过。',
+            defaultioUnsupportedFeatures: '警告: Defaultio 输出不支持以下活动功能，将被省略: {list}',
+            defaultioFeatureWeight: '字体粗细',
+            defaultioFeatureUppercase: '大写',
+            defaultioFeatureSmallcaps: '小型大写字母',
+            defaultioFeatureMark: '标记',
+            defaultioFeatureFontSize: '自定义字体大小',
+            defaultioFeatureStrokeTransparency: '描边透明度',
+            defaultioFeatureStrokeJoins: '描边连接',
+            defaultioFeatureStrokeSizing: '描边缩放',
+            defaultioFeaturePerChar: '逐字格式',
             confirmSwitchPointsToGradient: '切换到渐变/纯色将删除所有渐变点。是否继续?',
             confirmSwitchGradientToPoints: '切换到渐变点将重置逐字颜色。是否继续?',
+            confirmDisableFontSize: '禁用自定义字体大小将重置所有逐字字体大小。是否继续?',
             importRichText: '导入 Rich Text',
             importPasteLabel: '粘贴你的 Rich Text 代码',
             importReplaceExisting: '替换现有的字符格式',
@@ -1553,8 +1666,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: 'اختر حرفاً للتنسيق',
             invalidTransparency: 'يجب أن تكون الشفافية رقماً بين 0 و 1.',
             defaultioSkipChars: 'تحذير: تم تخطي الحرفين "<" و ">" في إخراج Defaultio.',
+            defaultioUnsupportedFeatures: 'تحذير: إخراج Defaultio لا يدعم الميزات النشطة التالية وسيتم حذفها: {list}',
+            defaultioFeatureWeight: 'سماكة الخط',
+            defaultioFeatureUppercase: 'أحرف كبيرة',
+            defaultioFeatureSmallcaps: 'أحرف صغيرة كبيرة',
+            defaultioFeatureMark: 'تمييز',
+            defaultioFeatureFontSize: 'حجم خط مخصص',
+            defaultioFeatureStrokeTransparency: 'شفافية الحدود',
+            defaultioFeatureStrokeJoins: 'وصلات الحدود',
+            defaultioFeatureStrokeSizing: 'قياس الحدود',
+            defaultioFeaturePerChar: 'تنسيق لكل حرف',
             confirmSwitchPointsToGradient: 'التبديل إلى التدرج/اللون الواحد سيحذف جميع نقاط التدرج. متابعة؟',
             confirmSwitchGradientToPoints: 'التبديل إلى نقاط التدرج سيعيد تعيين ألوان الحروف. متابعة؟',
+            confirmDisableFontSize: 'سيؤدي تعطيل حجم الخط المخصص إلى إعادة تعيين جميع أحجام الخطوط لكل حرف. متابعة؟',
             importRichText: 'استيراد Rich Text',
             importPasteLabel: 'الصق كود Rich Text هنا',
             importReplaceExisting: 'استبدال تنسيق الأحرف الحالي',
@@ -1655,8 +1779,19 @@ document.addEventListener('DOMContentLoaded', function () {
             selectCharForFormatting: 'फ़ॉर्मेटिंग के लिए अक्षर चुनें',
             invalidTransparency: 'पारदर्शिता 0 और 1 के बीच की संख्या होनी चाहिए।',
             defaultioSkipChars: 'चेतावनी: Defaultio आउटपुट में "<" और ">" अक्षर छोड़ दिए गए।',
+            defaultioUnsupportedFeatures: 'चेतावनी: Defaultio आउटपुट निम्नलिखित सक्रिय सुविधाओं का समर्थन नहीं करता और उन्हें छोड़ दिया जाएगा: {list}',
+            defaultioFeatureWeight: 'फ़ॉन्ट वज़न',
+            defaultioFeatureUppercase: 'अपरकेस',
+            defaultioFeatureSmallcaps: 'स्मॉल कैप्स',
+            defaultioFeatureMark: 'मार्क',
+            defaultioFeatureFontSize: 'कस्टम फ़ॉन्ट आकार',
+            defaultioFeatureStrokeTransparency: 'स्ट्रोक पारदर्शिता',
+            defaultioFeatureStrokeJoins: 'स्ट्रोक जोड़',
+            defaultioFeatureStrokeSizing: 'स्ट्रोक आकार',
+            defaultioFeaturePerChar: 'प्रति-अक्षर फ़ॉर्मेटिंग',
             confirmSwitchPointsToGradient: 'ग्रेडिएंट/ठोस पर स्विच करने से सभी ग्रेडिएंट पॉइंट हट जाएंगे। जारी रखें?',
             confirmSwitchGradientToPoints: 'ग्रेडिएंट पॉइंट पर स्विच करने से प्रति-अक्षर रंग रीसेट हो जाएंगे। जारी रखें?',
+            confirmDisableFontSize: 'कस्टम फ़ॉन्ट आकार अक्षम करने से सभी प्रति-अक्षर फ़ॉन्ट आकार रीसेट हो जाएंगे। जारी रखें?',
             importRichText: 'Rich Text आयात करें',
             importPasteLabel: 'अपना Rich Text कोड पेस्ट करें',
             importReplaceExisting: 'मौजूदा अक्षर फ़ॉर्मेटिंग बदलें',
@@ -1801,6 +1936,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearGradientPointsState();
             }
             selectedPoint = null;
+            charMarkEnabled = {};
             setSelection([]);
         }
 
@@ -2112,7 +2248,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const isSmall = !!charSmallcaps[rawIndex];
             const renderCh = applyCaseTransform(ch === ' ' ? ' ' : ch, isUpper, isSmall);
             let smallScale = 1;
-            if (isSmall && isLowercaseLetter(ch)) smallScale = 0.72;
+            if (isSmall && !isUpper && isLowercaseLetter(ch)) smallScale = 0.72;
             const key = (isItalic ? 'i' : '') + (isBold ? 'b' : '') + '|' + fontName + '|' + size + '|' + (weightCss || '') + '|' + (isUpper ? 'U' : '') + '|' + (isSmall ? 'S' : '') + '|' + renderCh;
             if (metricsCache.has(key)) return metricsCache.get(key) * smallScale;
             const prevFont = ctx.font;
@@ -2233,6 +2369,7 @@ document.addEventListener('DOMContentLoaded', function () {
             globalMarkEnabled,
             globalMarkColor,
             globalMarkTransparency,
+            baseFontSize,
             animate
         } = options;
 
@@ -2240,6 +2377,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const rainbowActive = animate && animate.style === 'Rainbow';
         const rainbowTime = rainbowActive ? (performance.now() - animationStart) / 1000 : 0;
+        const scaledBaseline = baseFontSize || 24;
 
         glyphs.forEach(g => {
             let color = colorFn(g.index) || '#ffffff';
@@ -2284,7 +2422,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const renderCh = applyCaseTransform(g.char, isUpper, isSmall);
             let smallScale = 1;
-            if (isSmall && isLowercaseLetter(g.char)) smallScale = 0.72;
+            if (isSmall && !isUpper && isLowercaseLetter(g.char)) smallScale = 0.72;
 
             const perCharMarkOn = charMarkEnabled[g.index] === true;
             const perCharMarkOff = charMarkEnabled[g.index] === false;
@@ -2324,7 +2462,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const strokeSizing = charStrokeSizing[g.index] || options.globalStrokeSizing || 'fixed';
 
             const strokeThickness = strokeSizing === 'scaled'
-                ? baseStrokeThickness * (charSize / 24)
+                ? baseStrokeThickness * (charSize / scaledBaseline)
                 : baseStrokeThickness;
 
             if (strokeThickness > 0 && strokeColor) {
@@ -2574,6 +2712,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ...opts,
             fontCss,
             fontSize,
+            baseFontSize: 24,
             globalFontName: opts.globalFontName || elements.fontFamily.value,
             globalStrokeColor: elements.strokeColor.value,
             globalStrokeThickness: parseFloat(elements.strokeThickness.value),
@@ -2854,6 +2993,7 @@ document.addEventListener('DOMContentLoaded', function () {
         charStrokeThicknessDirty = false;
         charMarkColorDirty = false;
         charMarkTransparencyDirty = false;
+        charStrokeTransparencyDirty = false;
         updateCharEditor();
         redrawCanvasesOnly();
     }
@@ -2893,6 +3033,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 usePoints,
                 fontCss: fontFamilyFor(elements.fontFamily.value),
                 fontSize: canvas === elements.previewLarge ? currentLargeFontSize() : 24,
+                baseFontSize: 24,
                 globalTrans,
                 globalFontName: elements.fontFamily.value,
                 globalStrokeColor: elements.strokeColor.value,
@@ -3097,10 +3238,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const v = [...strokeTransps][0];
             elements.charStrokeTransparency.value = v || '0';
             elements.charStrokeTransparencyValue.textContent = v || '0';
+            charStrokeTransparencyLastShown = (v !== undefined && v !== '') ? v : null;
         } else {
             elements.charStrokeTransparency.value = '0';
             elements.charStrokeTransparencyValue.textContent = '0';
+            charStrokeTransparencyLastShown = null;
         }
+        charStrokeTransparencyDirty = false;
 
         const joinsSet = new Set(arr.map(i => charStrokeJoins[i] || ''));
         if (joinsSet.size === 1) {
@@ -3138,9 +3282,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const v = [...markTransps][0];
             elements.charMarkTransparency.value = v || '0';
             elements.charMarkTransparencyValue.textContent = v || '0';
+            charMarkTransparencyLastShown = (v !== undefined && v !== '') ? v : null;
         } else {
             elements.charMarkTransparency.value = '0';
             elements.charMarkTransparencyValue.textContent = '0';
+            charMarkTransparencyLastShown = null;
         }
         charMarkTransparencyDirty = false;
 
@@ -3272,8 +3418,15 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.charStrokeThicknessValue.textContent = elements.charStrokeThickness.value;
     });
 
+    const markStrokeTransparencyDirty = () => {
+        if (charStrokeTransparencyLastShown === null) { charStrokeTransparencyDirty = true; return; }
+        if (elements.charStrokeTransparency.value !== charStrokeTransparencyLastShown) {
+            charStrokeTransparencyDirty = true;
+        }
+    };
     elements.charStrokeTransparency.addEventListener('input', () => {
         elements.charStrokeTransparencyValue.textContent = elements.charStrokeTransparency.value;
+        markStrokeTransparencyDirty();
     });
 
     const markCharMarkColorDirty = () => {
@@ -3283,8 +3436,15 @@ document.addEventListener('DOMContentLoaded', function () {
     elements.charMarkColor.addEventListener('input', markCharMarkColorDirty);
     elements.charMarkColorHex.addEventListener('input', markCharMarkColorDirty);
 
+    const markCharMarkTransparencyDirty = () => {
+        if (charMarkTransparencyLastShown === null) { charMarkTransparencyDirty = true; return; }
+        if (elements.charMarkTransparency.value !== charMarkTransparencyLastShown) {
+            charMarkTransparencyDirty = true;
+        }
+    };
     elements.charMarkTransparency.addEventListener('input', () => {
         elements.charMarkTransparencyValue.textContent = elements.charMarkTransparency.value;
+        markCharMarkTransparencyDirty();
     });
 
     ['charBold', 'charItalic', 'charUnderline', 'charStrike', 'charUppercase', 'charSmallcaps'].forEach(id => {
@@ -3374,9 +3534,8 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedChars.forEach(i => { charStrokeThickness[i] = chosenThickness; });
         }
 
-        const strokeTransRaw = elements.charStrokeTransparency.value;
-        if (strokeTransRaw !== '' && strokeTransRaw !== '0') {
-            const st = parseFloat(strokeTransRaw);
+        if (charStrokeTransparencyDirty) {
+            const st = parseFloat(elements.charStrokeTransparency.value);
             if (!isNaN(st)) {
                 selectedChars.forEach(i => { charStrokeTransparency[i] = st; });
             }
@@ -3403,9 +3562,8 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedChars.forEach(i => { charMarkColor[i] = chosenMark; });
         }
 
-        const markTransRaw = elements.charMarkTransparency.value;
-        if (markTransRaw !== '' && markTransRaw !== '0') {
-            const mt = parseFloat(markTransRaw);
+        if (charMarkTransparencyDirty) {
+            const mt = parseFloat(elements.charMarkTransparency.value);
             if (!isNaN(mt)) {
                 selectedChars.forEach(i => { charMarkTransparency[i] = mt; });
             }
@@ -3661,6 +3819,28 @@ document.addEventListener('DOMContentLoaded', function () {
         return { text: out, skippedChars };
     }
 
+    function collectDefaultioUnsupportedFeatures() {
+        const list = [];
+        if (elements.fontWeight.value) list.push(t('defaultioFeatureWeight'));
+        if (elements.uppercase.checked) list.push(t('defaultioFeatureUppercase'));
+        if (elements.smallcaps.checked) list.push(t('defaultioFeatureSmallcaps'));
+        if (isMarkAllowed()) list.push(t('defaultioFeatureMark'));
+        if (isFontSizeEnabled() && parseFloat(elements.fontSize.value) !== 10) list.push(t('defaultioFeatureFontSize'));
+        if (parseFloat(elements.strokeTransparency.value) > 0) list.push(t('defaultioFeatureStrokeTransparency'));
+        if ((elements.strokeJoins.value || 'miter') !== 'round') list.push(t('defaultioFeatureStrokeJoins'));
+        if ((elements.strokeSizing.value || 'fixed') !== 'fixed') list.push(t('defaultioFeatureStrokeSizing'));
+
+        const hasPerChar = [
+            charColors, charFontTransparency, charBold, charItalic, charUnderline, charStrike,
+            charUppercase, charSmallcaps, charMarkEnabled, charFont, charFontSize, charWeight,
+            charStrokeColor, charStrokeThickness, charStrokeTransparency, charStrokeJoins,
+            charStrokeSizing, charMarkColor, charMarkTransparency
+        ].some(d => Object.keys(d).length > 0);
+        if (hasPerChar) list.push(t('defaultioFeaturePerChar'));
+
+        return list;
+    }
+
     function generate() {
         const rawText = elements.textInput.value || 'Your Text';
         const userId = elements.userId.value || '0';
@@ -3670,7 +3850,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const globalStroke = elements.strokeColor.value;
         const globalThickness = parseFloat(elements.strokeThickness.value);
         const globalStrokeTrans = parseFloat(elements.strokeTransparency.value);
-        const globalStrokeJoins = elements.strokeJoins.value || 'round';
+        const globalStrokeJoins = elements.strokeJoins.value || 'miter';
         const globalStrokeSizing = elements.strokeSizing.value || 'fixed';
         const globalWeight = elements.fontWeight.value || null;
         const globalUppercase = elements.uppercase.checked;
@@ -3778,11 +3958,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const flush = () => {
             if (buffer.length) {
-                runs.push({ text: buffer, props: bufferProps });
+                runs.push({ text: buffer, props: bufferProps, rawIndices: bufferRawIndices });
                 buffer = '';
+                bufferRawIndices = [];
             }
         };
 
+        let bufferRawIndices = [];
         const commentRanges = parseCommentRanges(rawText);
         const isInComment = idx => commentRanges.some(r => idx >= r.start && idx < r.end);
 
@@ -3801,10 +3983,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const actualCh = ch === '\n' ? ' ' : ch;
             if (propsEqual(bufferProps, props)) {
                 buffer += actualCh;
+                bufferRawIndices.push(i);
             } else {
                 flush();
                 bufferProps = props;
                 buffer += actualCh;
+                bufferRawIndices.push(i);
             }
         }
         flush();
@@ -3812,24 +3996,27 @@ document.addEventListener('DOMContentLoaded', function () {
         let inner = '';
         let openStack = [];
 
-        const rawToRun = new Array(rawText.length);
+        const rawToRun = new Array(rawText.length).fill(null);
+        for (let r = 0; r < runs.length; r++) {
+            const run = runs[r];
+            if (run.isBreak) continue;
+            for (let c = 0; c < run.rawIndices.length; c++) {
+                const rawIdx = run.rawIndices[c];
+                rawToRun[rawIdx] = { runIdx: r, charIdx: c };
+            }
+        }
+
+        const breakRuns = new Set();
         {
-            let pos = 0;
-            for (let r = 0; r < runs.length; r++) {
-                const run = runs[r];
-                if (run.isBreak) {
-                    rawToRun[pos] = { runIdx: -1, charIdx: -1 };
-                    pos++;
-                    continue;
-                }
-                for (let c = 0; c < run.text.length; c++) {
-                    rawToRun[pos] = { runIdx: r, charIdx: c };
-                    pos++;
+            let breakIdx = 0;
+            for (let i = 0; i < rawText.length; i++) {
+                if (isInComment(i)) continue;
+                if (rawText[i] === '\n' && enableLineBreaks) {
+                    breakRuns.add(i);
                 }
             }
         }
 
-        let rp2 = 0;
         for (let i = 0; i < rawText.length; i++) {
             let inComment = false;
             for (const range of commentRanges) {
@@ -3839,114 +4026,102 @@ document.addEventListener('DOMContentLoaded', function () {
                 inner += rawText[i];
                 continue;
             }
-            while (rp2 < runs.length) {
-                const run = runs[rp2];
-                const mapped = rawToRun[i];
-                if (run.isBreak) {
-                    if (mapped && mapped.runIdx === -1) {
-                        while (openStack.length > 0) { inner += openStack.pop().close; }
-                        inner += '<br/>';
-                        rp2++;
-                        break;
-                    }
-                    rp2++;
-                    continue;
-                }
-                if (mapped && mapped.runIdx === rp2) {
-                    const p = run.props;
-                    const desiredKeys = [];
-                    const desiredOpen = [];
-
-                    desiredKeys.push('font:' + p.font);
-                    desiredOpen.push({ open: '<font face=\'' + p.font + '\'>', close: '</font>' });
-
-                    if (p.weight) {
-                        desiredKeys.push('weight:' + p.weight);
-                        desiredOpen.push({ open: '<font weight=\'' + p.weight + '\'>', close: '</font>' });
-                    }
-
-                    if (p.size !== null && p.size !== undefined) {
-                        desiredKeys.push('size:' + p.size);
-                        desiredOpen.push({ open: '<font size=\'' + p.size + '\'>', close: '</font>' });
-                    }
-
-                    if (p.strokeThickness > 0) {
-                        let strokeAttrs =
-                            ' color=\'' + formatColor(p.strokeColor) + '\'' +
-                            ' ' + attrThickness() + '=\'' + p.strokeThickness + '\'';
-                        if (p.strokeTrans > 0) {
-                            strokeAttrs += ' ' + attrTransparency() + '=\'' + roundTransparency(p.strokeTrans) + '\'';
-                        }
-                        strokeAttrs += ' joins=\'' + p.strokeJoins + '\'';
-                        strokeAttrs += ' sizing=\'' + p.strokeSizing + '\'';
-                        desiredKeys.push('stroke:' + p.strokeColor + ':' + p.strokeThickness + ':' + roundTransparency(p.strokeTrans) + ':' + p.strokeJoins + ':' + p.strokeSizing);
-                        desiredOpen.push({
-                            open: '<stroke' + strokeAttrs + '>',
-                            close: '</stroke>'
-                        });
-                    }
-
-                    if (p.markColor) {
-                        let markAttrs = ' color=\'' + formatColor(p.markColor) + '\'';
-                        if (p.markTrans > 0) {
-                            markAttrs += ' ' + attrTransparency() + '=\'' + roundTransparency(p.markTrans) + '\'';
-                        }
-                        desiredKeys.push('mark:' + p.markColor + ':' + roundTransparency(p.markTrans));
-                        desiredOpen.push({ open: '<mark' + markAttrs + '>', close: '</mark>' });
-                    }
-
-                    if (p.trans > 0) {
-                        desiredKeys.push('trans:' + roundTransparency(p.trans));
-                        desiredOpen.push({
-                            open: '<font ' + attrTransparency() + '=\'' + roundTransparency(p.trans) + '\'>',
-                            close: '</font>'
-                        });
-                    }
-
-                    const fmtTags = [];
-                    if (p.isStrike) fmtTags.push('s');
-                    if (p.isUnderline) fmtTags.push('u');
-                    if (p.isItalic) fmtTags.push('i');
-                    if (p.isBold) fmtTags.push('b');
-                    fmtTags.forEach(tag => {
-                        desiredKeys.push('fmt:' + tag);
-                        desiredOpen.push({ open: '<' + tag + '>', close: '</' + tag + '>' });
-                    });
-                    if (p.isUpper) {
-                        desiredKeys.push('uc');
-                        desiredOpen.push({ open: '<' + tagUppercase() + '>', close: '</' + tagUppercase() + '>' });
-                    }
-                    if (p.isSmall) {
-                        desiredKeys.push('sc');
-                        desiredOpen.push({ open: '<' + tagSmallcaps() + '>', close: '</' + tagSmallcaps() + '>' });
-                    }
-                    if (p.color) {
-                        desiredKeys.push('color:' + p.color);
-                        desiredOpen.push({
-                            open: '<font color=\'' + formatColor(p.color) + '\'>',
-                            close: '</font>'
-                        });
-                    }
-
-                    let commonLen = 0;
-                    while (commonLen < openStack.length && commonLen < desiredKeys.length
-                        && openStack[commonLen].key === desiredKeys[commonLen]) commonLen++;
-                    while (openStack.length > commonLen) {
-                        const top = openStack.pop();
-                        inner += top.close;
-                    }
-                    for (let k = commonLen; k < desiredKeys.length; k++) {
-                        inner += desiredOpen[k].open;
-                        openStack.push({ key: desiredKeys[k], close: desiredOpen[k].close });
-                    }
-                    inner += escapeRichText(run.text[mapped.charIdx]);
-                    if (mapped.charIdx === run.text.length - 1) {
-                        rp2++;
-                    }
-                    break;
-                }
-                rp2++;
+            if (breakRuns.has(i)) {
+                while (openStack.length > 0) { inner += openStack.pop().close; }
+                inner += '<br/>';
+                continue;
             }
+            const mapped = rawToRun[i];
+            if (!mapped) continue;
+            const run = runs[mapped.runIdx];
+            if (!run || run.isBreak) continue;
+            const p = run.props;
+            const desiredKeys = [];
+            const desiredOpen = [];
+
+            desiredKeys.push('font:' + p.font);
+            desiredOpen.push({ open: '<font face=\'' + p.font + '\'>', close: '</font>' });
+
+            if (p.weight) {
+                desiredKeys.push('weight:' + p.weight);
+                desiredOpen.push({ open: '<font weight=\'' + p.weight + '\'>', close: '</font>' });
+            }
+
+            if (p.size !== null && p.size !== undefined) {
+                desiredKeys.push('size:' + p.size);
+                desiredOpen.push({ open: '<font size=\'' + p.size + '\'>', close: '</font>' });
+            }
+
+            if (p.strokeThickness > 0) {
+                let strokeAttrs =
+                    ' color=\'' + formatColor(p.strokeColor) + '\'' +
+                    ' ' + attrThickness() + '=\'' + p.strokeThickness + '\'';
+                if (p.strokeTrans > 0) {
+                    strokeAttrs += ' ' + attrTransparency() + '=\'' + roundTransparency(p.strokeTrans) + '\'';
+                }
+                strokeAttrs += ' joins=\'' + p.strokeJoins + '\'';
+                strokeAttrs += ' sizing=\'' + p.strokeSizing + '\'';
+                desiredKeys.push('stroke:' + p.strokeColor + ':' + p.strokeThickness + ':' + roundTransparency(p.strokeTrans) + ':' + p.strokeJoins + ':' + p.strokeSizing);
+                desiredOpen.push({
+                    open: '<stroke' + strokeAttrs + '>',
+                    close: '</stroke>'
+                });
+            }
+
+            if (p.markColor) {
+                let markAttrs = ' color=\'' + formatColor(p.markColor) + '\'';
+                if (p.markTrans > 0) {
+                    markAttrs += ' ' + attrTransparency() + '=\'' + roundTransparency(p.markTrans) + '\'';
+                }
+                desiredKeys.push('mark:' + p.markColor + ':' + roundTransparency(p.markTrans));
+                desiredOpen.push({ open: '<mark' + markAttrs + '>', close: '</mark>' });
+            }
+
+            if (p.trans > 0) {
+                desiredKeys.push('trans:' + roundTransparency(p.trans));
+                desiredOpen.push({
+                    open: '<font ' + attrTransparency() + '=\'' + roundTransparency(p.trans) + '\'>',
+                    close: '</font>'
+                });
+            }
+
+            const fmtTags = [];
+            if (p.isStrike) fmtTags.push('s');
+            if (p.isUnderline) fmtTags.push('u');
+            if (p.isItalic) fmtTags.push('i');
+            if (p.isBold) fmtTags.push('b');
+            fmtTags.forEach(tag => {
+                desiredKeys.push('fmt:' + tag);
+                desiredOpen.push({ open: '<' + tag + '>', close: '</' + tag + '>' });
+            });
+            if (p.isUpper) {
+                desiredKeys.push('uc');
+                desiredOpen.push({ open: '<' + tagUppercase() + '>', close: '</' + tagUppercase() + '>' });
+            }
+            if (p.isSmall) {
+                desiredKeys.push('sc');
+                desiredOpen.push({ open: '<' + tagSmallcaps() + '>', close: '</' + tagSmallcaps() + '>' });
+            }
+            if (p.color) {
+                desiredKeys.push('color:' + p.color);
+                desiredOpen.push({
+                    open: '<font color=\'' + formatColor(p.color) + '\'>',
+                    close: '</font>'
+                });
+            }
+
+            let commonLen = 0;
+            while (commonLen < openStack.length && commonLen < desiredKeys.length
+                && openStack[commonLen].key === desiredKeys[commonLen]) commonLen++;
+            while (openStack.length > commonLen) {
+                const top = openStack.pop();
+                inner += top.close;
+            }
+            for (let k = commonLen; k < desiredKeys.length; k++) {
+                inner += desiredOpen[k].open;
+                openStack.push({ key: desiredKeys[k], close: desiredOpen[k].close });
+            }
+            inner += escapeRichText(run.text[mapped.charIdx]);
         }
         while (openStack.length > 0) {
             inner += openStack.pop().close;
@@ -3957,6 +4132,11 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.outputCode.value = richText;
 
         if (format === 'defaultio') {
+            const unsupported = collectDefaultioUnsupportedFeatures();
+            if (unsupported.length > 0) {
+                alert(t('defaultioUnsupportedFeatures').replace('{list}', unsupported.join(', ')));
+            }
+
             const defaultioResult = buildDefaultioText(rawText, enableLineBreaks, {
                 colorFn,
                 font: globalFont,
@@ -4638,6 +4818,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     elements.fontSizeEnabled.addEventListener('change', () => {
         if (!isFontSizeEnabled()) {
+            const hasPerChar = Object.keys(charFontSize).length > 0;
+            if (hasPerChar) {
+                if (!confirm(t('confirmDisableFontSize'))) {
+                    elements.fontSizeEnabled.checked = true;
+                    updateFontSizeVisibility();
+                    return;
+                }
+            }
             charFontSize = {};
         }
         updateFontSizeVisibility();
