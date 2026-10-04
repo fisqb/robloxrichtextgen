@@ -166,10 +166,10 @@
                 </select>
 
                 <div class="control-group advanced-only">
-                    <label data-i18n="transparency">Transparency</label>
+                    <label data-i18n="fontTransparency">Font Transparency</label>
                     <div class="range-group">
-                        <input type="range" id="transparency" min="0" max="1" step="0.1" value="0" />
-                        <span id="transparencyValue">0</span>
+                        <input type="range" id="fontTransparency" min="0" max="1" step="0.1" value="0" />
+                        <span id="fontTransparencyValue">0</span>
                     </div>
                 </div>
 
@@ -195,6 +195,61 @@
                     </div>
                 </div>
 
+                <div class="control-group advanced-only">
+                    <label data-i18n="weight">Font Weight</label>
+                    <select id="fontWeight">
+                        <option value="" selected data-i18n="weightDefault">— Default —</option>
+                        <option value="Thin">Thin (100)</option>
+                        <option value="ExtraLight">ExtraLight (200)</option>
+                        <option value="Light">Light (300)</option>
+                        <option value="Regular">Regular (400)</option>
+                        <option value="Medium">Medium (500)</option>
+                        <option value="SemiBold">SemiBold (600)</option>
+                        <option value="Bold">Bold (700)</option>
+                        <option value="ExtraBold">ExtraBold (800)</option>
+                        <option value="Heavy">Heavy (900)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label data-i18n="textTransform">Text Transform</label>
+                    <div class="formatting-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="uppercase" />
+                            <span data-i18n="uppercaseLabel">Uppercase</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="smallcaps" />
+                            <span data-i18n="smallcapsLabel">Small Caps</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group advanced-only">
+                    <label class="checkbox-label checkbox-inline">
+                        <input type="checkbox" id="markEnabled" />
+                        <span data-i18n="markEnabled">Enable Mark</span>
+                    </label>
+                </div>
+
+                <div id="markDetailsGroup" style="display:none">
+                    <div class="control-group">
+                        <label data-i18n="mark">Mark (Highlight)</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="markColor" value="#009966" />
+                            <input type="text" id="markColorHex" value="#009966" />
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label data-i18n="markTransparency">Mark Transparency</label>
+                        <div class="range-group">
+                            <input type="range" id="markTransparency" min="0" max="1" step="0.1" value="0" />
+                            <span id="markTransparencyValue">0</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="control-group">
                     <label data-i18n="rgbColors">RGB Colors</label>
                     <input type="checkbox" id="rgbColors" />
@@ -214,10 +269,60 @@
                 </div>
 
                 <div class="control-group">
-                    <label data-i18n="strokeWidth">Stroke Width</label>
+                    <label data-i18n="strokeThickness">Stroke Thickness</label>
                     <div class="range-group">
                         <input type="range" id="strokeThickness" min="0" max="5" step="0.5" value="2" />
                         <span id="strokeThicknessValue">2</span>
+                    </div>
+                </div>
+
+                <div class="control-group advanced-only">
+                    <label data-i18n="strokeTransparency">Stroke Transparency</label>
+                    <div class="range-group">
+                        <input type="range" id="strokeTransparency" min="0" max="1" step="0.1" value="0" />
+                        <span id="strokeTransparencyValue">0</span>
+                    </div>
+                </div>
+
+                <div class="control-group advanced-only">
+                    <label data-i18n="strokeJoins">Stroke Joins</label>
+                    <select id="strokeJoins">
+                        <option value="round" selected data-i18n="joinsRound">Round</option>
+                        <option value="bevel" data-i18n="joinsBevel">Bevel</option>
+                        <option value="miter" data-i18n="joinsMiter">Miter</option>
+                    </select>
+                </div>
+
+                <div class="control-group advanced-only">
+                    <label data-i18n="strokeSizing">Stroke Sizing</label>
+                    <select id="strokeSizing">
+                        <option value="fixed" selected data-i18n="sizingFixed">Fixed (pixels)</option>
+                        <option value="scaled" data-i18n="sizingScaled">Scaled (relative)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="checkbox-label checkbox-inline">
+                        <input type="checkbox" id="shortAttributes" checked />
+                        <span data-i18n="shortAttributes">Short attributes (th/tr/uc/sc)</span>
+                    </label>
+                </div>
+
+                <div class="control-group advanced-only">
+                    <label data-i18n="commentText">Comment</label>
+                    <input type="text" id="commentText" placeholder="Optional comment" />
+                </div>
+
+                <div class="control-group advanced-only">
+                    <div class="formatting-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="commentBefore" />
+                            <span data-i18n="commentBefore">Before output</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="commentAfter" />
+                            <span data-i18n="commentAfter">After output</span>
+                        </label>
                     </div>
                 </div>
 
@@ -429,7 +534,7 @@
                         <h3 data-i18n="helpImportRichText">Importing Rich Text</h3>
                         <ul>
                             <li data-i18n="helpImportRichText1">Click Import next to the output to paste an existing Rich Text code.</li>
-                            <li data-i18n="helpImportRichText2">Both Roblox native tags (font, b, i, u, s, stroke) and Defaultio tags are supported.</li>
+                            <li data-i18n="helpImportRichText2">Both Roblox native tags (font, b, i, u, s, stroke, mark, uppercase, smallcaps, weight) and Defaultio tags are supported.</li>
                             <li data-i18n="helpImportRichText3">The imported code replaces the current character formatting and can be edited normally afterwards.</li>
                         </ul>
                     </section>
@@ -446,7 +551,7 @@
                 <div class="import-body">
                     <label class="import-label" data-i18n="importPasteLabel" for="importTextarea">Paste your Rich Text code</label>
                     <textarea id="importTextarea" rows="14" spellcheck="false"
-    placeholder="&lt;font face='SpecialElite'&gt;&lt;stroke color='#0a0a1a' thickness='2'&gt;&lt;font color='#00d4ff' size='10'&gt;Rich Text&lt;/font&gt;&lt;/stroke&gt;&lt;/font&gt;"></textarea>
+    placeholder="&lt;font face='SpecialElite'&gt;&lt;stroke color='#0a0a1a' th='2' tr='0.25' joins='miter' sizing='scaled'&gt;&lt;font color='#00d4ff' size='10'&gt;Rich Text&lt;/font&gt;&lt;/stroke&gt;&lt;/font&gt;"></textarea>
                     <label class="import-checkbox-label">
                         <input type="checkbox" id="importClearExisting" checked />
                         <span data-i18n="importReplaceExisting">Replace existing character formatting</span>
@@ -470,8 +575,8 @@
                 <input type="text" id="charColorHex" value="#ff8c00" />
             </div>
             <div class="char-editor-row">
-                <input type="text" id="charTransparency" data-i18n-placeholder="transparencyPlaceholder"
-                    placeholder="Transparency (optional, 0-1)" inputmode="decimal" />
+                <input type="text" id="charFontTransparency" data-i18n-placeholder="transparencyPlaceholder"
+                    placeholder="Font transparency (optional, 0-1)" inputmode="decimal" />
                 <button type="button" id="charApply" class="mini-btn" data-i18n="apply">Apply</button>
             </div>
             <div class="char-editor-row char-format-row">
@@ -492,10 +597,39 @@
                     <span>S</span>
                 </label>
             </div>
+            <div class="char-editor-row char-format-row">
+                <label class="checkbox-label char-format-check">
+                    <input type="checkbox" id="charUppercase" />
+                    <span data-i18n="uppercaseShort">UC</span>
+                </label>
+                <label class="checkbox-label char-format-check">
+                    <input type="checkbox" id="charSmallcaps" />
+                    <span data-i18n="smallcapsShort">SC</span>
+                </label>
+                <label class="checkbox-label char-format-check">
+                    <input type="checkbox" id="charMarkEnabled" />
+                    <span>M</span>
+                </label>
+            </div>
             <div class="char-editor-row advanced-only">
                 <label class="char-editor-mini-label" data-i18n="font">Font</label>
                 <select id="charFont">
                     <option value="" data-i18n="mixedOrDefault">—</option>
+                </select>
+            </div>
+            <div class="char-editor-row advanced-only">
+                <label class="char-editor-mini-label" data-i18n="weight">Weight</label>
+                <select id="charFontWeight">
+                    <option value="" data-i18n="mixedOrDefault">—</option>
+                    <option value="Thin">Thin</option>
+                    <option value="ExtraLight">ExtraLight</option>
+                    <option value="Light">Light</option>
+                    <option value="Regular">Regular</option>
+                    <option value="Medium">Medium</option>
+                    <option value="SemiBold">SemiBold</option>
+                    <option value="Bold">Bold</option>
+                    <option value="ExtraBold">ExtraBold</option>
+                    <option value="Heavy">Heavy</option>
                 </select>
             </div>
             <div class="char-editor-row advanced-only" id="charFontSizeRow" style="display:none">
@@ -511,10 +645,48 @@
                 <input type="text" id="charStrokeColorHex" value="#0a0a1a" />
             </div>
             <div class="char-editor-row advanced-only">
-                <label class="char-editor-mini-label" data-i18n="strokeWidth">Stroke Width</label>
+                <label class="char-editor-mini-label" data-i18n="strokeThickness">Stroke Thickness</label>
                 <div class="range-group">
                     <input type="range" id="charStrokeThickness" min="0" max="5" step="0.5" value="2" />
                     <span id="charStrokeThicknessValue">2</span>
+                </div>
+            </div>
+            <div class="char-editor-row advanced-only">
+                <label class="char-editor-mini-label" data-i18n="strokeTransparency">Stroke Transparency</label>
+                <div class="range-group">
+                    <input type="range" id="charStrokeTransparency" min="0" max="1" step="0.1" value="0" />
+                    <span id="charStrokeTransparencyValue">0</span>
+                </div>
+            </div>
+            <div class="char-editor-row advanced-only">
+                <label class="char-editor-mini-label" data-i18n="strokeJoins">Stroke Joins</label>
+                <select id="charStrokeJoins">
+                    <option value="" data-i18n="mixedOrDefault">—</option>
+                    <option value="round">Round</option>
+                    <option value="bevel">Bevel</option>
+                    <option value="miter">Miter</option>
+                </select>
+            </div>
+            <div class="char-editor-row advanced-only">
+                <label class="char-editor-mini-label" data-i18n="strokeSizing">Stroke Sizing</label>
+                <select id="charStrokeSizing">
+                    <option value="" data-i18n="mixedOrDefault">—</option>
+                    <option value="fixed">Fixed</option>
+                    <option value="scaled">Scaled</option>
+                </select>
+            </div>
+            <div id="charMarkDetailsGroup" class="advanced-only" style="display:none">
+                <div class="char-editor-row">
+                    <label class="char-editor-mini-label" data-i18n="mark">Mark</label>
+                    <input type="color" id="charMarkColor" value="#009966" />
+                    <input type="text" id="charMarkColorHex" value="#009966" />
+                </div>
+                <div class="char-editor-row">
+                    <label class="char-editor-mini-label" data-i18n="markTransparency">Mark Transparency</label>
+                    <div class="range-group">
+                        <input type="range" id="charMarkTransparency" min="0" max="1" step="0.1" value="0" />
+                        <span id="charMarkTransparencyValue">0</span>
+                    </div>
                 </div>
             </div>
             <div class="char-editor-row" id="charMakePointRow" style="display:none">
